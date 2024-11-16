@@ -1,0 +1,8 @@
+100 ' TRON/TROFF sample
+110 ' ÄÚ°½ ½Ù ÌßÛ¸Þ×Ñ
+120 FOR I=1 TO 3
+130  FOR J=1 TO 3
+140   PRINT I;"*";J;"=";I*J
+150  NEXT J
+160 NEXT I
+170 END
