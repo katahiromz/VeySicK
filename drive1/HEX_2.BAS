@@ -1,0 +1,7 @@
+100 ' HEX$ sample {SJIS}
+110 PRINT "ÇPÇOêiÅ@Å@ÇPÇUêiÅ@Å@ÇWêi"
+120 FOR I=0 TO 17
+130  PRINT USING " ###";I;
+140  PRINT TAB(12);RIGHT$(" "+HEX$(I),2);
+150  PRINT TAB(21);RIGHT$("  "+OCT$(I),3)
+160 NEXT

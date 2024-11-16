@@ -1,0 +1,7 @@
+100 ' ASC sample
+110 A$="COMPUTER"
+120 FOR I=1 TO LEN(A$)
+130   B$=MID$(A$,I,1)
+140   PRINT USING "! = ###";B$;ASC(B$)
+150 NEXT I
+160 END

@@ -1,0 +1,7 @@
+100 ' GOTO sample
+110 PRINT "E ·° ¦ µ¼Ã ¸ÀÞ»²¡"
+120 K$=INKEY$
+130 IF K$="E" OR K$="e" THEN GOTO *QUIT
+140 GOTO 110
+150 *QUIT
+160 END

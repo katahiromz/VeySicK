@@ -1,0 +1,10 @@
+100 ' ON ERROR GOTO sample
+110 ON ERROR GOTO 170
+120 INPUT "A , B";A,B
+130 C=A/B
+140 PRINT TAB(14);"A/B=";C
+150 GOTO 120
+160 END
+170 ' ´×° ¼®Ø Ù°ÁÝ
+180 PRINT TAB(14);"¾ÞÛ ÃÞ ÜÙºÄ Ê ÃÞ·Ï¾Ý"
+190 RESUME 150
