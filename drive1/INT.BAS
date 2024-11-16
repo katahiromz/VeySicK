@@ -1,0 +1,5 @@
+100 ' INT sample
+110 FOR A=-2 TO 2 STEP .5
+120  PRINT "A =";A,"FIX(A) =";FIX(A),"INT(A) =";INT(A)
+130 NEXT A
+140 END

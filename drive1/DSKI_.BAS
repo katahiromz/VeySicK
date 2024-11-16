@@ -1,0 +1,11 @@
+100 ' DSKI$ sample
+110 FIELD #0, 128 AS A$(0), 128 AS A$(1)
+120 INPUT "Drive,Surface,Track,Sector";DR,SU,TR,SE
+130 DU$=DSKI$(DR,SU,TR,SE)
+140 FOR I=0 TO 1
+150  FOR J=0 TO 7
+160   FOR K=1 TO 16
+170    D$=HEX$(ASC(MID$(A$(I),J*16+K,1)))
+180    PRINT RIGHT$("0"+D$,2);" ";
+190   NEXT K
+200 NEXT J,I:END

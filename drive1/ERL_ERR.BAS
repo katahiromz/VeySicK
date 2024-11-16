@@ -1,0 +1,9 @@
+100 ' ERL/ERR sample
+110 ON ERROR GOTO 160
+120 INPUT "x,y";X,Y
+130 ANS=X^Y
+140 PRINT X;"É";Y;"¼Þ®³ Ê";ANS;"ÃÞ½¡"
+150 END
+160 'error trap
+170 IF ERR=11 AND ERL=130 THEN PRINT " ??? Ã²·Þ »ÚÏ¾Ý¡":END
+180 ON ERROR GOTO 0

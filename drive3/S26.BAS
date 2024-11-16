@@ -1,0 +1,10 @@
+100 OPEN "RDATA.DAT" AS #1
+110 FIELD #1, 2 AS A$, 4 AS B$, 8 AS C$
+120 A%=987:A!=123.456:A#=1234567891234#
+130 LSET A$=MKI$(A%)
+140 LSET B$=MKS$(A!)
+150 LSET C$=MKD$(A#)
+160 PUT #1
+170 PRINT "ºÉ ÌßÛ¸Þ×Ñ ÃÞ ¶·ºÑ ÃÞ°À Ê"
+180 PRINT "Â·Þ É ÌßÛ¸Þ×Ñ ÃÞ ÖÐÀÞ¾Ï½"
+190 CLOSE:END

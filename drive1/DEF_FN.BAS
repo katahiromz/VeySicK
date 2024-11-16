@@ -1,0 +1,5 @@
+100 ' DEF FN sample
+110 DEF FNPW(X,Y)=X^Y
+120 INPUT "x,y";X,Y
+130 PRINT "x^y=";FNPW(X,Y)
+140 END

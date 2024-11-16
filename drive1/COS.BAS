@@ -1,0 +1,7 @@
+100 ' COS sample
+110 INPUT "¶¸ÄÞ (ÄÞ) : ";D
+120 CS=COS(D/180*3.14159265358979#)
+130 PRINT "COS";USING "###";D;:PRINT " = ";CS;
+140 PRINT "SEC";USING "###";D;
+150 IF ABS(CS)<=1E-06 THEN PRINT " = Ã²·Þ »ÚÏ¾Ý" ELSE PRINT " = ";1/CS
+160 END

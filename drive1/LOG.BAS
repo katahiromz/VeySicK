@@ -1,0 +1,6 @@
+100 ' LOG sample
+110 INPUT X
+120 A=LOG(10)
+130 B=LOG(X)
+140 PRINT "log10(";X;")=";B/A
+150 END

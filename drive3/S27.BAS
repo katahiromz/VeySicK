@@ -1,0 +1,10 @@
+100 OPEN "RDATA.DAT" AS #1
+110 FIELD #1, 2 AS A$, 4 AS B$, 8 AS C$
+120 PRINT "Ï´ É ÌßÛ¸Þ×Ñ ÃÞ ¶·ºÝÀÞ ÃÞ°À ¦"
+130 PRINT "ÖÐÀÞ¼Ï½"
+140 GET #1
+150 A%=CVI(A$)
+160 A!=CVS(B$)
+170 A#=CVD(C$)
+180 PRINT A%:PRINT A!:PRINT A#
+190 CLOSE:END

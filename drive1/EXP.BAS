@@ -1,0 +1,6 @@
+100 ' EXP sample
+110 INPUT D
+120 HS=(EXP(D)-EXP(-D))/2:HC=(EXP(D)+EXP(-D))/2
+130 PRINT "SINH";USING "###";D;:PRINT " = ";HS;
+140 PRINT "COSH";USING "###";D;:PRINT " = ";HC;
+150 END

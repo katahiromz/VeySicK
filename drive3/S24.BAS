@@ -1,0 +1,8 @@
+100 FOR I=0 TO 16
+110  DE$=RIGHT$("  "+STR$(I),3)
+120  OC$=RIGHT$("  "+OCT$(I),3)
+130  HE$=RIGHT$("  "+HEX$(I),3)
+140  PRINT "10¼Ý:";DE$,
+150  PRINT " 8¼Ý:";OC$,
+160  PRINT "16¼Ý:";HE$
+170 NEXT I

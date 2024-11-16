@@ -1,0 +1,8 @@
+100 ' SIN sample
+110 F$="CSEC(###ß)=###.#####"
+120 INPUT "¶¸ÄÞ :";D
+130 R=D MOD 180
+140 IF R=0 THEN PRINT "Ã²·Þ »ÚÏ¾Ý":END
+150 C=1/SIN(R/180*3.1416)
+160 PRINT USING F$;D,C
+170 END

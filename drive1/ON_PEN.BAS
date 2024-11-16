@@ -1,0 +1,6 @@
+100 ' ON PEN GOSUB
+110 ON PEN GOSUB 140:PEN ON
+120 PRINT "--- ÍßÝ ÃÞ ¶ÞÒÝ ¦ ¸Ø¯¸ ¼ÃÈ ---"
+130 GOTO 130
+140 PRINT "X, Y = "; PEN(1); PEN(2)
+150 RETURN

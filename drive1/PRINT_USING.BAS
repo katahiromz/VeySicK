@@ -1,0 +1,16 @@
+100 ' PRINT USING sample
+110 PRINT USING "!";"CAT Computer"
+120 PRINT USING "&          &";"CAT Computer"
+130 PRINT USING "#####";123.456
+140 PRINT USING "#####.#";123.456
+150 PRINT USING "+####.#";123.456
+160 PRINT USING "#####.#-";-123.456
+170 PRINT USING "**###.#";123.456
+180 PRINT USING "\\###.#";123.456
+190 PRINT USING "**\##.#";123.456
+200 PRINT USING "#####,.#";1234.6
+210 PRINT USING "#####,.#^^^^";1234.56
+220 PRINT USING "\\###._-";123.456
+230 PRINT USING "#####";123456!
+240 PRINT USING "This is a @.";"pen"
+250 END

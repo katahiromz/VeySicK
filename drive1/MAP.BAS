@@ -1,0 +1,9 @@
+100 ' MAP sample
+110 SCREEN 0,0
+120 WINDOW(-100,-100)-(100,100)
+130 X=25:Y=70
+140 FOR I=0 TO 3 STEP 2
+150  M=MAP(X,I):PRINT "map(";X;",";I;")=";M
+160  M=MAP(X,I+1):PRINT "map(";Y;",";I+1;")=";M
+170 NEXT I
+180 END

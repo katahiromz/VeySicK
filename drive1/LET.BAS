@@ -1,0 +1,8 @@
+100 ' LET sample
+110 LET A=123
+120 LET B=.21
+130 C=A+B
+140 PRINT "A  =";A
+150 PRINT "B  =";B
+160 PRINT "A+B=";C
+170 END

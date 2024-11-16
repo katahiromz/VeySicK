@@ -1,0 +1,5 @@
+100 ' DATA sample
+110 DATA 10,20,def,A. 3
+120 READ A,A$,B$,C$
+130 PRINT A,A$,B$,C$
+140 END

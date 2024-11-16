@@ -1,0 +1,3 @@
+100 ' KINPUT ƒTƒ“ƒvƒ‹ {SJIS}
+110 PRINT "Š¿Žš‚ðŠÜ‚Þ•¶Žš—ñ‚ð“ü—Í‚µ‚Ä‚­‚¾‚³‚¢";:KINPUT K$
+120 PRINT "‚±‚Ì•¶Žš—ñ‚Ì’·‚³‚Í";KLEN(K$);"‚Å‚·B"

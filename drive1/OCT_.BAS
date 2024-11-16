@@ -1,0 +1,8 @@
+100 ' OCT$ sample
+110 FOR I=0 TO 16
+120  DE$=RIGHT$("  "+STR$(I),3)
+130  OC$=RIGHT$("  "+OCT$(I),3)
+140  HE$=RIGHT$("  "+HEX$(I),3)
+150  PRINT "DECIMAL:";DE$,"OCTAL:";OC$,"HEX:";HE$
+160 NEXT I
+170 END

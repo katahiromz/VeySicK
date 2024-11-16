@@ -1,0 +1,7 @@
+100 ' LIST sample
+110 N=1
+120 ' start
+130 PRINT N
+140 N=N+1
+150 IF N<10 THEN 140
+160 END

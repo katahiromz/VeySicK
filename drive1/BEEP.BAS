@@ -1,0 +1,7 @@
+100 ' BEEP sample
+110 FOR I=&H41 TO &H44
+120  PRINT CHR$(I);" ¦ Æ­³Ø®¸ ¼Ã ¸ÀÞ»²¡ ";
+130  A$=INPUT$(1)
+140  IF A$=CHR$(I) THEN PRINT A$ ELSE BEEP:GOTO 130
+150 NEXT I
+160 END

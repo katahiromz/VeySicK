@@ -1,0 +1,9 @@
+100 ' VAL sample {GRPH}
+110 T$=TIME$
+120 H=VAL(LEFT$(T$,2))
+130 M=VAL(MID$(T$,4,2))
+140 S=VAL(RIGHT$(T$,2))
+150 SS=H*3600+M*60+S
+160 PRINT "00:00:00 ¶× ";T$;" ÏÃÞ Ê"
+170 PRINT SS;"÷ ÃÞ½"
+180 END

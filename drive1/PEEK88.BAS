@@ -1,0 +1,13 @@
+100 ' PEEK sample
+110 INPUT "start address(hex)";SA$
+120 SA=VAL("&h"+SA$)
+130 INPUT "end   address(hex)";EA$
+140 EA=VAL("&h"+EA$)
+150 PRINT RIGHT$("000"+HEX$(SA),4);": ";
+160 FOR I=SA TO SA+15
+170  DA=PEEK(I)
+180  PRINT RIGHT$("0"+HEX$(DA),2);" ";
+190 NEXT I
+200 SA=SA+16:PRINT
+210 IF SA<=EA THEN 150
+220 END

@@ -1,0 +1,25 @@
+INPUT "X";X
+INPUT "Y";Y
+INPUT "Width";W
+INPUT "Height";H
+INPUT "File name";FIL$
+BYTES=((W+7)\8)*H*3+4
+IND=BYTES\2+1
+DIM DAT%(IND)
+GET@(X,Y)-(X+W-1,Y+H-1),DAT%
+OPEN FIL$ FOR OUTPUT AS #1
+F=0:LN=1000
+LN$=RIGHT$(STR$(LN),LEN(STR$(LN))-1)
+LN$=LN$+" ' image"+STR$(W)+" x"+STR$(H)+" DIM DAT%("+STR$(IND)+")"
+PRINT #1,LN$
+LN=LN+10
+LN$=""
+FOR I=0 TO IND
+IF F=0 THEN LN$=RIGHT$(STR$(LN),LEN(STR$(LN))-1)+" DATA " ELSE LN$=LN$+","
+LN$=LN$+"&H"+RIGHT$("000"+HEX$(DAT%(I)),4)
+F=F+1
+IF F=8 THEN F=0:PRINT #1,LN$:LN$="":LN=LN+10
+NEXT I
+IF F<>0 THEN F=0:PRINT #1,LN$:LN$="":LN=LN+10
+CLOSE #1
+PRINT "Image was written."

@@ -1,0 +1,8 @@
+100 ' KPOS サンプル {SJIS} {8801}
+110 CLS
+120 A$="ＫＰＯＳのサンプルＬist"
+130 PRINT A$
+140 LOCATE 0,1:PRINT "Ｉモジメ      バイト"
+150 FOR I=1 TO 13
+160  PRINT I,KPOS(A$,I)
+170 NEXT

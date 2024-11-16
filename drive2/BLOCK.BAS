@@ -1,0 +1,82 @@
+' BLOCK {8801} {GRPH} {DELAY2:10}
+'--------------------------------------------------------------------------
+*INIT
+SCREEN 0,0:CONSOLE 0,25,0,1:COLOR 7,0:WIDTH 40,25
+NEW CMD
+VRAM=&HF3C8:W=20
+REMAINS=3
+'--------------------------------------------------------------------------
+*RETRY
+CLS 3
+BX=1:BY=23:DX=1:DY=-1:RLEN=5:RX=1+(W-RLEN)/2:RY=24
+*DRAWTABLE
+COLOR 6:LOCATE 0,0:PRINT "‰"+STRING$(W, "Ü")+"Â";
+FOR Y=1 TO 23:LOCATE 0,Y:PRINT "á";SPACE$(W);"á";:NEXT Y
+LOCATE 0,24:PRINT "Á"+SPACE$(W)+"Ê";
+CNT1=0
+FOR Y=4 TO 8:FOR X=1 TO W-1 STEP 2
+COLOR 2:LOCATE X,Y:PRINT "€€";
+CNT1=CNT1+1
+NEXT X,Y
+CNT2=0:SCORE=0
+COLOR 7:LOCATE 1+W+2,0:PRINT "Ãﬁ€Ø∏ ∏Ωﬁº";
+COLOR 5:LOCATE 1+W+2,1:PRINT STRING$(REMAINS,"=")+SPACE$(3-REMAINS);
+COLOR 7:LOCATE 1+W+3,8:PRINT "‘ºﬁŸº ∑∞ √ﬁ";
+COLOR 7:LOCATE 1+W+3,9:PRINT "ø≥ª º√» !!";
+'--------------------------------------------------------------------------
+*STARTWAIT
+BASE$="T120@0O3Q7L8BB-A-FA-4AF"
+GUITAR$="T120@0O4Q7L16BBB-B-A-A-A-FE-E-F8A-A-F8"
+CMD PLAY BASE$,GUITAR$
+COLOR 3:LOCATE 1+(W-LEN("PRESS SPACE"))/2,12:PRINT "PRESS SPACE";
+WHILE INKEY$<>"":WEND
+WHILE INKEY$<>" ":R=RND(1):WEND
+BX=1+INT(RND(1)*W)
+IF (RND(1)*3) MOD 2 THEN DX=-1 ELSE DX=1
+COLOR 6:LOCATE 1+(W-LEN("PRESS SPACE"))/2,12:PRINT SPACE$(11);
+'--------------------------------------------------------------------------
+*MAINLOOP
+BEEP 0
+FLAG=0
+IF BY=24 THEN REMAINS=REMAINS-1:FLAG=1
+IF FLAG THEN IF REMAINS=0 THEN *GAMEOVER ELSE GOTO *RETRY
+MX=0
+IF RX>1 AND (INP(&H0A) AND 4)=0 THEN MX=-1
+IF (RX+RLEN<W) AND (INP(&H08) AND 4)=0 THEN MX=1
+IF MX<>0 THEN LOCATE RX,RY:PRINT SPACE$(RLEN);
+RX=RX+MX
+COLOR 5:LOCATE RX,RY:PRINT STRING$(RLEN,"=");
+X=BX+DX:Y=BY+DY
+C$=CHR$(PEEK(VRAM+(80+40)*Y+X*2))
+IF C$="‰" OR C$="Â" OR C$="Á" OR C$="Ê" THEN DX=-DX:DY=-DY:GOTO *MAINLOOP
+IF C$="á" THEN DX=-DX:GOTO *MAINLOOP
+IF C$="Ü" OR C$="=" THEN DY=-DY:GOTO *MAINLOOP
+IF C$="€" THEN GOSUB *HITBLOCK:GOTO *MAINLOOP
+IF CNT1<=CNT2 GOTO *GAMECLEAR
+LOCATE BX,BY:PRINT " ";
+BX=BX+DX:BY=BY+DY
+COLOR 7:LOCATE BX,BY:PRINT "Ï";
+FOR DELAY=0 TO 1000:NEXT DELAY
+GOTO *MAINLOOP
+'--------------------------------------------------------------------------
+*HITBLOCK
+BEEP 1
+DY=-DY:CNT2=CNT2+1
+LOCATE INT((X-1)/2)*2+1,Y:PRINT "  ";
+SCORE=SCORE+10
+COLOR 7:LOCATE 1+W+2,2:PRINT USING "SCORE: #####";SCORE;
+FOR I=0 TO 10:NEXT I
+RETURN
+'--------------------------------------------------------------------------
+*GAMEOVER
+CMD PLAY "T120@2L8V15BAEDC2"
+COLOR 5:LOCATE 1+W+2,1:PRINT STRING$(REMAINS,"=")+SPACE$(3-REMAINS);
+COLOR 3:LOCATE 1+(W-LEN("GAME OVER"))/2,12:PRINT "GAME OVER";:LOCATE 0,24
+END
+'--------------------------------------------------------------------------
+*GAMECLEAR
+BEEP 0
+CMD PLAY "T120@49L8V15CCDDEEFFERDRCR"
+COLOR 6:LOCATE 1+(W-LEN("CLEAR!"))/2,12:PRINT "CLEAR!";:LOCATE 0,24
+END
+'--------------------------------------------------------------------------

@@ -1,0 +1,6 @@
+500 PRINT "< chained program >"
+510 PRINT A$:PRINT B+B
+520 FOR I=0 TO 10
+530  C%(I)=C%(I)+C%(I):PRINT C%(I);
+540 NEXT I:PRINT
+550 END
