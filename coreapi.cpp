@@ -8419,7 +8419,7 @@ static VskAstPtr VSKAPI vsk_ON_KEY_GOSUB(VskAstPtr& self, const VskAstList& args
     auto arg0 = args[0];
     for (size_t key = 0; key < 10; ++key)
     {
-        if (key < arg0->size())
+        if (key < arg0->size() && arg0->at(key))
         {
             auto index_list = vsk_label_to_index_list(arg0->at(key), VSK_IMPL()->m_label_map);
             if (index_list.empty())
