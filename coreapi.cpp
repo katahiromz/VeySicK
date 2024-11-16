@@ -3002,9 +3002,13 @@ static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr& self, const VskAstList& args)
     if (args[1])
         printing_items = args[1]->children();
 
-    // 最後にセミコロン(;)が付いてなかったら "\n" を追加
-    if (printing_items.empty() || printing_items.back()->m_insn != INSN_PRINTING_SEMICOLON)
+    // 必要なら "\n" を追加
+    if (printing_items.empty() ||
+        (printing_items.back()->m_insn != INSN_PRINTING_SEMICOLON &&
+         printing_items.back()->m_insn != INSN_SPC))
+    {
         printing_items.push_back(vsk_ast_str("\n"));
+    }
 
     // セミコロン(;)を取り除く
     for (size_t i = printing_items.size(); i > 0; )
