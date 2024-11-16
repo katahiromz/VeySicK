@@ -1,4 +1,4 @@
-100 ' ON..GOSUB/ON..GOTO sample
+100 ' ON...GOTO sample
 110 INPUT "N=";N
 120 SG=SGN(N)+1
 130 ON SG GOTO 150,160
