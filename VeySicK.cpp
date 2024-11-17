@@ -2501,12 +2501,6 @@ void vsk_file_close_all(void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool VskMachine::draw(VskString str)
-{
-    // TODO:
-    return false;
-}
-
 bool VskMachine::connect(bool do_connect)
 {
     if (do_connect) // 接続する

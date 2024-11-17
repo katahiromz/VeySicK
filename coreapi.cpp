@@ -4,6 +4,7 @@
 #include "random.h"     // 乱数
 #include "sound.h"      // 音
 #include "renum.h"      // RENUM
+#include "draw.h"       // DRAW
 #include <stack>        // For std::stack
 #include <array>        // For std::array
 #include <sys/stat.h>   // For std::stat
@@ -273,7 +274,9 @@ struct VskMachineImpl
     bool m_auto_mode = false;
     VskLineNo m_auto_line_number = 0;
     VskLineNo m_auto_step = 0;
-
+    // DRAW
+    VskDrawEngine m_draw_engine;
+    std::vector<VskDrawItem> m_draw_items;
     // 初期化
     void init();
 };
@@ -1226,7 +1229,7 @@ VskAstPtr vsk_eval_text(const VskString& text)
     if (error)
         return nullptr;
 
-    return result;
+    return vsk_eval_ast(result);
 }
 
 // ファイル番号
@@ -2424,6 +2427,7 @@ void vsk_default_trap(VskTrapType type)
         {
         case VSK_NO_WAIT:
         case VSK_WAIT_FOR_INPUT:
+        case VSK_WAIT_FOR_DRAW:
             if (!VSK_IMPL()->m_auto_mode && !VSK_STATE()->m_edit_mode)
             {
                 vsk_machine->beep(-1);
@@ -2711,6 +2715,21 @@ bool vsk_wait(void)
             }
         }
         return true; // 待つ
+    case VSK_WAIT_FOR_DRAW:
+        if (VSK_IMPL()->m_draw_items.empty())
+        {
+            // 次の文へ
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+            VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+            return false; // 待たない
+        }
+        else
+        {
+            auto item = VSK_IMPL()->m_draw_items[0];
+            VSK_IMPL()->m_draw_items.erase(VSK_IMPL()->m_draw_items.begin());
+            VSK_IMPL()->m_draw_engine.draw_item(item);
+        }
+        return true;
     }
     return false; // 待たない
 }
@@ -6976,7 +6995,12 @@ static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr& self, const VskAstList& args)
 
     VskString v0;
     if (vsk_str(v0, args[0]))
-        vsk_machine->draw(v0);
+    {
+        if (!vsk_get_draw_items_from_string(VSK_IMPL()->m_draw_items, v0))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        VSK_STATE()->m_wait_for = VSK_WAIT_FOR_DRAW;
+        return vsk_ast(INSN_DONT_GO_NEXT);
+    }
 
     return nullptr;
 }

@@ -148,6 +148,7 @@ add_custom_target(jam
 add_executable(VeySicK WIN32
     VeySicK.cpp
     coreapi.cpp
+    draw.cpp
     encoding.cpp
     mdbg.cpp
     mem.cpp

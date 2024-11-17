@@ -46,102 +46,6 @@ VskString vsk_to_string(const VskString& str);
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// VskPoint, VskSize, VskRect
-
-// VskPoint - (x, y)座標
-template <typename T_VALUE>
-struct VskPoint
-{
-    T_VALUE m_x, m_y;
-};
-typedef VskPoint<int> VskPointI;
-typedef VskPoint<VskDouble> VskPointD;
-
-// VskSize - サイズ
-template <typename T_VALUE>
-struct VskSize
-{
-    T_VALUE m_cx, m_cy;
-};
-typedef VskSize<int> VskSizeI;
-typedef VskSize<VskDouble> VskSizeD;
-
-// VskRect - 長方形領域の座標
-template <typename T_VALUE>
-union VskRect
-{
-    struct
-    {
-        T_VALUE m_x0, m_y0, m_x1, m_y1;
-    };
-    struct
-    {
-        VskPoint<T_VALUE> m_pt0, m_pt1;
-    };
-
-    VskRect()
-    {
-        m_x0 = m_y0 = m_x1 = m_y1 = 0;
-    }
-    VskRect(const VskPoint<T_VALUE>& pt0, const VskPoint<T_VALUE>& pt1)
-    {
-        m_pt0 = pt0;
-        m_pt1 = pt1;
-    }
-    VskRect(T_VALUE x0, T_VALUE y0, T_VALUE x1, T_VALUE y1)
-    {
-        m_x0 = x0;
-        m_y0 = y0;
-        m_x1 = x1;
-        m_y1 = y1;
-    }
-
-    bool empty() const
-    {
-        return m_x0 > m_x1 || m_y0 > m_y1;
-    }
-    void set_empty()
-    {
-        m_x0 = m_y0 = -1;
-        m_x1 = m_y1 = 0;
-    }
-    bool inside_x(const T_VALUE& x) const
-    {
-        return m_x0 <= x && x <= m_x1;
-    }
-    bool inside_y(const T_VALUE& y) const
-    {
-        return m_y0 <= y && y <= m_y1;
-    }
-    bool inside(const T_VALUE& x, const T_VALUE& y) const
-    {
-        return m_x0 <= x && x <= m_x1 && m_y0 <= y && y <= m_y1;
-    }
-    bool inside(const VskPoint<T_VALUE>& pt) const
-    {
-        return inside(pt.m_x0, pt.m_y0);
-    }
-    T_VALUE width() const
-    {
-        if (empty()) return 0;
-        return m_x1 - m_x0 + 1;
-    }
-    T_VALUE height() const
-    {
-        if (empty()) return 0;
-        return m_y1 - m_y0 + 1;
-    }
-    VskPoint<T_VALUE>  center_point() const
-    {
-        return { (m_x0 + m_x1) / 2, (m_y0 + m_y1) / 2 };
-    }
-
-    bool intersect(const VskRect<T_VALUE>& other);
-};
-typedef VskRect<int> VskRectI;
-typedef VskRect<VskDouble> VskRectD;
-
-//////////////////////////////////////////////////////////////////////////////
 // 色
 
 typedef VskDword VskWebColor;       // Webカラー
@@ -477,6 +381,7 @@ enum VskWaitFor
     VSK_WAIT_FOR_COMMAND,
     VSK_WAIT_FOR_INPORT,
     VSK_WAIT_FOR_INPUT,
+    VSK_WAIT_FOR_DRAW,
 };
 
 // マシン状態
@@ -760,7 +665,6 @@ struct VskMachine : VskObject
 
     int get_pixel(int x0, int y0);
     void set_pixel(int x0, int y0, int palette);
-    bool draw(VskString str);
     void draw_line(int x0, int y0, int x1, int y1, int palette, VskWord line_style = 0xFFFF);
     void draw_box(int x0, int y0, int x1, int y1, int palette, VskWord line_style = 0xFFFF);
     void fill_box(int x0, int y0, int x1, int y1, int palette, const VskString& tile = "");
