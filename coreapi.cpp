@@ -5561,8 +5561,8 @@ bool vsk_load_file(const VskString& filename, VskString& text)
     if (!vsk_machine->load(filename, text))
         return false;
 
-    // 前後の空白を取り除く
-    mstr_trim(text, " \t\r\n");
+    // 後ろの空白を取り除く
+    mstr_trim_right(text, " \t\r\n");
 
     // 行番号がなければ追加
     VskLineNo number = vsk_line_number_from_line_text(text);
@@ -5614,7 +5614,7 @@ static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr& self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
-        if (!vsk_machine->save(v0, VSK_IMPL()->m_program_text))
+        if (!vsk_machine->save(v0, VSK_IMPL()->m_program_text + "\n"))
             return nullptr;
     }
 
