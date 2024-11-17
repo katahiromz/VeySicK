@@ -300,8 +300,8 @@ bool vsk_sound_sing(const VskString& str)
         return false;
 
     VskScoreBlock block = { phrase };
-    vsk_sound_player->play(block);
     vsk_ssg_sound_settings[0] = phrase->m_setting;
+    vsk_sound_player->play(block);
     return true;
 }
 
@@ -722,17 +722,38 @@ bool vsk_init_sound(void)
     return true;
 }
 
+void vsk_sound_stop(void)
+{
+    if (vsk_sound_player)
+        vsk_sound_player->stop();
+}
+
 void vsk_exit_sound(void)
 {
+    vsk_sound_stop();
     alutExit();
     vsk_sound_player = nullptr;
+}
+
+bool vsk_sound_is_playing(void)
+{
+    return vsk_sound_player && vsk_sound_player->m_playing_music;
+}
+
+bool vsk_sound_wait(VskDword milliseconds)
+{
+    if (vsk_sound_is_playing())
+        return vsk_sound_player->wait_for_stop(milliseconds);
+    return false;
 }
 
 void vsk_sound_beep(int i)
 {
     assert(vsk_sound_player);
-    if (vsk_sound_player)
+    if (vsk_sound_player) {
         vsk_sound_player->beep(i);
+        vsk_sound_player->wait_for_stop(500);
+    }
 }
 
 // SSG音源で音楽再生

@@ -383,6 +383,7 @@ enum VskWaitFor
     VSK_WAIT_FOR_INPUT,
     VSK_WAIT_FOR_DRAW,
     VSK_WAIT_FOR_TURTLE,
+    VSK_WAIT_FOR_PLAY,
 };
 
 // マシン状態

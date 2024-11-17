@@ -281,6 +281,8 @@ struct VskMachineImpl
     // CMD TURTLE
     VskTurtleEngine m_turtle_engine;
     std::vector<VskTurtleItem> m_turtle_items;
+    // PLAY / CMD PLAY
+    bool m_play_bgm = true; // CMD BGM (PLAY / CMD PLAY / CMD SINGを並列動作モードにするか？)
     // 初期化
     void init();
 };
@@ -2451,6 +2453,16 @@ void vsk_default_trap(VskTrapType type)
             break;
         case VSK_WAIT_FOR_INPORT:
             break;
+        case VSK_WAIT_FOR_PLAY:
+            vsk_sound_stop();
+            {
+                vsk_machine->beep(-1);
+                vsk_print("^C\nBreak");
+                if (vsk_target_line != 0 && vsk_target_line != -1)
+                    vsk_print(" at " + vsk_to_string(vsk_target_line));
+            }
+            vsk_enter_command_level();
+            break;
         }
         break;
     case VSK_TRAP_HELP: // HELPキー（Endキー）を機能させる
@@ -2734,7 +2746,7 @@ bool vsk_wait(void)
             VSK_IMPL()->m_draw_items.erase(VSK_IMPL()->m_draw_items.begin());
             VSK_IMPL()->m_draw_engine.draw_item(item);
         }
-        return true;
+        return true; // 待った
     case VSK_WAIT_FOR_TURTLE:
         if (VSK_IMPL()->m_turtle_items.empty())
         {
@@ -2750,6 +2762,15 @@ bool vsk_wait(void)
             VSK_IMPL()->m_turtle_engine.turtle_item(item);
         }
         return true;
+    case VSK_WAIT_FOR_PLAY:
+        if (vsk_sound_is_playing()) {
+            return true; // 待つ
+        } else {
+            // 次の文へ
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+            VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+        }
+        break;
     }
     return false; // 待たない
 }
@@ -6000,7 +6021,12 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
     if (vsk_str(v0, args[0]))
     {
         if (!vsk_sound_sing(v0))
-            vsk_machine->bad_call();
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        if (!VSK_IMPL()->m_play_bgm)
+        {
+            VSK_STATE()->m_wait_for = VSK_WAIT_FOR_PLAY;
+            return vsk_ast(INSN_DONT_GO_NEXT);
+        }
     }
 
     return nullptr;
@@ -6020,6 +6046,33 @@ static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_TURTLE;
         return vsk_ast(INSN_DONT_GO_NEXT);
     }
+    return nullptr;
+}
+
+// INSN_CMD_BGM (CMD BGM) @implemented
+static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskInt v0;
+    if (vsk_int(v0, args[0]))
+    {
+        if (v0 != 0 && v0 != 1)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        VSK_IMPL()->m_play_bgm = !!v0;
+    }
+
+    return nullptr;
+}
+
+// INSN_CMD_STOPM (CMD STOPM)
+static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 0))
+        return nullptr;
+
+    vsk_sound_stop();
     return nullptr;
 }
 
@@ -6088,6 +6141,16 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
     {
         if (args.size() == 2)
             return vsk_CMD_TURTLE(self, { args[1] });
+    }
+    else if (v0 == "BGM") // CMD BGM
+    {
+        if (args.size() == 2)
+            return vsk_CMD_BGM(self, { args[1] });
+    }
+    else if (v0 == "STOPM") // CMD STOPM
+    {
+        if (args.size() == 1)
+            return vsk_CMD_STOPM(self, { });
     }
 
     assert(0);
@@ -6868,7 +6931,13 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
         break;
     default:
         vsk_machine->bad_call();
-        break;
+        return nullptr;
+    }
+
+    if (!VSK_IMPL()->m_play_bgm)
+    {
+        VSK_STATE()->m_wait_for = VSK_WAIT_FOR_PLAY;
+        return vsk_ast(INSN_DONT_GO_NEXT);
     }
 
     return nullptr;
@@ -9059,7 +9128,13 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr& self, const VskAstList& args)
         break;
     default:
         vsk_machine->bad_call();
-        break;
+        return nullptr;
+    }
+
+    if (!VSK_IMPL()->m_play_bgm)
+    {
+        VSK_STATE()->m_wait_for = VSK_WAIT_FOR_PLAY;
+        return vsk_ast(INSN_DONT_GO_NEXT);
     }
 
     return nullptr;
