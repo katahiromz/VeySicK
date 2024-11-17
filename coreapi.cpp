@@ -6066,7 +6066,7 @@ static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CMD_STOPM (CMD STOPM)
+// INSN_CMD_STOPM (CMD STOPM) @implemented
 static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
@@ -6076,7 +6076,7 @@ static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CMD_UNLINK (CMD UNLINK)
+// INSN_CMD_UNLINK (CMD UNLINK) @implemented
 static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
@@ -6088,7 +6088,7 @@ static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CMD_CUT @implemented
+// INSN_CMD_CUT (CMD CUT) @implemented
 static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
