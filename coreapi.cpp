@@ -3780,7 +3780,7 @@ static VskAstPtr VSKAPI vsk_SUB(VskAstPtr& self, const VskAstList& args)
                 if (vsk_lng(v1, arg1))
                 {
                     vsk_targeting(self);
-                    return vsk_ast_lng(v0 - v1);
+                    return vsk_ast_dbl(v0 - v1);
                 }
             }
         }
@@ -4002,7 +4002,7 @@ static VskAstPtr VSKAPI vsk_AND(VskAstPtr& self, const VskAstList& args)
         return nullptr;
 
     VskInt v0, v1;
-    if ((v0, args[0]) && vsk_int(v1, args[1]))
+    if (vsk_int(v0, args[0]) && vsk_int(v1, args[1]))
     {
         vsk_targeting(self);
         return vsk_ast_int(v0 & v1);
@@ -4560,7 +4560,7 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
             if (v0 == "@exst")
             {
                 VSK_STATE()->m_has_turtle = true;
-                VSK_STATE()->m_has_cmd_exst = true;
+                VSK_STATE()->m_has_cmd_extension = true;
                 return nullptr;
             }
         }
@@ -5994,7 +5994,7 @@ static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
-    VSK_STATE()->m_has_cmd_exst = true;
+    VSK_STATE()->m_has_cmd_extension = true;
     return nullptr;
 }
 
@@ -6064,6 +6064,12 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
@@ -6085,6 +6091,12 @@ static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
@@ -6102,10 +6114,16 @@ static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_extension())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VskInt v0;
     if (vsk_int(v0, args[0]))
     {
-        if (v0 != 0 && v0 != 1)
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0 != 0 && v0 != 1)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VSK_IMPL()->m_play_bgm = !!v0;
     }
@@ -6119,6 +6137,12 @@ static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_extension())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     vsk_sound_stop();
     return nullptr;
 }
@@ -6129,8 +6153,14 @@ static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_extension())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     vsk_sound_stop(); // 音を止める
-    VSK_STATE()->m_has_cmd_exst = false; // 拡張命令を破棄する
+    VSK_STATE()->m_has_cmd_extension = false; // 拡張命令を破棄する
     VSK_STATE()->m_has_turtle = false; // タートルグラフィック拡張命令を破棄する
     return nullptr;
 }
@@ -6141,7 +6171,49 @@ static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VSK_STATE()->m_has_turtle = false;
+    return nullptr;
+}
+
+// INSN_CMD_PAL (CMD PAL) @implemented
+static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 2))
+        return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_extension())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
+    if (args.size() == 0)
+    {
+        vsk_machine->reset_palette();
+        return nullptr;
+    }
+
+    VskInt v0;
+    if (!vsk_int(v0, args[0]))
+        return nullptr;
+    if (!vsk_machine->is_valid_color(v0))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+    VskInt v1 = vsk_get_default_digital_color_8(v0);
+    if (args.size() <= 1 || vsk_int(v1, args[1]))
+    {
+        auto blue   = (v1 & 0x7) * 255 / 7;
+        auto red    = ((v1 >> 3) & 0x7) * 255 / 7;
+        auto green  = ((v1 >> 6) & 0x7) * 255 / 7;
+        VSK_STATE()->m_palette[v0] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
+    }
+
     return nullptr;
 }
 
@@ -6157,34 +6229,13 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
 
     if (v0 == "PAL") // CMD PAL
     {
-        if (!VSK_SETTINGS()->m_unlimited_mode)
-        {
-            if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_exst())
-                VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
-        }
-
         if (args.size() == 1)
-        {
-            vsk_machine->reset_palette();
-            return nullptr;
-        }
-
-        VskInt v1;
-        if (!vsk_int(v1, args[1]))
-            return nullptr;
-        if (!(0 <= v1 && v1 < 8))
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-
-        VskInt v2 = vsk_get_default_digital_color_8(v1);
-        if (args.size() <= 2 || vsk_int(v2, args[2]))
-        {
-            auto blue = (v2 & 0x7) * 255 / 7;
-            auto red = ((v2 >> 3) & 0x7) * 255 / 7;
-            auto green = ((v2 >> 6) & 0x7) * 255 / 7;
-            VSK_STATE()->m_palette[v1] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
-        }
-
-        return nullptr;
+            return vsk_CMD_PAL(self, {});
+        if (args.size() == 2)
+            return vsk_CMD_PAL(self, { args[1] });
+        if (args.size() == 3)
+            return vsk_CMD_PAL(self, { args[1], args[2] });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
     else if (v0 == "CUT") // CMD CUT
     {
@@ -6927,6 +6978,12 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT_OFF(VskAstPtr& self, const VskAstList& arg
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VskString v0;
     if (vsk_ident(v0, args[0]))
     {
@@ -6947,6 +7004,12 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT_ON(VskAstPtr& self, const VskAstList& args
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     VskString v0;
     if (vsk_ident(v0, args[0]))
     {
@@ -6966,6 +7029,12 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_extension())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
 
     VskInt v0 = 2;
     if (args[0] && !vsk_file_number(v0, args[0]))

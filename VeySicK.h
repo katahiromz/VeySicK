@@ -484,7 +484,7 @@ struct VskMachineState
     bool m_auto_mode                        = false;        // AUTOモード (行番号自動入力)
     bool m_kanji_mode                       = false;        // 漢字モード
     bool m_kana_mode                        = false;        // カナモード
-    bool m_has_cmd_exst                     = false;        // 拡張命令が有効か？
+    bool m_has_cmd_extension                = false;        // 拡張命令が有効か？
     bool m_has_turtle                       = false;        // タートルグラフィック拡張命令が有効か？
     bool m_edit_mode                        = false;        // 編集モード (EDIT文による)
     int m_option_base                       = -1;           // -1: default, 0: zero, 1: one
@@ -536,7 +536,7 @@ struct VskMachine : VskObject
     bool is_jis_mode() const { return m_state && m_state->m_text_mode == VSK_TEXT_MODE_JIS && m_state->m_machine_mode != VSK_MACHINE_MODE_8801; }
     bool is_sjis_mode() const { return !is_grph_mode() && !is_jis_mode(); }
     bool has_turtle() const { return m_state && m_state->m_has_turtle; }
-    bool has_cmd_exst() const { return m_state && m_state->m_has_cmd_exst; }
+    bool has_cmd_extension() const { return m_state && m_state->m_has_cmd_extension; }
 
     // アドレスの解決
     VskAddr resolve_addr(VskAddr segment, VskAddr offset) const

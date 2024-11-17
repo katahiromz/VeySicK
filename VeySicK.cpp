@@ -2189,7 +2189,7 @@ bool VskMachine::binary_load(const char *filename, VskAddr addr, VskDword& size,
         {
             if ((0x8000 <= i && i <= 0x83FF) ||
                 (0xE600 <= i && i <= 0xFFFF) ||
-                (has_cmd_exst() && (0xE100 <= i && i <= 0xE5FF)))
+                (has_cmd_extension() && (0xE100 <= i && i <= 0xE5FF)))
             {
                 bad_call();
                 return false;
