@@ -4491,11 +4491,14 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr& self, const VskAstList& args)
 // INSN_CMD_CLS (CMD CLS) @implemented
 static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
 {
-    //if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
-    //    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
-
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode)
+    {
+        if (!vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
 
     VskInt v0 = 1;
     auto arg0 = args[0];
