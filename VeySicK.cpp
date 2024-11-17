@@ -2305,6 +2305,7 @@ bool VskMachine::save(VskString filename, const std::string& data)
     std::string text = data;
     mstr_replace_all(text, "\r\n", "\n");
     mstr_replace_all(text, "\r", "\n");
+    mstr_replace_all(text, "\n", "\r\n");
 
     if (text.size())
     {
