@@ -12,7 +12,7 @@
 
 NEWLINE            (\r?\n|\r)
 STRING             \"[^\"\r\n]*\"?
-IDENTIFIER         [A-Za-z][A-Za-z0-9\.]*[\$\#\!\%\@]?
+IDENTIFIER         [A-Za-z][A-Za-z0-9\.]*[\$\#\!\%\&]?
 OCTAL              (&O|&o|&)[0-7]+
 HEX                (&H|&h)[0-9A-Fa-f]+
 DIGITS             [0-9]+[0-9 \t]*
@@ -120,6 +120,7 @@ REM([ \t]|:).* {
     // Digits with type
     yylval = vsk_ast_digits(yytext, 10);
     vsk_target_column += yyleng;
+    assert(yylval->is_number());
     return TK_NUMERIC;
 }
 {DIGITS} {

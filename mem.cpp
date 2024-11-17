@@ -159,9 +159,7 @@ VskType vsk_var_get_type(const VskString& name)
     case VSK_TYPE_DOUBLE:
     case VSK_TYPE_INTEGER:
     case VSK_TYPE_STRING:
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG:
-#endif
         return type;
     default:
         if (vsk_isalpha(type))
@@ -192,9 +190,7 @@ VskString vsk_var_get_typed_name(const VskString& name)
     case VSK_TYPE_DOUBLE:
     case VSK_TYPE_INTEGER:
     case VSK_TYPE_STRING:
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG:
-#endif
         break;
     case VSK_TYPE_ARRAY:
         break;

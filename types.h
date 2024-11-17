@@ -40,10 +40,6 @@ static_assert(sizeof(VskDword)  == 4, "");
 static_assert(sizeof(VskSingle) == 4, "");
 static_assert(sizeof(VskDouble) == 8, "");
 
-#if defined(INT_IS_32BIT) && !defined(ENABLE_LONG)
-    #define ENABLE_LONG
-#endif
-
 // VskIntとVskFloatは切り替え可能
 #ifdef INT_IS_32BIT
     typedef  std::int32_t VskInt;
@@ -64,9 +60,7 @@ enum VSK_TYPE : uint8_t
     VSK_TYPE_DOUBLE  = '#',
     VSK_TYPE_INTEGER = '%',
     VSK_TYPE_STRING  = '$',
-#ifdef ENABLE_LONG
     VSK_TYPE_LONG    = '&',
-#endif
     VSK_TYPE_ARRAY   = '@',
 };
 

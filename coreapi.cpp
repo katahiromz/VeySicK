@@ -1354,7 +1354,6 @@ bool vsk_var_assign(VskAstPtr arg0, VskAstPtr arg1)
             vsk_var_set_value(name, dimension, &v1);
         }
         break;
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG:
         {
             VskLong v1;
@@ -1363,7 +1362,6 @@ bool vsk_var_assign(VskAstPtr arg0, VskAstPtr arg1)
             vsk_var_set_value(name, dimension, &v1);
         }
         break;
-#endif
     }
 
     return true;
@@ -1566,6 +1564,8 @@ VskAstPtr vsk_ast_digits(const char *text, int base)
     int64_t value = std::strtoll(str.c_str(), nullptr, base);
     if (type == VSK_TYPE_INTEGER || std::numeric_limits<VskInt>::lowest() <= value && value <= std::numeric_limits<VskInt>::max())
         return vsk_ast_int(VskInt(value));
+    if (type == VSK_TYPE_LONG || std::numeric_limits<VskLong>::lowest() <= value && value <= std::numeric_limits<VskLong>::max())
+        return vsk_ast_lng(VskLong(value));
     if (type == VSK_TYPE_SINGLE || std::numeric_limits<VskSingle>::lowest() <= value && value <= std::numeric_limits<VskSingle>::max())
         return vsk_ast_sng(VskSingle(value));
     return vsk_ast_dbl(VskDouble(value));
@@ -1602,9 +1602,7 @@ VskAstPtr vsk_ast_exponent(const char *text)
     case VSK_TYPE_DOUBLE: return vsk_ast_dbl(VskDouble(value));
     case VSK_TYPE_SINGLE: return vsk_ast_sng(VskSingle(value));
     case VSK_TYPE_INTEGER: return vsk_ast_int(VskInt(value));
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG: return vsk_ast_lng(VskLong(value));
-#endif
     default:
         // 限界に応じて処理する
         if (is_double ||
@@ -1639,9 +1637,7 @@ VskAstPtr vsk_ast_real(const char *text)
     case VSK_TYPE_DOUBLE: return vsk_ast_dbl(VskDouble(value));
     case VSK_TYPE_SINGLE: return vsk_ast_sng(VskSingle(value));
     case VSK_TYPE_INTEGER: return vsk_ast_int(VskInt(value));
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG: return vsk_ast_lng(VskLong(value));
-#endif
     default:
         mstr_replace_all(str, ".", "");
         is_double = (str.size() >= 8);
@@ -1666,34 +1662,31 @@ bool vsk_sht(VskShort& value, VskAstPtr arg)
 
     switch (ret->m_insn)
     {
-    case INSN_INT_LITERAL:
-        value = VskShort(ret->m_int);
+    case INSN_SHT_LITERAL:
+        value = ret->m_sht;
         break;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
         {
             VskLong v = ret->m_lng;
             if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = VskShort(v);
+            value = static_cast<VskShort>(v);
         }
         break;
-#endif
     case INSN_SNG_LITERAL:
         {
             VskDouble v = std::round(ret->m_sng);
             if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = VskShort(v);
+            value = static_cast<VskShort>(std::round(v));
         }
-        break;
         break;
     case INSN_DBL_LITERAL:
         {
             VskDouble v = std::round(ret->m_dbl);
             if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = VskShort(v);
+            value = static_cast<VskShort>(std::round(v));
         }
         break;
     case INSN_STR_LITERAL:
@@ -1721,7 +1714,6 @@ bool vsk_wrd(VskWord& value, VskAstPtr arg)
     case INSN_INT_LITERAL:
         value = ret->m_int;
         break;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
         {
             VskDouble v = ret->m_lng;
@@ -1734,7 +1726,6 @@ bool vsk_wrd(VskWord& value, VskAstPtr arg)
             value = VskWord(ret->m_lng);
         }
         break;
-#endif
     case INSN_SNG_LITERAL:
         {
             VskDouble v = ret->m_sng;
@@ -1785,7 +1776,6 @@ bool vsk_ident(VskString& value, VskAstPtr arg)
     return true;
 }
 
-#ifdef ENABLE_LONG
 // 長い整数を取得する
 bool vsk_lng(VskLong& value, VskAstPtr arg)
 {
@@ -1803,17 +1793,15 @@ bool vsk_lng(VskLong& value, VskAstPtr arg)
     case INSN_INT_LITERAL:
         value = ret->m_int;
         break;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
         value = ret->m_lng;
         break;
-#endif
     case INSN_SNG_LITERAL:
         {
             VskDouble v = ret->m_sng + 0.5;
             if (std::numeric_limits<VskDword>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = VskLong(v);
+            value = (VskLong)std::round(v);
         }
         break;
     case INSN_DBL_LITERAL:
@@ -1821,7 +1809,7 @@ bool vsk_lng(VskLong& value, VskAstPtr arg)
             VskDouble v = ret->m_dbl + 0.5;
             if (std::numeric_limits<VskDword>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = VskLong(v);
+            value = (VskLong)std::round(v);
         }
         break;
     case INSN_STR_LITERAL:
@@ -1831,7 +1819,6 @@ bool vsk_lng(VskLong& value, VskAstPtr arg)
 
     return true;
 }
-#endif
 
 // 単精度型を取得する
 bool vsk_sng(VskSingle& value, VskAstPtr arg)
@@ -1853,11 +1840,9 @@ bool vsk_sng(VskSingle& value, VskAstPtr arg)
     case INSN_INT_LITERAL:
         value = ret->m_int;
         break;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
         value = VskSingle(ret->m_lng);
         break;
-#endif
     case INSN_DBL_LITERAL:
         // 範囲をチェック
         if (!(std::numeric_limits<VskSingle>::lowest() <= ret->m_dbl &&
@@ -1900,11 +1885,9 @@ bool vsk_dbl(VskDouble& value, VskAstPtr arg)
     case INSN_INT_LITERAL:
         value = ret->m_int;
         break;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
         value = ret->m_lng;
         break;
-#endif
     case INSN_DBL_LITERAL:
         value = ret->m_dbl;
         break;
@@ -1968,28 +1951,12 @@ void vsk_print(const VskString& str)
 //////////////////////////////////////////////////////////////////////////////
 // 構文解析
 
-bool VskAst::is_integer() const
-{
-    switch (m_insn)
-    {
-    case INSN_SHT_LITERAL:
-#ifdef ENABLE_LONG
-    case INSN_LNG_LITERAL:
-#endif
-        return true;
-    default:
-        return false;
-    }
-}
-
 bool VskAst::is_number() const
 {
     switch (m_insn)
     {
     case INSN_SHT_LITERAL:
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL:
-#endif
     case INSN_SNG_LITERAL:
     case INSN_DBL_LITERAL:
         return true;
@@ -2003,9 +1970,7 @@ bool VskAst::is_negative() const
     switch (m_insn)
     {
     case INSN_SHT_LITERAL: return m_sht < 0;
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL: return m_lng < 0;
-#endif
     case INSN_SNG_LITERAL: return m_sng < 0;
     case INSN_DBL_LITERAL: return m_dbl < 0;
     case INSN_STR_LITERAL:
@@ -2019,9 +1984,7 @@ VskString VskAst::to_str() const
     switch (m_insn)
     {
     case INSN_SHT_LITERAL: return vsk_to_string(m_sht);
-#ifdef ENABLE_LONG
     case INSN_LNG_LITERAL: return vsk_to_string(m_lng);
-#endif
     case INSN_SNG_LITERAL: return vsk_to_string(m_sng);
     case INSN_DBL_LITERAL: return vsk_to_string(m_dbl);
     case INSN_STR_LITERAL:
@@ -2871,20 +2834,20 @@ static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr& self, const VskAstList& args
 {
     auto arg0 = vsk_eval_ast(args[0]);
 
-    VskDouble v0;
-    if (!vsk_dbl(v0, args[0]))
+    VskLong v0;
+    if (!vsk_lng(v0, args[0]))
         return nullptr;
 
 #ifdef INT_IS_32BIT
     if (v0 < std::numeric_limits<VskDword>::lowest() || std::numeric_limits<VskDword>::max() < v0)
         VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, nullptr);
 
-    return vsk_ast_lng(VskDword(v0));
+    return vsk_ast_lng(VskDword(std::round(v0)));
 #else
     if (v0 < std::numeric_limits<VskWord>::lowest() || std::numeric_limits<VskWord>::max() < v0)
         VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, nullptr);
 
-    return vsk_ast_int(VskWord(v0));
+    return vsk_ast_int(VskWord(std::round(v0)));
 #endif
 }
 
@@ -2893,6 +2856,13 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 5))
         return nullptr;
+
+    if (args.empty())
+    {
+        vsk_machine->reset_palette();
+        vsk_machine->reset_border_color();
+        return nullptr;
+    }
 
     VskInt v0 = VSK_STATE()->m_text_color; // 機能コード
     VskInt v1 = VSK_STATE()->m_back_color; // 背景色
@@ -3497,14 +3467,12 @@ static VskAstPtr VSKAPI vsk_UMINUS(VskAstPtr& self, const VskAstList& args)
         if (vsk_sng(v0, arg0))
             return vsk_ast_sng(-v0);
     }
-#ifdef ENABLE_LONG
     else if (arg0->is_lng())
     {
         VskLong v0;
         if (vsk_lng(v0, arg0))
             return vsk_ast_lng(-v0);
     }
-#endif
     else if (arg0->is_int())
     {
         VskInt v0;
@@ -3537,14 +3505,12 @@ static VskAstPtr VSKAPI vsk_ABS(VskAstPtr& self, const VskAstList& args)
         if (vsk_dbl(v0, arg0))
             return vsk_ast_dbl(std::abs(v0));
     }
-#ifdef ENABLE_LONG
     else if (arg0->is_lng())
     {
         VskLong v0;
         if (vsk_lng(v0, arg0))
             return vsk_ast_lng(std::abs(v0));
     }
-#endif
     else if (arg0->is_int())
     {
         VskInt v0;
@@ -3724,37 +3690,61 @@ static VskAstPtr VSKAPI vsk_ADD(VskAstPtr& self, const VskAstList& args)
     if (!arg1)
         return nullptr;
 
-    if (arg0->is_str() || arg1->is_str())
+    if (arg0->is_floating())
     {
-        VskString v0, v1;
-        if (vsk_str(v0, arg0) && vsk_str(v1, arg1))
+        VskDouble v0;
+        if (vsk_dbl(v0, arg0))
         {
-            vsk_targeting(self);
-            auto ret = v0 + v1;
-            if (ret.size() >= 256 && !vsk_machine->is_vsk_mode())
-                VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
-            return vsk_ast_str(v0 + v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 + v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 + v1);
+                }
+            }
         }
     }
-    else if (arg0->is_dbl() || arg1->is_dbl())
+    else if (arg0->is_integer())
     {
-        VskDouble v0, v1;
-        if (vsk_dbl(v0, arg0) && vsk_dbl(v1, arg1))
+        VskLong v0;
+        if (vsk_lng(v0, arg0))
         {
-            vsk_targeting(self);
-            return vsk_ast_dbl(v0 + v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 + v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    if (arg0->is_lng() || arg1->is_lng())
+                        return vsk_ast_lng(v0 + v1);
+                    else
+                        return vsk_ast_int(v0 + v1);
+                }
+            }
         }
     }
-    else
-    {
-        VskSingle v0, v1;
-        if (vsk_sng(v0, arg0) && vsk_sng(v1, arg1))
-        {
-            vsk_targeting(self);
-            return vsk_ast_sng(v0 + v1);
-        }
-    }
-    return nullptr;
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
 }
 
 // INSN_SUB (-) @implemented
@@ -3770,29 +3760,61 @@ static VskAstPtr VSKAPI vsk_SUB(VskAstPtr& self, const VskAstList& args)
     if (!arg1)
         return nullptr;
 
-    if (arg0->is_str() || arg1->is_str())
+    if (arg0->is_floating())
     {
-        vsk_machine->do_error(VSK_ERR_BAD_TYPE);
-    }
-    else if (arg0->is_dbl() || arg1->is_dbl())
-    {
-        VskDouble v0, v1;
-        if (vsk_dbl(v0, arg0) && vsk_dbl(v1, arg1))
+        VskDouble v0;
+        if (vsk_dbl(v0, arg0))
         {
-            vsk_targeting(self);
-            return vsk_ast_dbl(v0 - v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 - v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_lng(v0 - v1);
+                }
+            }
         }
     }
-    else
+    else if (arg0->is_integer())
     {
-        VskSingle v0, v1;
-        if (vsk_sng(v0, arg0) && vsk_sng(v1, arg1))
+        VskLong v0;
+        if (vsk_lng(v0, arg0))
         {
-            vsk_targeting(self);
-            return vsk_ast_sng(v0 - v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 - v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    if (arg0->is_lng() || arg1->is_lng())
+                        return vsk_ast_lng(v0 - v1);
+                    else
+                        return vsk_ast_int(v0 - v1);
+                }
+            }
         }
     }
-    return nullptr;
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
 }
 
 // INSN_MUL (*) @implemented
@@ -3808,29 +3830,61 @@ static VskAstPtr VSKAPI vsk_MUL(VskAstPtr& self, const VskAstList& args)
     if (!arg1)
         return nullptr;
 
-    if (arg0->is_str() || arg1->is_str())
+    if (arg0->is_floating())
     {
-        vsk_machine->do_error(VSK_ERR_BAD_TYPE);
-    }
-    else if (arg0->is_dbl() || arg1->is_dbl())
-    {
-        VskDouble v0, v1;
-        if (vsk_dbl(v0, arg0) && vsk_dbl(v1, arg1))
+        VskDouble v0;
+        if (vsk_dbl(v0, arg0))
         {
-            vsk_targeting(self);
-            return vsk_ast_dbl(v0 * v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 * v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 * v1);
+                }
+            }
         }
     }
-    else
+    else if (arg0->is_integer())
     {
-        VskSingle v0, v1;
-        if (vsk_sng(v0, arg0) && vsk_sng(v1, arg1))
+        VskLong v0;
+        if (vsk_lng(v0, arg0))
         {
-            vsk_targeting(self);
-            return vsk_ast_sng(v0 * v1);
+            if (arg1->is_floating())
+            {
+                VskDouble v1;
+                if (vsk_dbl(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    return vsk_ast_dbl(v0 * v1);
+                }
+            }
+            else if (arg1->is_integer())
+            {
+                VskLong v1;
+                if (vsk_lng(v1, arg1))
+                {
+                    vsk_targeting(self);
+                    if (arg0->is_lng() || arg1->is_lng())
+                        return vsk_ast_lng(v0 * v1);
+                    else
+                        return vsk_ast_int(v0 * v1);
+                }
+            }
         }
     }
-    return nullptr;
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
 }
 
 // INSN_DIV (/) @implemented
@@ -3948,7 +4002,7 @@ static VskAstPtr VSKAPI vsk_AND(VskAstPtr& self, const VskAstList& args)
         return nullptr;
 
     VskInt v0, v1;
-    if (vsk_int(v0, args[0]) && vsk_int(v1, args[1]))
+    if ((v0, args[0]) && vsk_int(v1, args[1]))
     {
         vsk_targeting(self);
         return vsk_ast_int(v0 & v1);
@@ -4687,7 +4741,7 @@ static VskAstPtr VSKAPI vsk_ASC(VskAstPtr& self, const VskAstList& args)
             vsk_machine->bad_call();
             return nullptr;
         }
-        return vsk_ast_int(VskInt(v0[0]));
+        return vsk_ast_int(static_cast<VskByte>(v0[0]));
     }
     return nullptr;
 }
@@ -4947,12 +5001,10 @@ static VskAstPtr VSKAPI vsk_INT(VskAstPtr& self, const VskAstList& args)
         if (vsk_dbl(v0, arg0))
             return vsk_ast_dbl(VskDouble(std::floor(v0)));
     }
-#ifdef ENABLE_LONG
     else if (arg0->is_lng())
     {
         return arg0;
     }
-#endif
 
     vsk_machine->do_error(VSK_ERR_BAD_TYPE);
     return nullptr;
@@ -4984,12 +5036,10 @@ static VskAstPtr VSKAPI vsk_FIX(VskAstPtr& self, const VskAstList& args)
         if (vsk_dbl(v0, arg0))
             return vsk_ast_dbl(VskDouble(std::trunc(v0)));
     }
-#ifdef ENABLE_LONG
     else if (arg0->is_lng())
     {
         return arg0;
     }
-#endif
 
     vsk_machine->do_error(VSK_ERR_BAD_TYPE);
     return nullptr;
@@ -5943,9 +5993,6 @@ static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
-
-    if (vsk_machine->is_9801_mode() && !vsk_machine->is_vsk_mode())
-        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 
     VSK_STATE()->m_has_cmd_exst = true;
     return nullptr;
@@ -7637,10 +7684,8 @@ static VskAstPtr vsk_LVALUE_helper(const VskString& name, VskIndexList index_lis
             delete (VskString*)ptr;
             return ret;
         }
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG:
-        return vsk_ast_lng(*(VskLong*)value);
-#endif
+        return vsk_ast_lng(*(VskLong*)ptr);
     }
 
     return nullptr;

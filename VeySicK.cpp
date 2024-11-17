@@ -159,9 +159,7 @@ size_t vsk_get_type_size(VskType type)
     case VSK_TYPE_DOUBLE: return sizeof(VskDouble);
     case VSK_TYPE_INTEGER: return sizeof(VskInt);
     case VSK_TYPE_STRING: return sizeof(VskStringDesc);
-#ifdef ENABLE_LONG
     case VSK_TYPE_LONG: return sizeof(VskLong);
-#endif
     default: return 0;
     }
 }

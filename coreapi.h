@@ -118,13 +118,14 @@ struct VskAst : VskObject
 
     VskString to_str() const;
     VskString to_debug_str();
-    bool is_integer() const;
     bool is_int() const { return m_insn == INSN_INT_LITERAL; }
     bool is_lng() const { return m_insn == INSN_LNG_LITERAL; }
+    bool is_integer() const { return is_int() || is_lng(); }
     bool is_sng() const { return m_insn == INSN_SNG_LITERAL; }
     bool is_dbl() const { return m_insn == INSN_DBL_LITERAL; }
     bool is_str() const { return m_insn == INSN_STR_LITERAL; }
     bool is_multi() const { return m_insn == INSN_MULTI; }
+    bool is_floating() const { return is_dbl() || is_sng(); }
     bool is_number() const;
     bool is_negative() const;
     bool is_ident() const { return m_insn == INSN_IDENTIFIER; }
@@ -173,13 +174,11 @@ vsk_ast_sht(VskShort value)
 {
     return vsk_ast(INSN_SHT_LITERAL, value);
 }
-#ifdef ENABLE_LONG
 inline VskAstPtr
 vsk_ast_lng(VskLong value)
 {
     return vsk_ast(INSN_LNG_LITERAL, value);
 }
-#endif
 inline VskAstPtr
 vsk_ast_sng(VskSingle value)
 {
@@ -220,10 +219,8 @@ VskAstPtr vsk_ast_multi(VskAstPtr x, VskAstPtr y, VskAstPtr z);
 bool vsk_sht(VskInt& value, VskAstPtr arg);
 // 符号なし16ビット整数を取得する
 bool vsk_wrd(VskWord& value, VskAstPtr arg);
-#ifdef ENABLE_LONG
 // 32ビット整数を取得する
 bool vsk_lng(VskLong& value, VskAstPtr arg);
-#endif
 // 単精度型を取得する
 bool vsk_sng(VskSingle& value, VskAstPtr arg);
 // 倍精度型を取得する
