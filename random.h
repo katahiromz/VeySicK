@@ -2,5 +2,5 @@
 
 #pragma once
 
-void vsk_init_rand(int seed);
-float vsk_get_next_rand(int func = 1);
+void vsk_rand_init(int seed);
+float vsk_rand_get_next(int func = 1);

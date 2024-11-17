@@ -402,8 +402,8 @@ bool vsk_connect_machine(VskMachineState *state, bool do_connect)
 {
     if (do_connect)
     {
-        vsk_init_sound();
-        vsk_init_rand(0);
+        vsk_sound_init();
+        vsk_rand_init(0);
 
         vsk_lock();
         vsk_machine = VskMachine::create_machine(state);
@@ -417,7 +417,7 @@ bool vsk_connect_machine(VskMachineState *state, bool do_connect)
         vsk_machine = nullptr;
         vsk_unlock();
 
-        vsk_exit_sound();
+        vsk_sound_exit();
     }
     return true;
 }

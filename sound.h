@@ -1,7 +1,7 @@
 #pragma once
 
-bool vsk_init_sound(void);
-void vsk_exit_sound(void);
+bool vsk_sound_init(void);
+void vsk_sound_exit(void);
 bool vsk_sound_is_playing(void);
 bool vsk_sound_wait(VskDword milliseconds);
 void vsk_sound_stop(void);

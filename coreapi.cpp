@@ -2857,7 +2857,7 @@ VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE })
     VSK_IMPL()->m_control_path = index_list;
     VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
     vsk_var_clear_all();
-    vsk_init_rand(0);
+    vsk_rand_init(0);
     vsk_scan_program_data();
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
@@ -6582,7 +6582,7 @@ static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 3))
         return nullptr;
     vsk_var_clear_all();
-    vsk_init_rand(0);
+    vsk_rand_init(0);
     // 継続(CONT)はできなくなった
     VSK_IMPL()->m_stopping_path.clear();
     return nullptr;
@@ -8561,7 +8561,7 @@ static VskAstPtr VSKAPI vsk_NEW(VskAstPtr& self, const VskAstList& args)
     VSK_STATE()->error_clear();
     vsk_var_clear_all();
     vsk_file_close_all();
-    vsk_init_rand(0);
+    vsk_rand_init(0);
     vsk_enter_command_level();
 
     return nullptr;
@@ -9177,10 +9177,7 @@ static VskAstPtr VSKAPI vsk_RND(VskAstPtr& self, const VskAstList& args)
 
     VskInt v0 = 1;
     if (args.size() <= 0 || vsk_int(v0, args[0]))
-    {
-        VskSingle ret = vsk_get_next_rand(v0);
-        return vsk_ast_sng(VskSingle(ret));
-    }
+        return vsk_ast_sng(VskSingle(vsk_rand_get_next(v0)));
 
     return nullptr;
 }
@@ -9203,7 +9200,7 @@ static VskAstPtr VSKAPI vsk_RANDOMIZE(VskAstPtr& self, const VskAstList& args)
         VskInt v0;
         if (vsk_int(v0, args[0]))
         {
-            vsk_init_rand(v0);
+            vsk_rand_init(v0);
         }
     }
 
@@ -9896,7 +9893,7 @@ void vsk_enter_input_text(const VskString& text)
                 vsk_error(VSK_ERR_OVERFLOW);
                 return;
             }
-            vsk_init_rand(number);
+            vsk_rand_init(number);
         }
 
         // 次の文へ

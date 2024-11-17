@@ -10,11 +10,11 @@ std::mt19937 vsk_random_generator;
 float vsk_prev_rand = 0.0f;
 
 // 基本的には次の乱数を取得する。必要ならば乱数生成を初期化したり、前の値を取得することもある
-float vsk_get_next_rand(int func)
+float vsk_rand_get_next(int func)
 {
     if (func < 0) // funcがゼロ未満なら初期化
     {
-        vsk_init_rand(vsk_seed);
+        vsk_rand_init(vsk_seed);
         func = 1; // あとは正の場合と同じ
     }
 
@@ -31,9 +31,9 @@ float vsk_get_next_rand(int func)
 }
 
 // 乱数生成を初期化
-void vsk_init_rand(int seed)
+void vsk_rand_init(int seed)
 {
     vsk_seed = seed;
     vsk_random_generator = std::mt19937(seed);
-    vsk_prev_rand = vsk_get_next_rand(1);
+    vsk_prev_rand = vsk_rand_get_next(1);
 }

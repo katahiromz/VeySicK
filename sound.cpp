@@ -710,7 +710,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
 
 //////////////////////////////////////////////////////////////////////////////
 
-bool vsk_init_sound(void)
+bool vsk_sound_init(void)
 {
     if (!alutInit(NULL, NULL))
     {
@@ -728,7 +728,7 @@ void vsk_sound_stop(void)
         vsk_sound_player->stop();
 }
 
-void vsk_exit_sound(void)
+void vsk_sound_exit(void)
 {
     vsk_sound_stop();
     alutExit();
