@@ -93,10 +93,17 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
         case 1: case 2: // サブコマンドに1個か2個の引数があるか？
             param.clear();
             if (ch == '(') { // 変数か？
+                int level = 1;
                 for (;;) {
                     ch = str[++i];
-                    if ((ch == ')') || (ch == 0))
+                    if (ch == 0)
                         break;
+                    if (ch == '(') {
+                        ++level;
+                    } else if (ch == ')') {
+                        if (--level == 0)
+                            break;
+                    }
                     if (!vsk_isblank(ch))
                         param.push_back(ch);
                 }
@@ -176,8 +183,6 @@ VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
 
 bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 {
-    auto color = m_pen_color;
-
     if (item.m_subcommand == "FD") { // FORWARD (前に進む)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->value();
@@ -190,7 +195,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
                 pt1 = { pt0.m_x + d0 * std::cos(radian)    , pt0.m_y - d0 * std::sin(radian) };
             }
             if (m_pen_down) {
-                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, 0xFFFF);
+                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
             }
             update_LP(pt1);
             return true;
@@ -207,7 +212,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
                 pt1 = { pt0.m_x - d0 * std::cos(radian)    , pt0.m_y + d0 * std::sin(radian) };
             }
             if (m_pen_down) {
-                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, 0xFFFF);
+                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
             }
             update_LP(pt1);
             return true;
