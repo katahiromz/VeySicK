@@ -788,3 +788,6 @@ void vsk_page_down(void);
 VskLineNo vsk_line_number_from_line_text(const VskString& line, char **endptr = nullptr);
 // 指定した行番号の前後の行を取得する
 VskString vsk_get_next_line_text(VskLineNo number, int which);
+
+// VeySicKの設定
+#include "settings.h"

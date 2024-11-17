@@ -35,11 +35,6 @@
 
 static DWORD s_dwFpsCounter = 0; // FPSチェック用の変数
 
-BOOL vsk_move_caret_by_mouse_click = FALSE;     // マウスクリックでキャレット位置を移動するか？
-BOOL vsk_remember_window_pos = TRUE;            // ウィンドウの位置とサイズを記憶するか？
-LONG vsk_x = CW_USEDEFAULT, vsk_y = CW_USEDEFAULT;      // ウィンドウの位置
-LONG vsk_cx = CW_USEDEFAULT, vsk_cy = CW_USEDEFAULT;    // ウィンドウのサイズ
-BOOL vsk_zoomed = FALSE; // 最大化されているか？
 CRITICAL_SECTION vsk_cs_lock; // クリティカルセクション
 
 // ロックする
@@ -58,6 +53,80 @@ void vsk_unlock(void)
 void vsk_sleep(uint32_t wait)
 {
     ::Sleep(wait);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// 設定実装
+
+#define VEYSICK_REGKEY TEXT("SOFTWARE\\Katayama Hirofumi MZ\\VeySicK")
+
+// 設定を読み込む
+bool VskSettings::load()
+{
+    reset();
+
+    HKEY hKey;
+    LSTATUS error = ::RegOpenKeyEx(HKEY_CURRENT_USER, VEYSICK_REGKEY, 0, KEY_READ, &hKey);
+    if (error)
+        return false;
+
+    DWORD cbValue = sizeof(m_move_caret_by_mouse_click);
+    ::RegQueryValueEx(hKey, TEXT("MoveCaretByMouseClick"), NULL, NULL, (BYTE*)&m_move_caret_by_mouse_click, &cbValue);
+
+    cbValue = sizeof(m_remember_window_pos);
+    ::RegQueryValueEx(hKey, TEXT("RememberWindowPos"), NULL, NULL, (BYTE*)&m_remember_window_pos, &cbValue);
+
+    if (m_remember_window_pos)
+    {
+        cbValue = sizeof(m_x);
+        ::RegQueryValueEx(hKey, TEXT("WinX"), NULL, NULL, (BYTE*)&m_x, &cbValue);
+        cbValue = sizeof(m_y);
+        ::RegQueryValueEx(hKey, TEXT("WinY"), NULL, NULL, (BYTE*)&m_y, &cbValue);
+        cbValue = sizeof(m_cx);
+        ::RegQueryValueEx(hKey, TEXT("WinCX"), NULL, NULL, (BYTE*)&m_cx, &cbValue);
+        cbValue = sizeof(m_cy);
+        ::RegQueryValueEx(hKey, TEXT("WinCY"), NULL, NULL, (BYTE*)&m_cy, &cbValue);
+        cbValue = sizeof(m_zoomed);
+        ::RegQueryValueEx(hKey, TEXT("WinZoomed"), NULL, NULL, (BYTE*)&m_zoomed, &cbValue);
+    }
+
+    ::RegCloseKey(hKey);
+    return true;
+}
+
+// 設定を保存する
+bool VskSettings::save() const
+{
+    HKEY hKey;
+    LSTATUS error = ::RegCreateKeyEx(HKEY_CURRENT_USER, VEYSICK_REGKEY, 0, NULL, 0, KEY_WRITE, NULL,
+                                     &hKey, NULL);
+    if (error)
+        return false;
+
+    DWORD cbValue;
+
+    cbValue = sizeof(m_move_caret_by_mouse_click);
+    ::RegSetValueEx(hKey, TEXT("MoveCaretByMouseClick"), 0, REG_DWORD, (BYTE*)&m_move_caret_by_mouse_click, cbValue);
+
+    cbValue = sizeof(m_remember_window_pos);
+    ::RegSetValueEx(hKey, TEXT("RememberWindowPos"), 0, REG_DWORD, (BYTE*)&m_remember_window_pos, cbValue);
+
+    if (m_remember_window_pos)
+    {
+        cbValue = sizeof(m_x);
+        ::RegSetValueEx(hKey, TEXT("WinX"), 0, REG_DWORD, (BYTE*)&m_x, cbValue);
+        cbValue = sizeof(m_y);
+        ::RegSetValueEx(hKey, TEXT("WinY"), 0, REG_DWORD, (BYTE*)&m_y, cbValue);
+        cbValue = sizeof(m_cx);
+        ::RegSetValueEx(hKey, TEXT("WinCX"), 0, REG_DWORD, (BYTE*)&m_cx, cbValue);
+        cbValue = sizeof(m_cy);
+        ::RegSetValueEx(hKey, TEXT("WinCY"), 0, REG_DWORD, (BYTE*)&m_cy, cbValue);
+        cbValue = sizeof(m_zoomed);
+        ::RegSetValueEx(hKey, TEXT("WinZoomed"), 0, REG_DWORD, (BYTE*)&m_zoomed, cbValue);
+    }
+
+    ::RegCloseKey(hKey);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1433,6 +1502,7 @@ struct VskWin32App : VskObject
     char m_disk_images[10][MAX_PATH] = { "" };  // ディスク イメージ群
     char m_disk_folders[10][MAX_PATH] = { "" }; // ディスク フォルダー群
     HANDLE m_hWorkingThread = nullptr;          // 仕事をするスレッドのハンドル
+    VskSettings m_settings;                     // 設定
 
     VskWin32App();
     bool init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow);
@@ -1505,6 +1575,9 @@ protected:
 
 VskWin32App *vsk_pMainWnd = nullptr;
 
+#define VSK_APP() vsk_pMainWnd
+#define VSK_SETTINGS() (&vsk_pMainWnd->m_settings)
+
 // コンストラクタ
 VskWin32App::VskWin32App()
 {
@@ -1512,87 +1585,22 @@ VskWin32App::VskWin32App()
     vsk_pMainWnd = this;
 }
 
-#define VEYSICK_REGKEY TEXT("SOFTWARE\\Katayama Hirofumi MZ\\VeySicK")
-
 // 設定をリセットする
 void VskWin32App::reset_settings()
 {
-    vsk_move_caret_by_mouse_click = FALSE;
-    vsk_remember_window_pos = TRUE;
-    vsk_x = vsk_y = CW_USEDEFAULT;      // ウィンドウの位置
-    vsk_cx = vsk_cy = CW_USEDEFAULT;    // ウィンドウのサイズ
-    vsk_zoomed = FALSE;
+    m_settings.reset();
 }
 
 // 設定を読み込む
 bool VskWin32App::load_settings()
 {
-    reset_settings();
-
-    HKEY hKey;
-    LSTATUS error = ::RegOpenKeyEx(HKEY_CURRENT_USER, VEYSICK_REGKEY, 0, KEY_READ, &hKey);
-    if (error)
-        return false;
-
-    DWORD cbValue;
-
-    cbValue = sizeof(vsk_move_caret_by_mouse_click);
-    ::RegQueryValueEx(hKey, TEXT("MoveCaretByMouseClick"), NULL, NULL, (BYTE*)&vsk_move_caret_by_mouse_click, &cbValue);
-
-    cbValue = sizeof(vsk_remember_window_pos);
-    ::RegQueryValueEx(hKey, TEXT("RememberWindowPos"), NULL, NULL, (BYTE*)&vsk_remember_window_pos, &cbValue);
-
-    if (vsk_remember_window_pos)
-    {
-        cbValue = sizeof(vsk_x);
-        ::RegQueryValueEx(hKey, TEXT("WinX"), NULL, NULL, (BYTE*)&vsk_x, &cbValue);
-        cbValue = sizeof(vsk_y);
-        ::RegQueryValueEx(hKey, TEXT("WinY"), NULL, NULL, (BYTE*)&vsk_y, &cbValue);
-        cbValue = sizeof(vsk_cx);
-        ::RegQueryValueEx(hKey, TEXT("WinCX"), NULL, NULL, (BYTE*)&vsk_cx, &cbValue);
-        cbValue = sizeof(vsk_cy);
-        ::RegQueryValueEx(hKey, TEXT("WinCY"), NULL, NULL, (BYTE*)&vsk_cy, &cbValue);
-        cbValue = sizeof(vsk_zoomed);
-        ::RegQueryValueEx(hKey, TEXT("WinZoomed"), NULL, NULL, (BYTE*)&vsk_zoomed, &cbValue);
-    }
-
-    ::RegCloseKey(hKey);
-    return true;
+    return m_settings.load();
 }
 
 // 設定を保存する
 bool VskWin32App::save_settings()
 {
-    HKEY hKey;
-    LSTATUS error = ::RegCreateKeyEx(HKEY_CURRENT_USER, VEYSICK_REGKEY, 0, NULL, 0, KEY_WRITE, NULL,
-                                     &hKey, NULL);
-    if (error)
-        return false;
-
-    DWORD cbValue;
-
-    cbValue = sizeof(vsk_move_caret_by_mouse_click);
-    ::RegSetValueEx(hKey, TEXT("MoveCaretByMouseClick"), 0, REG_DWORD, (BYTE*)&vsk_move_caret_by_mouse_click, cbValue);
-
-    cbValue = sizeof(vsk_remember_window_pos);
-    ::RegSetValueEx(hKey, TEXT("RememberWindowPos"), 0, REG_DWORD, (BYTE*)&vsk_remember_window_pos, cbValue);
-
-    if (vsk_remember_window_pos)
-    {
-        cbValue = sizeof(vsk_x);
-        ::RegSetValueEx(hKey, TEXT("WinX"), 0, REG_DWORD, (BYTE*)&vsk_x, cbValue);
-        cbValue = sizeof(vsk_y);
-        ::RegSetValueEx(hKey, TEXT("WinY"), 0, REG_DWORD, (BYTE*)&vsk_y, cbValue);
-        cbValue = sizeof(vsk_cx);
-        ::RegSetValueEx(hKey, TEXT("WinCX"), 0, REG_DWORD, (BYTE*)&vsk_cx, cbValue);
-        cbValue = sizeof(vsk_cy);
-        ::RegSetValueEx(hKey, TEXT("WinCY"), 0, REG_DWORD, (BYTE*)&vsk_cy, cbValue);
-        cbValue = sizeof(vsk_zoomed);
-        ::RegSetValueEx(hKey, TEXT("WinZoomed"), 0, REG_DWORD, (BYTE*)&vsk_zoomed, cbValue);
-    }
-
-    ::RegCloseKey(hKey);
-    return true;
+    return m_settings.save();
 }
 
 // 終了フラグ
@@ -1700,8 +1708,8 @@ void VskWin32App::OnMove(HWND hwnd, int x, int y)
         // 位置を覚えておく
         RECT rc;
         ::GetWindowRect(hwnd, &rc);
-        vsk_x = rc.left;
-        vsk_y = rc.top;
+        VSK_SETTINGS()->m_x = rc.left;
+        VSK_SETTINGS()->m_y = rc.top;
     }
 }
 
@@ -1710,13 +1718,13 @@ void VskWin32App::OnMove(HWND hwnd, int x, int y)
 void VskWin32App::OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
     // サイズを覚えておく
-    vsk_zoomed = ::IsZoomed(hwnd);
+    VSK_SETTINGS()->m_zoomed = ::IsZoomed(hwnd);
     if (!::IsZoomed(hwnd) && !::IsIconic(hwnd))
     {
         RECT rc;
         ::GetWindowRect(hwnd, &rc);
-        vsk_cx = rc.right - rc.left;
-        vsk_cy = rc.bottom - rc.top;
+        VSK_SETTINGS()->m_cx = rc.right - rc.left;
+        VSK_SETTINGS()->m_cy = rc.bottom - rc.top;
     }
 
     // 再描画
@@ -1763,7 +1771,7 @@ void VskWin32App::update_caret_position(HWND hwnd)
 /// マウスクリックでキャレット位置を移動する
 void vsk_caret_move_by_mouse_click(int text_x, int text_y)
 {
-    if (vsk_move_caret_by_mouse_click)
+    if (VSK_SETTINGS()->m_move_caret_by_mouse_click)
     {
         VSK_STATE()->m_caret_x = text_x;
         VSK_STATE()->m_caret_y = text_y;
@@ -2477,8 +2485,8 @@ BOOL SaveHBITMAPToFile(HBITMAP hBitmap, LPCWSTR filename, LPCWSTR mime_type = L"
 
 BOOL Settings_OnOK(HWND hwnd)
 {
-    vsk_move_caret_by_mouse_click = (IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED);
-    vsk_remember_window_pos = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
+    VSK_SETTINGS()->m_move_caret_by_mouse_click = (IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED);
+    VSK_SETTINGS()->m_remember_window_pos = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
     return TRUE;
 }
 
@@ -2489,9 +2497,9 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_INITDIALOG:
-        if (vsk_move_caret_by_mouse_click)
+        if (VSK_SETTINGS()->m_move_caret_by_mouse_click)
             ::CheckDlgButton(hwnd, chx1, BST_CHECKED);
-        if (vsk_remember_window_pos)
+        if (VSK_SETTINGS()->m_remember_window_pos)
             ::CheckDlgButton(hwnd, chx2, BST_CHECKED);
         return TRUE; // オートフォーカス
     case WM_COMMAND:
@@ -3147,20 +3155,21 @@ bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
 
     // クライアント領域のサイズからウィンドウのサイズを取得する
     RECT rc = { 0, 0, VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT };
-    if (vsk_cx == CW_USEDEFAULT)
+    if (VSK_SETTINGS()->m_cx == CW_USEDEFAULT)
     {
         ::AdjustWindowRectEx(&rc, style, TRUE, exstyle);
     }
     else
     {
         rc.left = rc.top = 0;
-        rc.right = vsk_cx;
-        rc.bottom = vsk_cy;
+        rc.right = VSK_SETTINGS()->m_cx;
+        rc.bottom = VSK_SETTINGS()->m_cy;
     }
 
     // メインウィンドウを作成
     HWND hwnd = CreateWindowEx(exstyle, TEXT(VEYSICK_CLASSNAME), TEXT(VEYSICK_TITLE), style,
-                               vsk_x, vsk_y, rc.right - rc.left, rc.bottom - rc.top,
+                               VSK_SETTINGS()->m_x, VSK_SETTINGS()->m_y,
+                               rc.right - rc.left, rc.bottom - rc.top,
                                nullptr, nullptr, m_hInst, this);
     if (!hwnd)
     {
@@ -3170,7 +3179,7 @@ bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
     }
 
     // 必要なら最大化する
-    if (vsk_zoomed && vsk_remember_window_pos)
+    if (VSK_SETTINGS()->m_zoomed && VSK_SETTINGS()->m_remember_window_pos)
         nCmdShow = SW_SHOWMAXIMIZED;
 
     // ウィンドウを表示
