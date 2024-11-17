@@ -4,6 +4,6 @@
 130 FOR I=1 TO 9
 140  DRAW "S"+STR$(I)+"X=A$;"
 150 NEXT
-160 LOCATE 0,23:PRINT "Hit any key to exit"
+160 LOCATE 0,20:PRINT "Hit any key to exit"
 170 IF INKEY$<>"" THEN 170
 180 IF INKEY$="" THEN 180

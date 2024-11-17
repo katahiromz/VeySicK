@@ -66,13 +66,13 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
                 }
                 if (ch != ';')
                     --i;
-            } else if (vsk_isdigit(ch) || ch == '-' || ch == '.') { // 数値？
+            } else if (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.') { // 数値？
                 do {
                     if (!vsk_isblank(ch)) {
                         param.push_back(ch);
                     }
                     ch = expr[++i];
-                } while (vsk_isdigit(ch) || ch == '-' || ch == '.' || vsk_isblank(ch));
+                } while (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
                 if (ch != ',') {
                     --i;
                 }
