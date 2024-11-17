@@ -6076,6 +6076,18 @@ static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
+// INSN_CMD_UNLINK (CMD UNLINK)
+static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 0))
+        return nullptr;
+
+    vsk_sound_stop(); // 音を止める
+    VSK_STATE()->m_has_cmd_exst = false; // 拡張命令を破棄する
+    VSK_STATE()->m_has_turtle = false; // タートルグラフィック拡張命令を破棄する
+    return nullptr;
+}
+
 // INSN_CMD_CUT @implemented
 static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
 {
@@ -6131,26 +6143,37 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
     {
         if (args.size() == 1)
             return vsk_CMD_CUT(self, { });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
     else if (v0 == "SING") // CMD SING
     {
         if (args.size() == 2)
             return vsk_CMD_SING(self, { args[1] });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
     else if (v0 == "TURTLE") // CMD TURTLE
     {
         if (args.size() == 2)
             return vsk_CMD_TURTLE(self, { args[1] });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
     else if (v0 == "BGM") // CMD BGM
     {
         if (args.size() == 2)
             return vsk_CMD_BGM(self, { args[1] });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
     else if (v0 == "STOPM") // CMD STOPM
     {
         if (args.size() == 1)
             return vsk_CMD_STOPM(self, { });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+    }
+    else if (v0 == "UNLINK") // CMD UNLINK
+    {
+        if (args.size() == 1)
+            return vsk_CMD_UNLINK(self, { });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
 
     assert(0);

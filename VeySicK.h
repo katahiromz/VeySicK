@@ -476,23 +476,23 @@ struct VskMachineState
                void error_clear()   { m_error.clear(); }
 
     // misc
-    VskWaitFor m_wait_for                   = VSK_NO_WAIT;
-    VskString m_input_prompt                = "";
-    VskLong m_input_wait_start              = 0; // 入力待ち開始
-    VskLong m_input_wait_interval           = 0; // 入力待ち間隔
-    VskIndexList m_input_wait_default_path  = { }; // 入力待ち終了コントロールパス
-    bool m_insert_mode                      = false;
-    bool m_auto_mode                        = false;
-    bool m_kanji_mode                       = false;
-    bool m_kana_mode                        = false;
-    bool m_has_turtle                       = false;
-    bool m_has_cmd_exst                     = false;
-    bool m_edit_mode                        = false;
-    int m_option_base                       = -1; // -1: default, 0: zero, 1: one
-    int m_how_many_files                    = 15;
-    int m_wait_inport_port                  = 0;
-    int m_wait_inport_data1                 = 0;
-    int m_wait_inport_data2                 = 0;
+    VskWaitFor m_wait_for                   = VSK_NO_WAIT;  // 何を待っているのか
+    VskString m_input_prompt                = "";           // 入力プロンプト
+    VskLong m_input_wait_start              = 0;            // 入力待ち開始
+    VskLong m_input_wait_interval           = 0;            // 入力待ち間隔
+    VskIndexList m_input_wait_default_path  = { };          // 入力待ち終了コントロールパス
+    bool m_insert_mode                      = false;        // 挿入モード
+    bool m_auto_mode                        = false;        // AUTOモード (行番号自動入力)
+    bool m_kanji_mode                       = false;        // 漢字モード
+    bool m_kana_mode                        = false;        // カナモード
+    bool m_has_cmd_exst                     = false;        // 拡張命令が有効か？
+    bool m_has_turtle                       = false;        // タートルグラフィック拡張命令が有効か？
+    bool m_edit_mode                        = false;        // 編集モード (EDIT文による)
+    int m_option_base                       = -1;           // -1: default, 0: zero, 1: one
+    int m_how_many_files                    = 15;           // 使用できるファイルの個数
+    int m_wait_inport_port                  = 0;            // 待っているインポート
+    int m_wait_inport_data1                 = 0;            // インポート待ちのデータ1
+    int m_wait_inport_data2                 = 0;            // インポート待ちのデータ2
     VskFilePtr m_screen_device;
     VskFilePtr m_line_printer;
     std::shared_ptr<VskFileManager> m_file_manager;
