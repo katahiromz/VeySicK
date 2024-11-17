@@ -154,6 +154,7 @@ add_executable(VeySicK WIN32
     mem.cpp
     print_using.cpp
     renum.cpp
+    turtle.cpp
     vm8801.cpp
     vm9801.cpp
     random.cpp

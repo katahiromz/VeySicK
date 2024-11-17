@@ -477,6 +477,9 @@ struct Vsk8801Machine : VskMachine
 
     // ディスプレイページから表示すべきページのフラグ群を取得
     int get_display_pages_flags(int screen_mode, int display_pages) override;
+
+    // 指定したプレーンのグラフィックをクリアする
+    void clear_planes(bool blue, bool red, bool green, bool intensity) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1025,6 +1028,23 @@ int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
         return (1 << 0);
     }
     return -1;
+}
+
+// 指定したプレーンのグラフィックをクリアする
+void Vsk8801Machine::clear_planes(bool blue, bool red, bool green, bool intensity)
+{
+    VskByte *planes[3] = {
+        vsk_8801_get_page(m_state->m_screen_mode, 0),
+        vsk_8801_get_page(m_state->m_screen_mode, 1),
+        vsk_8801_get_page(m_state->m_screen_mode, 2)
+    };
+    if (blue)
+        std::memset(planes[0], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    if (red)
+        std::memset(planes[1], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    if (green)
+        std::memset(planes[2], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    // No intensity
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

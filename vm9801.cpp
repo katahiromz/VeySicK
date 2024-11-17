@@ -623,6 +623,9 @@ struct Vsk9801Machine : VskMachine
 
     // ディスプレイページから表示すべきページのフラグ群を取得
     int get_display_pages_flags(int screen_mode, int display_pages) override;
+
+    // 指定したプレーンのグラフィックをクリアする
+    void clear_planes(bool blue, bool red, bool green, bool intensity) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1249,6 +1252,33 @@ int Vsk9801Machine::get_display_pages_flags(int screen_mode, int display_pages)
         break;
     }
     return -1;
+}
+
+// 指定したプレーンのグラフィックをクリアする
+void Vsk9801Machine::clear_planes(bool blue, bool red, bool green, bool intensity)
+{
+    VskByte *planes[4] = {
+        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 0),
+        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 1),
+        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 2),
+        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 3)
+    };
+    if (blue)
+    {
+        std::memset(planes[0], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    }
+    if (red)
+    {
+        std::memset(planes[1], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    }
+    if (green)
+    {
+        std::memset(planes[2], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    }
+    if (intensity)
+    {
+        std::memset(planes[3], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

@@ -382,55 +382,59 @@ enum VskWaitFor
     VSK_WAIT_FOR_INPORT,
     VSK_WAIT_FOR_INPUT,
     VSK_WAIT_FOR_DRAW,
+    VSK_WAIT_FOR_TURTLE,
 };
 
 // マシン状態
 struct VskMachineState
 {
-    std::shared_ptr<VskMachineImpl> m_pimpl;
-    VskMachineMode m_machine_mode           = VSK_MACHINE_MODE_9801;
+    std::shared_ptr<VskMachineImpl> m_pimpl;                            // 実装詳細
+    VskMachineMode m_machine_mode           = VSK_MACHINE_MODE_9801;    // マシンモード
 
     // text console
-    VskTextMode m_text_mode                 = VSK_TEXT_MODE_GRPH;
-    int m_text_width                        = 80;
-    int m_text_height                       = 25;
-    bool m_text_wider                       = false;
-    bool m_text_longer                      = false;
-    int m_blink_interval                    = 500;
-    int m_blink_flag                        = 0;
-    bool m_show_text                        = true;
-    bool m_show_caret                       = true;
-    int m_caret_x                           = 0;
-    int m_caret_y                           = 0;
-    int m_console_y0                        = 0;
-    int m_console_cy0                       = 25;
-    VskByte m_text_attr                     = 0;
-    VskByte m_line_link[25]                 = { 0 };
+    VskTextMode m_text_mode                 = VSK_TEXT_MODE_GRPH;       // テキストモード
+    int m_text_width                        = 80;                       // テキスト画面の幅（文字単位）
+    int m_text_height                       = 25;                       // テキスト画面の高さ（文字単位）
+    bool m_text_wider                       = false;                    // テキスト画面の文字の幅が2倍か？
+    bool m_text_longer                      = false;                    // テキスト画面の文字の高さが比較的高いか？
+    bool m_show_text                        = true;                     // テキスト画面を表示するか？
+    int m_blink_interval                    = 500;                      // キャレットの点滅間隔（ミリ秒）
+    int m_blink_flag                        = 0;                        // キャレットの点滅フラグ
+    bool m_show_caret                       = true;                     // キャレットを表示するか？
+    int m_caret_x                           = 0;                        // キャレットの水平位置（文字単位）
+    int m_caret_y                           = 0;                        // キャレットの垂直位置（文字単位）
+    int m_console_y0                        = 0;                        // コンソールのスクロール範囲の最初の行の垂直位置
+    int m_console_cy0                       = 25;                       // コンソールのスクロール範囲の行数
+    VskByte m_text_attr                     = 0;                        // テキスト画面のテキスト属性
+    VskByte m_line_link[25]                 = { 0 };                    // 行リンク（次の行とつながっているか？）
 
     // graphic screen
-    int m_screen_mode                       = 0;
-    int m_screen_width                      = 640;
-    int m_screen_height                     = 200;
-    int m_active_page                       = 0;
-    int m_display_pages                     = 1;
-    bool m_show_graphics                    = true;
-    bool m_odd_line                         = false;
-    VskPointD m_last_ref                    = { 0, 0 };
-    int m_vram_bank                         = 0;
-    int m_display_pages_flags               = 0;
-    VskRectD m_window                       = { 0, 0, 640 - 1, 200 - 1 };
-    VskRectI m_viewport                     = { 0, 0, 640 - 1, 200 - 1 };
+    int m_screen_mode                       = 0;            // スクリーンモード
+    int m_screen_width                      = 640;          // スクリーンの幅（ピクセル単位）
+    int m_screen_height                     = 200;          // スクリーンの高さ（ピクセル単位）
+    int m_active_page                       = 0;            // アクティブページ（描画するページ）
+    int m_display_pages                     = 1;            // 表示ページ
+    bool m_show_graphics                    = true;         // グラフィック画面を表示するか？
+    bool m_odd_line                         = false;        // グラフィック画面の奇数ラインを描画するか？
+    VskPointD m_last_ref                    = { 0, 0 };     // LP (Last referenced Point) ワールド座標
+    int m_vram_bank                         = 0;            // VRAMのバンク番号
+    int m_display_pages_flags               = 0;            // 表示ページのフラグ
+    VskRectD m_window                       = { 0, 0, 640 - 1, 200 - 1 };   // ワールド座標の範囲
+    VskRectI m_viewport                     = { 0, 0, 640 - 1, 200 - 1 };   // ビューポート座標の範囲
+    bool is_height_200() const {
+        return m_screen_height == 200;
+    }
 
     // colors
-    bool m_color_text                       = false;
-    bool m_color_graphics                   = true;
-    int m_text_color                        = 0;
-    int m_fore_color                        = 7;
-    int m_back_color                        = 0;
-    int m_border_color                      = -1;
-    bool m_green_console                    = false;
-    VskColorMode m_color_mode               = VSK_COLOR_MODE_8_COLORS_DIGITAL;
-    VskWebColor m_palette[16];
+    bool m_color_text                       = false;        // テキスト画面がカラーか？
+    bool m_color_graphics                   = true;         // グラフィック画面がカラーか？
+    int m_text_color                        = 0;            // テキストの色または属性（機能コード）
+    int m_fore_color                        = 7;            // グラフィック画面の前景色
+    int m_back_color                        = 0;            // グラフィック画面の背景色
+    int m_border_color                      = -1;           // グラフィック画面の境界色
+    bool m_green_console                    = false;        // テキスト画面がモノクロのとき緑色で表示するか？
+    VskColorMode m_color_mode               = VSK_COLOR_MODE_8_COLORS_DIGITAL;  // カラーモード
+    VskWebColor m_palette[16];                              // パレット番号からWebカラーへ
 
     int get_graphics_num_planes() const;
 
@@ -558,6 +562,7 @@ struct VskMachine : VskObject
     virtual void clear_text();
     virtual void clear_text(int y0, int y1) { }
     virtual void clear_graphic();
+    virtual void clear_planes(bool blue, bool red, bool green, bool intensity) { }
     virtual void clear_graphic(const VskRectI *rect);
     virtual void clear_screen_image() { }
 

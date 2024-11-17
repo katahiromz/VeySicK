@@ -5,6 +5,7 @@
 #include "sound.h"      // 音
 #include "renum.h"      // RENUM
 #include "draw.h"       // DRAW
+#include "turtle.h"     // CMD TURTLE
 #include <stack>        // For std::stack
 #include <array>        // For std::array
 #include <sys/stat.h>   // For std::stat
@@ -277,6 +278,9 @@ struct VskMachineImpl
     // DRAW
     VskDrawEngine m_draw_engine;
     std::vector<VskDrawItem> m_draw_items;
+    // CMD TURTLE
+    VskTurtleEngine m_turtle_engine;
+    std::vector<VskTurtleItem> m_turtle_items;
     // 初期化
     void init();
 };
@@ -310,6 +314,7 @@ void vsk_enter_command_level(bool show_ok)
         vsk_machine->print("Ok \n");
 
     VSK_STATE()->m_wait_for = VSK_WAIT_FOR_COMMAND;
+    VSK_STATE()->m_show_text = true;
 }
 
 // インデックスリストを解決する
@@ -2730,6 +2735,21 @@ bool vsk_wait(void)
             VSK_IMPL()->m_draw_engine.draw_item(item);
         }
         return true;
+    case VSK_WAIT_FOR_TURTLE:
+        if (VSK_IMPL()->m_turtle_items.empty())
+        {
+            // 次の文へ
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+            VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+            return false; // 待たない
+        }
+        else
+        {
+            auto item = VSK_IMPL()->m_turtle_items[0];
+            VSK_IMPL()->m_turtle_items.erase(VSK_IMPL()->m_turtle_items.begin());
+            VSK_IMPL()->m_turtle_engine.turtle_item(item);
+        }
+        return true;
     }
     return false; // 待たない
 }
@@ -4395,8 +4415,8 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr& self, const VskAstList& args)
 // INSN_CMD_CLS (CMD CLS) @implemented
 static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
 {
-    if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
-        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    //if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
+    //    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -4405,12 +4425,6 @@ static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
     auto arg0 = args[0];
     if ((!arg0 || vsk_int(v0, arg0)))
     {
-        if (!(1 <= v0 && v0 <= 15) || (5 <= v0 && v0 <= 8))
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
-
         if (1 <= v0 && v0 <= 3)
         {
             if (v0 & 1)
@@ -4429,14 +4443,18 @@ static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
                 };
                 vsk_machine->clear_graphic(&rect);
             }
+            return nullptr;
         }
-        else
+
+        if (9 <= v0 && v0 <= 15)
         {
-            v0 >>= 9;
-            // TODO:
+            auto flags = v0 - 8;
+            vsk_machine->clear_planes(!!(flags & 1), !!(flags & 2), !!(flags & 4), !!(flags & 8));
+            return nullptr;
         }
     }
 
+    vsk_machine->bad_call();
     return nullptr;
 }
 
@@ -5987,6 +6005,33 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
+// INSN_CMD_TURTLE (CMD TURTLE) @implemented
+static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_str(v0, args[0]))
+    {
+        if (!vsk_get_turtle_items_from_string(VSK_IMPL()->m_turtle_items, v0))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        VSK_STATE()->m_wait_for = VSK_WAIT_FOR_TURTLE;
+        return vsk_ast(INSN_DONT_GO_NEXT);
+    }
+    return nullptr;
+}
+
+// INSN_CMD_CUT @implemented
+static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 0))
+        return nullptr;
+
+    VSK_STATE()->m_has_turtle = false;
+    return nullptr;
+}
+
 // INSN_CMD_IDENT
 static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
 {
@@ -6025,18 +6070,27 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
             auto green = ((v2 >> 6) & 0x7) * 255 / 7;
             VSK_STATE()->m_palette[v1] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
         }
+
+        return nullptr;
+    }
+    else if (v0 == "CUT") // CMD CUT
+    {
+        if (args.size() == 1)
+            return vsk_CMD_CUT(self, { });
     }
     else if (v0 == "SING") // CMD SING
     {
-        return vsk_CMD_SING(self, { args[1] });
+        if (args.size() == 2)
+            return vsk_CMD_SING(self, { args[1] });
     }
-    else
+    else if (v0 == "TURTLE") // CMD TURTLE
     {
-        assert(0);
-        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+        if (args.size() == 2)
+            return vsk_CMD_TURTLE(self, { args[1] });
     }
 
-    return nullptr;
+    assert(0);
+    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 }
 
 // INSN_STOP_OFF (STOP OFF) @implemented
@@ -6733,17 +6787,43 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT_COPY(VskAstPtr& self, const VskAstList& ar
     return nullptr;
 }
 
-// INSN_CMD_IDENT_OFF
+// INSN_CMD_IDENT_OFF (CMD TEXT OFF) @implemented
 static VskAstPtr VSKAPI vsk_CMD_IDENT_OFF(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_ident(v0, args[0]))
+    {
+        if (v0 == "TEXT") // CMD TEXT OFF
+        {
+            VSK_STATE()->m_show_text = false;
+            return nullptr;
+        }
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     return nullptr;
 }
 
-// INSN_CMD_IDENT_ON
+// INSN_CMD_IDENT_ON (CMD TEXT ON) @implemented
 static VskAstPtr VSKAPI vsk_CMD_IDENT_ON(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_ident(v0, args[0]))
+    {
+        if (v0 == "TEXT") // CMD TEXT ON
+        {
+            VSK_STATE()->m_show_text = true;
+            return nullptr;
+        }
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     return nullptr;
 }
 
