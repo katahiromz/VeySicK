@@ -226,11 +226,30 @@ bool vsk_eval_sing_items(
         }
         item.m_subcommand = subcommand;
         subcommand.clear();
+
+        ch = scanner.peek();
+        if ((ch == '+') || (ch == '#') || (ch == '-')) {
+            item.m_sign = scanner.getch();
+            ch = scanner.peek();
+        }
+
         if (scanner.peek() == '(') {
-            scanner.getch();
+            int level = 0;
             for (;;) {
                 ch = scanner.peek();
-                if ((ch == ')') || (ch == 0)) {
+                if (ch == 0)
+                    break;
+                if (ch == '(') {
+                    ++level;
+                    item.m_param.push_back(ch);
+                    scanner.getch();
+                    continue;
+                }
+                if (ch == ')') {
+                    item.m_param.push_back(ch);
+                    scanner.getch();
+                    if (--level == 0)
+                        break;
                     continue;
                 }
                 scanner.getch();
@@ -239,11 +258,6 @@ bool vsk_eval_sing_items(
                 }
             }
         } else {
-            ch = scanner.peek();
-            if ((ch == '+') || (ch == '#') || (ch == '-')) {
-                item.m_sign = scanner.getch();
-                ch = scanner.peek();
-            }
             if (vsk_isdigit(ch)) {
                 while (!scanner.eof()) {
                     ch = scanner.getch();
@@ -256,12 +270,14 @@ bool vsk_eval_sing_items(
                     scanner.ungetch();
                 }
             }
-            ch = scanner.peek();
-            if (ch == '.') {
-                item.m_dot = true;
-                scanner.getch();
-            }
         }
+
+        ch = scanner.peek();
+        if (ch == '.') {
+            item.m_dot = true;
+            scanner.getch();
+        }
+
         items.push_back(item);
         item.clear();
     }
