@@ -88,6 +88,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("WinCY"), NULL, NULL, (BYTE*)&m_cy, &cbValue);
         cbValue = sizeof(m_zoomed);
         ::RegQueryValueEx(hKey, TEXT("WinZoomed"), NULL, NULL, (BYTE*)&m_zoomed, &cbValue);
+        cbValue = sizeof(m_unlimited_mode);
+        ::RegQueryValueEx(hKey, TEXT("Unlimited"), NULL, NULL, (BYTE*)&m_unlimited_mode, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -123,6 +125,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("WinCY"), 0, REG_DWORD, (BYTE*)&m_cy, cbValue);
         cbValue = sizeof(m_zoomed);
         ::RegSetValueEx(hKey, TEXT("WinZoomed"), 0, REG_DWORD, (BYTE*)&m_zoomed, cbValue);
+        cbValue = sizeof(m_unlimited_mode);
+        ::RegSetValueEx(hKey, TEXT("Unlimited"), 0, REG_DWORD, (BYTE*)&m_unlimited_mode, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -1576,7 +1580,6 @@ protected:
 VskWin32App *vsk_pMainWnd = nullptr;
 
 #define VSK_APP() vsk_pMainWnd
-#define VSK_SETTINGS() (&vsk_pMainWnd->m_settings)
 
 // コンストラクタ
 VskWin32App::VskWin32App()
@@ -1633,7 +1636,7 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
     // マシンと接続できなければ失敗
-    if (!vsk_connect_machine(&m_state, true))
+    if (!vsk_connect_machine(&m_state, &m_settings, true))
         return FALSE; // 失敗
 
     // テストパターンを表示。
@@ -1674,7 +1677,7 @@ void VskWin32App::OnDestroy(HWND hwnd)
     start_stop_timers(hwnd, false);
 
     // マシンとの接続を切断
-    vsk_connect_machine(&m_state, false);
+    vsk_connect_machine(&m_state, &m_settings, false);
 
     // MImageViewExの終了処理
     m_imageView.OnDestroy(hwnd);
@@ -1994,10 +1997,8 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     {
         BOOL bCheck8801 = (m_state.m_machine_mode == VSK_MACHINE_MODE_8801);
         BOOL bCheck9801 = (m_state.m_machine_mode == VSK_MACHINE_MODE_9801);
-        BOOL bCheckVSK = (m_state.m_machine_mode == VSK_MACHINE_MODE_VSK);
         ::CheckMenuItem(hMenu, ID_MACHINE_8801, (bCheck8801 ? MF_CHECKED : MF_UNCHECKED));
         ::CheckMenuItem(hMenu, ID_MACHINE_9801, (bCheck9801 ? MF_CHECKED : MF_UNCHECKED));
-        ::CheckMenuItem(hMenu, ID_MACHINE_VSK, (bCheckVSK ? MF_CHECKED : MF_UNCHECKED));
     }
 
     // 必要ならば、メニュー項目のID_GRPH_MODE, ID_SJIS_MODE, ID_JIS_MODEのいずれかにチェックを付ける
@@ -2292,26 +2293,20 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         ::DestroyWindow(hwnd);
         break;
     case ID_RESET: // リセット
-        vsk_connect_machine(&m_state, false);
-        vsk_connect_machine(&m_state, true);
+        vsk_connect_machine(&m_state, &m_settings, false);
+        vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;
     case ID_MACHINE_8801: // 8801モード
-        vsk_connect_machine(&m_state, false);
+        vsk_connect_machine(&m_state, &m_settings, false);
         m_state.m_machine_mode = VSK_MACHINE_MODE_8801;
-        vsk_connect_machine(&m_state, true);
+        vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;
     case ID_MACHINE_9801: // 9801モード
-        vsk_connect_machine(&m_state, false);
+        vsk_connect_machine(&m_state, &m_settings, false);
         m_state.m_machine_mode = VSK_MACHINE_MODE_9801;
-        vsk_connect_machine(&m_state, true);
-        vsk_machine->test_pattern(0);
-        break;
-    case ID_MACHINE_VSK: // VSKモード
-        vsk_connect_machine(&m_state, false);
-        m_state.m_machine_mode = VSK_MACHINE_MODE_VSK;
-        vsk_connect_machine(&m_state, true);
+        vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;
     case ID_LOAD: // 読み込む
@@ -2487,6 +2482,7 @@ BOOL Settings_OnOK(HWND hwnd)
 {
     VSK_SETTINGS()->m_move_caret_by_mouse_click = (IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED);
     VSK_SETTINGS()->m_remember_window_pos = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
+    VSK_SETTINGS()->m_unlimited_mode = (IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED);
     return TRUE;
 }
 
@@ -2501,12 +2497,15 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::CheckDlgButton(hwnd, chx1, BST_CHECKED);
         if (VSK_SETTINGS()->m_remember_window_pos)
             ::CheckDlgButton(hwnd, chx2, BST_CHECKED);
+        if (VSK_SETTINGS()->m_unlimited_mode)
+            ::CheckDlgButton(hwnd, chx3, BST_CHECKED);
         return TRUE; // オートフォーカス
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
         case chx1:
         case chx2:
+        case chx3:
             PropSheet_Changed(::GetParent(hwnd), hwnd);
             break;
         }
@@ -3155,20 +3154,20 @@ bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
 
     // クライアント領域のサイズからウィンドウのサイズを取得する
     RECT rc = { 0, 0, VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT };
-    if (VSK_SETTINGS()->m_cx == CW_USEDEFAULT)
+    if (m_settings.m_cx == CW_USEDEFAULT)
     {
         ::AdjustWindowRectEx(&rc, style, TRUE, exstyle);
     }
     else
     {
         rc.left = rc.top = 0;
-        rc.right = VSK_SETTINGS()->m_cx;
-        rc.bottom = VSK_SETTINGS()->m_cy;
+        rc.right = m_settings.m_cx;
+        rc.bottom = m_settings.m_cy;
     }
 
     // メインウィンドウを作成
     HWND hwnd = CreateWindowEx(exstyle, TEXT(VEYSICK_CLASSNAME), TEXT(VEYSICK_TITLE), style,
-                               VSK_SETTINGS()->m_x, VSK_SETTINGS()->m_y,
+                               m_settings.m_x, m_settings.m_y,
                                rc.right - rc.left, rc.bottom - rc.top,
                                nullptr, nullptr, m_hInst, this);
     if (!hwnd)

@@ -104,7 +104,7 @@ struct Vsk8801Machine : VskMachine
     std::shared_ptr<Vsk8801VRAM> m_vram;        // VRAM
 
     // コンストラクタ
-    Vsk8801Machine(VskMachineState *state);
+    Vsk8801Machine(VskMachineState *state, VskSettings *settings);
 
     // パレットのリセット
     void reset_palette() override;
@@ -485,8 +485,8 @@ struct Vsk8801Machine : VskMachine
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Vsk8801Machineのコンストラクタ
-Vsk8801Machine::Vsk8801Machine(VskMachineState *state)
-    : VskMachine(state)
+Vsk8801Machine::Vsk8801Machine(VskMachineState *state, VskSettings *settings)
+    : VskMachine(state, settings)
     , m_screen_image(VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT)
 {
     state->m_machine_mode = VSK_MACHINE_MODE_8801;
@@ -1050,9 +1050,9 @@ void Vsk8801Machine::clear_planes(bool blue, bool red, bool green, bool intensit
 ////////////////////////////////////////////////////////////////////////////////////
 
 // 8801マシンを作成する関数
-std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state)
+std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state, VskSettings *settings)
 {
-    return std::make_shared<Vsk8801Machine>(state);
+    return std::make_shared<Vsk8801Machine>(state, settings);
 }
 
 #endif  // def ENABLE_PC8801

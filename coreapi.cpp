@@ -4550,7 +4550,7 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
         if (v2 != "" && v2 != "R")
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
-        if (vsk_machine->is_8801_mode() || vsk_machine->is_vsk_mode())
+        if (vsk_machine->is_8801_mode())
         {
             if (v0 == "@exst*v1" || v0 == "@exst*v2")
             {
@@ -4856,7 +4856,7 @@ static VskAstPtr VSKAPI vsk_KEY(VskAstPtr& self, const VskAstList& args)
     VskString v1;
     if (vsk_int(v0, args[0]) && vsk_str(v1, args[1]))
     {
-        if (!(1 <= v0 && v0 <= 10) || (!vsk_machine->is_vsk_mode() && v1.size() > 15))
+        if (!(1 <= v0 && v0 <= 10) || (!VSK_SETTINGS()->m_unlimited_mode && v1.size() > 15))
         {
             vsk_machine->bad_call();
             return nullptr;
@@ -4895,7 +4895,7 @@ static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr& self, const VskAstList& arg
     auto v1 = vsk_eval_ast(args[1]);
     if (v1 && vsk_int(v0, args[0]))
     {
-        if (vsk_machine->is_vsk_mode() ? !(0 <= v0) : !(0 <= v0 && v0 < 256))
+        if (VSK_SETTINGS()->m_unlimited_mode ? !(0 <= v0) : !(0 <= v0 && v0 < 256))
         {
             vsk_machine->bad_call();
             return nullptr;
@@ -6157,7 +6157,7 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
 
     if (v0 == "PAL") // CMD PAL
     {
-        if (!vsk_machine->is_vsk_mode())
+        if (!VSK_SETTINGS()->m_unlimited_mode)
         {
             if (vsk_machine->is_9801_mode() || !vsk_machine->has_cmd_exst())
                 VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
@@ -6267,7 +6267,7 @@ static VskAstPtr VSKAPI vsk_AKCNV_dollar(VskAstPtr& self, const VskAstList& args
     if (vsk_str(v0, args[0]))
     {
         VskString str = vsk_ank_to_kanji(v0);
-        if (!vsk_machine->is_vsk_mode() && str.size() > 255)
+        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > 255)
         {
             vsk_machine->do_error(VSK_ERR_STRING_TOO_LONG);
             return nullptr;
@@ -6288,7 +6288,7 @@ static VskAstPtr VSKAPI vsk_KACNV_dollar(VskAstPtr& self, const VskAstList& args
     if (vsk_str(v0, args[0]))
     {
         VskString str = vsk_kanji_to_ank(v0);
-        if (!vsk_machine->is_vsk_mode() && str.size() > 255)
+        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > 255)
         {
             vsk_machine->do_error(VSK_ERR_STRING_TOO_LONG);
             return nullptr;
@@ -7951,7 +7951,7 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr& self, const VskAstList& args)
             size_t ib0 = vsk_jis_kpos2ib(v0, v1);
             size_t ib1 = vsk_jis_kpos2ib(v0, v1 + v2);
             auto substr = v0.substr(ib0, ib1 - ib0);
-            if (!vsk_machine->is_vsk_mode() && substr.size() >= 256)
+            if (!VSK_SETTINGS()->m_unlimited_mode && substr.size() >= 256)
                 VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
             return vsk_ast_str(substr);
         }
@@ -7960,7 +7960,7 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr& self, const VskAstList& args)
             size_t ib0 = vsk_sjis_kpos2ib(v0, v1);
             size_t ib1 = vsk_sjis_kpos2ib(v0, v1 + v2);
             auto substr = v0.substr(ib0, ib1 - ib0);
-            if (!vsk_machine->is_vsk_mode() && substr.size() >= 256)
+            if (!VSK_SETTINGS()->m_unlimited_mode && substr.size() >= 256)
                 VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
             return vsk_ast_str(substr);
         }
@@ -8010,14 +8010,14 @@ static VskAstPtr VSKAPI vsk_KPOS(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    if (!vsk_machine->is_8801_mode() && !vsk_machine->is_vsk_mode())
+    if (!vsk_machine->is_8801_mode() && !VSK_SETTINGS()->m_unlimited_mode)
         VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 
     VskString v0;
     VskInt v1;
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
-        if (v1 < 0 || (!vsk_machine->is_vsk_mode() && v1 >= 256))
+        if (v1 < 0 || (!VSK_SETTINGS()->m_unlimited_mode && v1 >= 256))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         if (vsk_machine->is_jis_mode()) // JISモード
@@ -9389,7 +9389,7 @@ static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr& self, const VskAstList& args)
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
-        if (!vsk_machine->is_vsk_mode())
+        if (!VSK_SETTINGS()->m_unlimited_mode)
         {
             if (VSK_STATE()->m_screen_height == 400)
             {
@@ -9404,10 +9404,7 @@ static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr& self, const VskAstList& args)
 
             if (v1 < -639) v1 = -639;
             if (v1 > +639) v1 = +639;
-        }
 
-        if (!vsk_machine->is_vsk_mode())
-        {
             if (v1 < 0)
                 v1 = -((-v1 / 8) * 8);
             else

@@ -346,7 +346,6 @@ enum VskMachineMode
 {
     VSK_MACHINE_MODE_8801,  // 8801モード
     VSK_MACHINE_MODE_9801,  // 9801モード
-    VSK_MACHINE_MODE_VSK,   // VSKモード
 };
 
 // テキストモード
@@ -508,6 +507,11 @@ struct VskMachineState
 };
 
 //////////////////////////////////////////////////////////////////////////////
+// VeySicKの設定
+
+#include "settings.h"
+
+//////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<VskFileManager> vsk_get_file_manager(void);
 VskFilePtr vsk_get_screen_device(void);
@@ -521,13 +525,13 @@ struct VskMachine : VskObject
 {
     // マシン状態
     VskMachineState *m_state = nullptr;
+    VskSettings *m_settings = nullptr;
 
-    VskMachine(VskMachineState *state);
+    VskMachine(VskMachineState *state, VskSettings *settings);
     ~VskMachine();
 
     bool is_8801_mode() const { return m_state && m_state->m_machine_mode == VSK_MACHINE_MODE_8801; }
     bool is_9801_mode() const { return m_state && m_state->m_machine_mode == VSK_MACHINE_MODE_9801; }
-    bool is_vsk_mode() const { return m_state && m_state->m_machine_mode == VSK_MACHINE_MODE_VSK; }
     bool is_grph_mode() const { return m_state && m_state->m_text_mode == VSK_TEXT_MODE_GRPH; }
     bool is_jis_mode() const { return m_state && m_state->m_text_mode == VSK_TEXT_MODE_JIS && m_state->m_machine_mode != VSK_MACHINE_MODE_8801; }
     bool is_sjis_mode() const { return !is_grph_mode() && !is_jis_mode(); }
@@ -686,7 +690,7 @@ struct VskMachine : VskObject
     bool get_image(int x0, int y0, int cx, int cy, void *ptr, size_t size, int M);
     bool put_image(int x0, int y0, const void *ptr, size_t size, int M, const VskString& op);
 
-    static std::shared_ptr<VskMachine> create_machine(VskMachineState *state);
+    static std::shared_ptr<VskMachine> create_machine(VskMachineState *state, VskSettings *settings);
     void test_pattern(int type);
     void step();
 
@@ -704,13 +708,15 @@ extern VskMachinePtr vsk_machine;
 #define VSK_STATE() (vsk_machine->m_state)
 // マシンの実装へのポインタ
 #define VSK_IMPL() (vsk_machine->m_state->m_pimpl)
+// 設定へのポインタ
+#define VSK_SETTINGS() (vsk_machine->m_settings)
 
 // マシンを作成する関数
 #ifdef ENABLE_PC8801
-    std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state);
+    std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state, VskSettings *settings);
 #endif
 #ifdef ENABLE_PC9801
-    std::shared_ptr<VskMachine> vsk_create_9801_machine(VskMachineState *state);
+    std::shared_ptr<VskMachine> vsk_create_9801_machine(VskMachineState *state, VskSettings *settings);
 #endif
 
 // かなモードでアルファベットを半角カナに変換
@@ -732,7 +738,7 @@ VskInt vsk_inport_8801(VskInt port);
 // 入力ポートの値を取得
 VskInt vsk_inport_9801(VskInt port);
 // マシンの接続または接続の切断
-bool vsk_connect_machine(VskMachineState *state, bool do_connect);
+bool vsk_connect_machine(VskMachineState *state, VskSettings *settings, bool do_connect);
 // コメントを処理する
 void vsk_process_comment(VskString text);
 // STOP (Ctrl+C)を処理する
@@ -788,6 +794,3 @@ void vsk_page_down(void);
 VskLineNo vsk_line_number_from_line_text(const VskString& line, char **endptr = nullptr);
 // 指定した行番号の前後の行を取得する
 VskString vsk_get_next_line_text(VskLineNo number, int which);
-
-// VeySicKの設定
-#include "settings.h"

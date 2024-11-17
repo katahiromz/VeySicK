@@ -18,7 +18,6 @@ IDR_MAINMENU MENU
         {
             MENUITEM "8801 モード", ID_MACHINE_8801
             MENUITEM "9801 モード", ID_MACHINE_9801
-            MENUITEM "VSK モード", ID_MACHINE_VSK
         }
         POPUP "テキスト モード"
         {
@@ -108,6 +107,7 @@ FONT 9, "MS UI Gothic"
 {
     AUTOCHECKBOX "マウスクリックでキャレット位置を移動する", chx1, 5, 10, 175, 15
     AUTOCHECKBOX "ウィンドウの位置とサイズを記憶する", chx2, 5, 35, 175, 15
+    AUTOCHECKBOX "無制限モード（実機の制限を乗り越える）", chx3, 5, 60, 175, 15
 }
 
 //////////////////////////////////////////////////////////////////////////////

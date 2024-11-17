@@ -42,7 +42,6 @@
 #define ID_OPEN_README                      122
 #define ID_MACHINE_8801                     123
 #define ID_MACHINE_9801                     124
-#define ID_MACHINE_VSK                      125
 #define ID_SAVE_AS                          126
 #define ID_COPY_SCREENSHOT                  127
 #define ID_MAXIMIZE                         128

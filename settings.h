@@ -1,13 +1,14 @@
 #pragma once
 
-// VeySicK‚Ìİ’è
+// VeySicKã®è¨­å®š
 struct VskSettings
 {
-    int m_move_caret_by_mouse_click = false;            // ƒ}ƒEƒXƒNƒŠƒbƒN‚ÅƒLƒƒƒŒƒbƒgˆÊ’u‚ğˆÚ“®‚·‚é‚©H
-    int m_remember_window_pos = true;                   // ƒEƒBƒ“ƒhƒE‚ÌˆÊ’u‚ÆƒTƒCƒY‚ğ‹L‰¯‚·‚é‚©H
-    int m_x = (int)0x80000000, m_y = (int)0x80000000;   // ƒEƒBƒ“ƒhƒE‚ÌˆÊ’u
-    int m_cx = (int)0x80000000, m_cy = (int)0x80000000; // ƒEƒBƒ“ƒhƒE‚ÌƒTƒCƒY
-    int m_zoomed = false;                               // Å‘å‰»‚³‚ê‚Ä‚¢‚é‚©H
+    int m_move_caret_by_mouse_click = false;            // ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯ã§ã‚­ãƒ£ãƒ¬ãƒƒãƒˆä½ç½®ã‚’ç§»å‹•ã™ã‚‹ã‹ï¼Ÿ
+    int m_remember_window_pos = true;                   // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½ç½®ã¨ã‚µã‚¤ã‚ºã‚’è¨˜æ†¶ã™ã‚‹ã‹ï¼Ÿ
+    int m_x = (int)0x80000000, m_y = (int)0x80000000;   // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½ç½®
+    int m_cx = (int)0x80000000, m_cy = (int)0x80000000; // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚º
+    int m_zoomed = false;                               // æœ€å¤§åŒ–ã•ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
+    int m_unlimited_mode = true;                        // ç„¡åˆ¶é™ãƒ¢ãƒ¼ãƒ‰ï¼ˆå®Ÿæ©Ÿã®åˆ¶é™ã‚’ä¹—ã‚Šè¶Šãˆã‚‹ï¼‰
 
     void reset()
     {

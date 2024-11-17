@@ -18,7 +18,6 @@ IDR_MAINMENU MENU
         {
             MENUITEM "8801 mode", ID_MACHINE_8801
             MENUITEM "9801 mode", ID_MACHINE_9801
-            MENUITEM "VSK mode", ID_MACHINE_VSK
         }
         POPUP "Text Mode"
         {
@@ -108,6 +107,7 @@ FONT 9, "MS Shell Dlg"
 {
     AUTOCHECKBOX "Move the caret position with a mouse click", chx1, 5, 10, 175, 15
     AUTOCHECKBOX "Remember window position and size", chx2, 5, 35, 175, 15
+    AUTOCHECKBOX "Unlimited mode", chx3, 5, 60, 175, 15
 }
 
 //////////////////////////////////////////////////////////////////////////////

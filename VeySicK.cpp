@@ -365,7 +365,9 @@ VskMachineState::~VskMachineState()
     vsk_vars_map = nullptr;
 }
 
-VskMachine::VskMachine(VskMachineState *state) : m_state(state)
+VskMachine::VskMachine(VskMachineState *state, VskSettings *settings)
+    : m_state(state)
+    , m_settings(settings)
 {
 }
 
@@ -374,29 +376,29 @@ VskMachine::~VskMachine()
 }
 
 // マシンを作成する
-VskMachinePtr VskMachine::create_machine(VskMachineState *state)
+VskMachinePtr VskMachine::create_machine(VskMachineState *state, VskSettings *settings)
 {
 #ifdef ENABLE_PC8801
     if (state->m_machine_mode == VSK_MACHINE_MODE_8801)
-        return vsk_create_8801_machine(state);
+        return vsk_create_8801_machine(state, settings);
 #endif
 #ifdef ENABLE_PC9801
     if (state->m_machine_mode == VSK_MACHINE_MODE_9801)
-        return vsk_create_9801_machine(state);
+        return vsk_create_9801_machine(state, settings);
 #endif
 #ifdef ENABLE_PC8801
     state->m_machine_mode = VSK_MACHINE_MODE_9801;
-    return vsk_create_9801_machine(state);
+    return vsk_create_9801_machine(state, settings);
 #elif defined(ENABLE_PC9801)
     state->m_machine_mode = VSK_MACHINE_MODE_8801;
-    return vsk_create_8801_machine(state);
+    return vsk_create_8801_machine(state, settings);
 #else
     return nullptr;
 #endif
 }
 
 // マシンの接続または接続の切断
-bool vsk_connect_machine(VskMachineState *state, bool do_connect)
+bool vsk_connect_machine(VskMachineState *state, VskSettings *settings, bool do_connect)
 {
     if (do_connect)
     {
@@ -404,7 +406,7 @@ bool vsk_connect_machine(VskMachineState *state, bool do_connect)
         vsk_rand_init(0);
 
         vsk_lock();
-        vsk_machine = VskMachine::create_machine(state);
+        vsk_machine = VskMachine::create_machine(state, settings);
         vsk_machine->connect(true);
         vsk_unlock();
     }
@@ -2063,9 +2065,6 @@ void VskMachine::test_pattern(int type)
         case VSK_MACHINE_MODE_9801:
             print("Started in 9801 mode\n");
             break;
-        case VSK_MACHINE_MODE_VSK:
-            print("Started in VSK mode\n");
-            break;
         }
         print("99999 Bytes free\n");
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
@@ -2542,15 +2541,14 @@ void vsk_process_comment(VskString text)
         new_machine_mode = VSK_MACHINE_MODE_8801;
     if (text.find("{9801}") != text.npos)
         new_machine_mode = VSK_MACHINE_MODE_9801;
-    if (text.find("{VSK}") != text.npos)
-        new_machine_mode = VSK_MACHINE_MODE_VSK;
 
     if (old_machine_mode != new_machine_mode)
     {
         auto* state = VSK_STATE();
-        vsk_connect_machine(state, false);
+        auto* settings = VSK_SETTINGS();
+        vsk_connect_machine(state, settings, false);
         state->m_machine_mode = new_machine_mode;
-        vsk_connect_machine(state, true);
+        vsk_connect_machine(state, settings, true);
     }
 
     assert(vsk_machine);
