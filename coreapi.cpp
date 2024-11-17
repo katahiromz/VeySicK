@@ -4352,6 +4352,7 @@ static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
         VSK_STATE()->m_active_page = v2;
         VSK_STATE()->m_display_pages = v3;
         vsk_machine->reset_graphics();
+        VSK_IMPL()->m_draw_engine.reset();
     }
 
     return nullptr;
