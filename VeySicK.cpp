@@ -1852,9 +1852,9 @@ bool VskMachine::is_valid_color_code(VskDword color_code, VskWebColor& web_color
         {
             if (!(0 <= color_code && color_code <= 0777))
                 return false;
-            auto blue = (color_code & 0xF) * 255 / 0xF;
-            auto red = ((color_code >> 4) & 0xF) * 255 / 0xF;
-            auto green = ((color_code >> 8) & 0xF) * 255 / 0xF;
+            auto blue = (color_code & 0x7) * 255 / 0x7;
+            auto red = ((color_code >> 4) & 0x7) * 255 / 0x7;
+            auto green = ((color_code >> 8) & 0x7) * 255 / 0x7;
             web_color = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
         }
         break;

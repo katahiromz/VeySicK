@@ -48,4 +48,5 @@ DEFINE_ERROR(70, VSK_ERR_BAD_DRIVE_NO,          "Bad drive number")
 DEFINE_ERROR(71, VSK_ERR_BAD_TRACK_SECTOR,      "Bad track/sector")
 DEFINE_ERROR(73, VSK_ERR_RENAME_ACROSS_DISK,    "Rename across disk")
 DEFINE_ERROR(74, VSK_ERR_BAD_OPERATION,         "Illegal operation")
+DEFINE_ERROR(254,VSK_ERR_MOUSE_NOT_INITED,      "MOUSE not initialized")
 /* DEFINE_ERROR(??, VSK_ERR_UNPRINTABLE,           "Unprintable error") */

@@ -262,6 +262,7 @@ struct VskMachineImpl
     int m_pen_x = -1;
     int m_pen_y = -1;
     // マウス入力
+    bool m_mouse_inited = false;
     std::array<int, VSK_MOUSE_MAX> m_mouse_x = { 0 };
     std::array<int, VSK_MOUSE_MAX> m_mouse_y = { 0 };
     std::array<bool, VSK_MOUSE_MAX> m_mouse_pressed = { 0 };
@@ -2036,7 +2037,7 @@ VskString VskAst::to_debug_str()
 // 構文エラーのときに呼び出される関数
 void yyerror(VskParseResult& result, yyscan_t yyscanner, const char *s)
 {
-    mdbg_printfA("yyerror: %s\n", s);
+    mdbg_traceA("yyerror: %s\n", s);
 }
 
 // 実際に構文解析を行う関数
@@ -2369,7 +2370,7 @@ void vsk_direct_execute(const VskString& text)
     }
 
 #if !defined(NDEBUG)
-    mdbg_printfA("to_debug_str: %s\n", result->to_debug_str().c_str());
+    mdbg_traceA("to_debug_str: %s\n", result->to_debug_str().c_str());
 #endif
 
     // プログラムデータをスキャンする
@@ -2824,7 +2825,7 @@ bool vsk_arity_in_range(const VskAstList& args, size_t min_, size_t max_)
 // プログラムを実行する
 VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE })
 {
-    mdbg_printfA("vsk_run\n");
+    mdbg_traceA("vsk_run\n");
     VSK_STATE()->m_option_base = -1;
     VSK_STATE()->error_clear();
     VSK_IMPL()->m_control_path = index_list;
@@ -4613,7 +4614,7 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
 
         if (v2 == "R")
         {
-            // TODO: Call call_addr
+            mdbg_traceA("TODO: Call call_addr\n");
         }
     }
 
@@ -4704,7 +4705,11 @@ static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr& self, const VskAstList& args)
     if (vsk_int(v0, args[0]) &&
         (!arg1 || vsk_int(v1, args[1])))
     {
-        // TODO: v0 == 36 and v0 == 72
+        if (v0 == 36 || v0 == 72)
+        {
+            mdbg_traceA("TODO: WIDTH 32 or 72: %d\n", v0);
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+        }
         if (!(v0 == 80 || v0 == 40) || !(v1 == 20 || v1 == 25))
         {
             vsk_machine->bad_call();
@@ -6851,7 +6856,7 @@ static VskAstPtr VSKAPI vsk_ATTR_dollar(VskAstPtr& self, const VskAstList& args)
         if (!(sbuf.st_mode & S_IWRITE))
             ret[2] = 'P';
 
-        // TODO:
+        mdbg_traceA("TODO: R or E\n");
         //ret[0] = 'R';
         //ret[1] = 'E';
         return vsk_ast_str(ret);
@@ -7146,9 +7151,9 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr& self, const VskAstList& args)
             {
                 if (!(0 <= v1 && v1 <= 0777))
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-                auto blue = (v1 & 0xF) * 255 / 0xF;
-                auto red = ((v1 >> 4) & 0xF) * 255 / 0xF;
-                auto green = ((v1 >> 8) & 0xF) * 255 / 0xF;
+                auto blue = (v1 & 0x7) * 255 / 0x7;
+                auto red = ((v1 >> 4) & 0x7) * 255 / 0x7;
+                auto green = ((v1 >> 8) & 0x7) * 255 / 0x7;
                 VSK_STATE()->m_palette[v0] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
             }
             break;
@@ -7727,6 +7732,9 @@ static void vsk_MOUSE_ON_OFF_STOP_helper(const VskAstList& args, VskTrapMode mod
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+        VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED);
 
     VskInt v0 = 1;
     if (args.size() <= 0 || !args[0] || vsk_int(v0, args[0]))
@@ -8811,6 +8819,9 @@ static VskAstPtr VSKAPI vsk_ON_MOUSE_GOSUB(VskAstPtr& self, const VskAstList& ar
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+
     auto index_list = vsk_label_to_index_list(args[1], VSK_IMPL()->m_label_map);
     if (index_list.empty())
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
@@ -9051,10 +9062,10 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr& self, const VskAstList& args)
                 switch (v1)
                 {
                 case 0x06:
-                    // TODO: 8801フォント
+                    mdbg_traceA("TODO: 8801 font\n");
                     break;
                 case 0x07:
-                    // TODO: 9801フォント
+                    mdbg_traceA("TODO: 9801 font\n");
                     break;
                 case 0x08:
                     // 奇数ラスタの表示
@@ -9081,9 +9092,10 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr& self, const VskAstList& args)
                 {
                 case 0:
                     // TODO: 8色モード
+                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_8_COLORS_DIGITAL;
                     break;
                 case 1:
-                    // TODO: 16色モード
+                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_16_COLORS_SUPER;
                     break;
                 }
                 break;
@@ -9131,6 +9143,11 @@ static VskAstPtr VSKAPI vsk_MOUSE_func(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+        VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
 
     VskInt v0, v1 = 0;
     if (vsk_int(v0, args[0]) &&
@@ -9214,14 +9231,21 @@ static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 5))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+
     VskInt v0, v1, v2, v3, v4;
     if (vsk_int(v0, args[0]))
     {
         switch (v0)
         {
         case 0:
+            VSK_IMPL()->m_mouse_inited = true;
+            // ...FALL THROUGH...
         case 6:
             // マウスの初期化・破棄
+            if (v0 == 6 && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
             if (args.size() > 1)
                 VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
             vsk_mouse_clip(-1, -1, -1, -1);
@@ -9235,8 +9259,12 @@ static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
             VSK_IMPL()->m_mouse_pressed = { 0 };
             if (v0 == 0)
                 vsk_set_mouse_pos(VSK_STATE()->m_screen_width / 2, VSK_STATE()->m_screen_height / 2, true);
+            if (v0 == 6)
+                VSK_IMPL()->m_mouse_inited = false;
             break;
         case 1: // マウスの移動、表示・非表示
+            if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
             if (args.size() > 4)
                 VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
             v1 = v2 = -1;
@@ -9249,12 +9277,18 @@ static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
             }
             break;
         case 2: // マウスポインタの形状
-            // TODO:
+            if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
+            mdbg_traceA("TODO: mouse cursor shape\n");
             break;
         case 3: // マウスポインタの移動比率
-            // TODO:
+            if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
+            mdbg_traceA("TODO: mouse move ratio\n");
             break;
         case 4: // マウスのクリッピング
+            if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
             if (args.size() > 5)
                 VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
             v1 = v2 = v3 = v4 = -1;
@@ -9267,7 +9301,9 @@ static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
             }
             break;
         case 5: // マウスの色
-            // TODO:
+            if (!VSK_SETTINGS()->m_unlimited_mode && !VSK_IMPL()->m_mouse_inited)
+                VSK_ERROR_AND_RETURN(VSK_ERR_MOUSE_NOT_INITED, nullptr);
+            mdbg_traceA("TODO: mouse cursor color\n");
             break;
         default:
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
@@ -9282,6 +9318,9 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 
     VskInt v0 = 2;
     if (args[0] && !vsk_file_number(v0, args[0]))
@@ -9840,7 +9879,7 @@ void vsk_processor_unit_tests(void)
     VskParseResult data;
     VskError error = vsk_parse_program("100 ? 3\n110 goto 100", data);
 
-    mdbg_printfA("program: %s\n", data->to_debug_str().c_str());
+    mdbg_traceA("program: %s\n", data->to_debug_str().c_str());
 
     VskLabelMap label_map;
     error = vsk_scan_label_info(data, label_map);
@@ -9850,46 +9889,46 @@ void vsk_processor_unit_tests(void)
     error = vsk_scan_loop_info_1(data, { I_PROGRAM_CODE }, loop_map);
     assert(!error);
 
-    mdbg_printfA("## label_map:\n");
+    mdbg_traceA("## label_map:\n");
     for (auto& pair : label_map)
     {
-        mdbg_printfA("%s --> %s\n", pair.first.c_str(), vsk_to_string(pair.second).c_str());
+        mdbg_traceA("%s --> %s\n", pair.first.c_str(), vsk_to_string(pair.second).c_str());
     }
 
-    mdbg_printfA("## loop_map:\n");
+    mdbg_traceA("## loop_map:\n");
     for (auto& pair : loop_map)
     {
-        mdbg_printfA("%s --> %d\n", vsk_to_string(pair.first).c_str(), vsk_to_string(pair.second.m_type).c_str());
+        mdbg_traceA("%s --> %d\n", vsk_to_string(pair.first).c_str(), vsk_to_string(pair.second.m_type).c_str());
     }
 
     VskIndexList indices = { 0 };
-    mdbg_printfA("%s\n", vsk_to_string(indices).c_str());
+    mdbg_traceA("%s\n", vsk_to_string(indices).c_str());
     auto next = vsk_next_control_path_0(data, indices);
     auto resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     next = vsk_next_control_path_0(data, next);
     resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     next = vsk_next_control_path_0(data, next);
     resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     next = vsk_next_control_path_0(data, next);
     resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     next = vsk_next_control_path_0(data, next);
     resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     next = vsk_next_control_path_0(data, next);
     resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_printfA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
+    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
 
     indices = vsk_label_to_index_list(vsk_ast(INSN_LABEL, { vsk_ast_dbl(110) }), label_map);
-    mdbg_printfA("indices: %s\n", vsk_to_string(indices).c_str());
+    mdbg_traceA("indices: %s\n", vsk_to_string(indices).c_str());
 #endif
 }
 
