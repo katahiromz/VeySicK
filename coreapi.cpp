@@ -2398,6 +2398,7 @@ void vsk_default_trap(VskTrapType type)
         case VSK_NO_WAIT:
         case VSK_WAIT_FOR_INPUT:
         case VSK_WAIT_FOR_DRAW:
+            // 必要ならば停止メッセージを表示
             if (!VSK_IMPL()->m_auto_mode && !VSK_STATE()->m_edit_mode)
             {
                 vsk_machine->beep(-1);
@@ -2405,9 +2406,15 @@ void vsk_default_trap(VskTrapType type)
                 if (vsk_target_line != 0 && vsk_target_line != -1)
                     vsk_print(" at " + vsk_to_string(vsk_target_line));
             }
+            // 自動モード、編集モード解除
             VSK_IMPL()->m_auto_mode = VSK_STATE()->m_edit_mode = false;
+            // 改行
             vsk_print("\n");
+            // 継続（CONT）のために覚えておく
             VSK_IMPL()->m_stopping_path = VSK_IMPL()->m_control_path;
+            // IMEをOFFにする
+            vsk_ime_on_off(false);
+            // コマンドレベルに戻る
             vsk_enter_command_level();
             break;
         case VSK_WAIT_FOR_COMMAND:
@@ -2553,7 +2560,10 @@ bool vsk_check_trap(void)
         VSK_STATE()->m_input_wait_start = 0;
         VSK_IMPL()->m_control_path = std::move(VSK_STATE()->m_input_wait_default_path);
         VSK_STATE()->m_input_wait_default_path.clear();
+        // 実行の再開
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return true;
     }
 
@@ -8274,23 +8284,27 @@ static VskAstPtr VSKAPI vsk_KINPUT(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
-    // 左辺値（lvalue）から名前と次元を取得
+    // 左辺値（lvalue）から変数名と次元を取得
     VskString name;
     VskIndexList dimension;
     if (!vsk_dimension_from_lvalue(name, dimension, args[0], +(VSK_STATE()->m_option_base == 1)))
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
+    // この変数は文字列でなければならない
     if (vsk_var_get_type(name) != VSK_TYPE_STRING)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
 
+    // 行入力の準備
     auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
     mstr_trim_right(prompt, " \t\r\n");
     prompt.resize(vsk_machine->get_line_column(), ' ');
-
     VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
     VSK_STATE()->m_input_prompt = prompt + "\x81\x48 "; // 全角の疑問符を付ける
     VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT;
     vsk_show_input_prompt();
+
+    // IMEをONにする
+    vsk_ime_on_off(true);
 
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
@@ -10008,10 +10022,11 @@ void vsk_enter_input_text(const VskString& text)
     {
         // 変数に代入する
         vsk_var_assign(node->at(1), vsk_ast_str(text));
-
         // 次の文へ
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
         VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return;
     }
 
@@ -10028,6 +10043,8 @@ void vsk_enter_input_text(const VskString& text)
         // 次の文へ
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
         VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return;
     }
 
@@ -10045,10 +10062,11 @@ void vsk_enter_input_text(const VskString& text)
             }
             vsk_rand_init(number);
         }
-
         // 次の文へ
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
         VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return;
     }
 
@@ -10061,6 +10079,8 @@ void vsk_enter_input_text(const VskString& text)
         // 次の文へ
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
         VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return;
     }
 
@@ -10074,6 +10094,8 @@ void vsk_enter_input_text(const VskString& text)
             // 次の文へ
             VSK_STATE()->m_wait_for = VSK_NO_WAIT;
             VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+            // IMEをOFFにする
+            vsk_ime_on_off(false);
             return;
         }
     }
@@ -10088,10 +10110,11 @@ void vsk_enter_input_text(const VskString& text)
             // クリア
             VSK_STATE()->m_input_wait_start = 0;
             VSK_STATE()->m_input_wait_default_path.clear();
-
             // 次の文へ
             VSK_STATE()->m_wait_for = VSK_NO_WAIT;
             VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+            // IMEをOFFにする
+            vsk_ime_on_off(false);
             return;
         }
     }
@@ -10099,19 +10122,22 @@ void vsk_enter_input_text(const VskString& text)
     // AUTO文か？
     if (node->m_insn == INSN_AUTO)
     {
+        // 行を取得して行を格納
         VskString line;
         line = vsk_to_string(VSK_IMPL()->m_auto_line_number) + " " + text;
         vsk_direct_execute(line);
-
+        // 増分だけ行番号を加算
         VSK_IMPL()->m_auto_line_number += VSK_IMPL()->m_auto_step;
+        // すでに存在する行番号のときは行番号プロンプトにアスタリスク(*)を出力
         auto number = VSK_IMPL()->m_auto_line_number;
-
         if (vsk_get_next_line_text(number, 0).size())
             VSK_STATE()->m_input_prompt = vsk_to_string(number) + "*";
         else
             VSK_STATE()->m_input_prompt = vsk_to_string(number) + " ";
-
+        // プロンプトを表示
         vsk_show_input_prompt();
+        // IMEをOFFにする
+        vsk_ime_on_off(false);
         return;
     }
 }

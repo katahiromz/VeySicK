@@ -1657,6 +1657,34 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     return TRUE; // 成功
 }
 
+#define MYWM_IME_ON_OFF (WM_USER + 100)
+
+// IMEをオンまたはオフにする(メインスレッドにゆだねる)
+void vsk_ime_on_off(bool on)
+{
+    HWND hwnd = vsk_pMainWnd->m_hWnd;
+    ::PostMessage(hwnd, MYWM_IME_ON_OFF, (BOOL)on, 0);
+}
+
+// IMEをオンまたはオフにする(本物、実体)
+void vsk_ime_on_off_real(HWND hwnd, bool on)
+{
+    HIMC hIMC = vsk_pMainWnd->m_hIMC;
+    if (on)
+    {
+        ::ImmAssociateContext(hwnd, hIMC);
+        ::ImmSetOpenStatus(hIMC, TRUE);
+        DWORD dwConversion, dwSentence;
+        ::ImmGetConversionStatus(hIMC, &dwConversion, &dwSentence);
+        ::ImmSetConversionStatus(hIMC, IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE, dwSentence);
+    }
+    else
+    {
+        ::ImmSetOpenStatus(hIMC, FALSE);
+        ::ImmAssociateContext(hwnd, nullptr);
+    }
+}
+
 // WM_DESTROY
 // ウィンドウの破棄前の処理
 void VskWin32App::OnDestroy(HWND hwnd)
@@ -3108,6 +3136,9 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
     case WM_IME_NOTIFY:
         return OnImeNotify(wParam, lParam);
+    case MYWM_IME_ON_OFF:
+        vsk_ime_on_off_real(hwnd, wParam);
+        break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
