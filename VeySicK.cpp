@@ -1838,7 +1838,7 @@ bool vsk_web_color_from_digital_8_color_code(VskWebColor& web_color, VskDword co
     return true;
 }
 
-// アナログ8色カラーコードからWebカラーを計算
+// アナログ8色カラーコードからWebカラーを計算 (CMD PAL用)
 bool vsk_web_color_from_analog_8_color_code(VskWebColor& web_color, VskDword color_code)
 {
     if (!(0 <= color_code && color_code <= 0777))

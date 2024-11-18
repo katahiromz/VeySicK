@@ -6248,10 +6248,10 @@ static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr& self, const VskAstList& args)
     VskInt v1 = vsk_get_default_digital_color_8(v0);
     if (args.size() <= 1 || vsk_int(v1, args[1]))
     {
-        auto blue   = (v1 & 0x7) * 255 / 7;
-        auto red    = ((v1 >> 3) & 0x7) * 255 / 7;
-        auto green  = ((v1 >> 6) & 0x7) * 255 / 7;
-        VSK_STATE()->m_palette[v0] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
+        VskWebColor web_color;
+        if (!vsk_web_color_from_analog_8_color_code(web_color, v1))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        VSK_STATE()->m_palette[v0] = web_color;
     }
 
     return nullptr;
@@ -7139,18 +7139,19 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr& self, const VskAstList& args)
         switch (VSK_STATE()->m_color_mode)
         {
         case VSK_COLOR_MODE_8_COLORS:
-            if (!(0 <= v1 && v1 < 8))
-                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-            VSK_STATE()->m_palette[v0] = vsk_get_default_digital_color_8(v1);
+            {
+                VskWebColor web_color;
+                if (!vsk_web_color_from_digital_8_color_code(web_color, v1))
+                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+                VSK_STATE()->m_palette[v0] = web_color;
+            }
             break;
         case VSK_COLOR_MODE_16_COLORS:
             {
-                if (!(0 <= v1 && v1 <= 0xFFF))
+                VskWebColor web_color;
+                if (!vsk_web_color_from_super_16_color_code(web_color, v1))
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-                auto blue = (v1 & 0xF) * 255 / 0xF;
-                auto red = ((v1 >> 4) & 0xF) * 255 / 0xF;
-                auto green = ((v1 >> 8) & 0xF) * 255 / 0xF;
-                VSK_STATE()->m_palette[v0] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
+                VSK_STATE()->m_palette[v0] = web_color;
             }
             break;
         }
