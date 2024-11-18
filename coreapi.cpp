@@ -2885,9 +2885,8 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
     {
         switch (VSK_STATE()->m_color_mode)
         {
-        case VSK_COLOR_MODE_8_COLORS_DIGITAL: v4 = 0; break;
-        case VSK_COLOR_MODE_8_COLORS_SUPER: v4 = 1; break;
-        case VSK_COLOR_MODE_16_COLORS_SUPER: v4 = 2; break;
+        case VSK_COLOR_MODE_8_COLORS:   v4 = 1; break;
+        case VSK_COLOR_MODE_16_COLORS:  v4 = 2; break;
         }
     }
 
@@ -2907,7 +2906,6 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
         {
             // バリデーション
             if (!vsk_machine->is_valid_color(v1) ||
-                !(v2 == -1 || vsk_machine->is_valid_color_code(v2)) ||
                 !vsk_machine->is_valid_color(v3) ||
                 (args.size() >= 4))
             {
@@ -2915,13 +2913,12 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
             }
 
             // カラーモードをセット
-            color_mode = VSK_COLOR_MODE_8_COLORS_SUPER;
+            color_mode = VSK_COLOR_MODE_8_COLORS;
         }
         else // 8801モード以外
         {
             // バリデーション
             if (!vsk_machine->is_valid_color(v1) ||
-                !(v2 == -1 || vsk_machine->is_valid_color_code(v2)) ||
                 !vsk_machine->is_valid_color(v3) ||
                 !(0 <= v4 && v4 <= 2))
             {
@@ -2929,12 +2926,11 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
             }
 
             // カラーモードをセット
-            color_mode = VSK_COLOR_MODE_8_COLORS_DIGITAL;
+            color_mode = VSK_COLOR_MODE_8_COLORS;
             switch (v4)
             {
-            case 0: color_mode = VSK_COLOR_MODE_8_COLORS_DIGITAL; break;
-            case 1: color_mode = VSK_COLOR_MODE_8_COLORS_SUPER; break;
-            case 2: color_mode = VSK_COLOR_MODE_16_COLORS_SUPER; break;
+            case 0: case 1: color_mode = VSK_COLOR_MODE_8_COLORS; break;
+            case 2: color_mode = VSK_COLOR_MODE_16_COLORS; break;
             default: assert(0); break;
             }
         }
@@ -6482,7 +6478,7 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
         {
             switch (VSK_STATE()->m_color_mode)
             {
-            case VSK_COLOR_MODE_16_COLORS_SUPER:
+            case VSK_COLOR_MODE_16_COLORS:
                 M = 4;
                 break;
             default:
@@ -6562,7 +6558,7 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr& self, const VskAstList& args)
         {
             switch (VSK_STATE()->m_color_mode)
             {
-            case VSK_COLOR_MODE_16_COLORS_SUPER:
+            case VSK_COLOR_MODE_16_COLORS:
                 M = 4;
                 break;
             default:
@@ -7142,22 +7138,12 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr& self, const VskAstList& args)
 
         switch (VSK_STATE()->m_color_mode)
         {
-        case VSK_COLOR_MODE_8_COLORS_DIGITAL:
+        case VSK_COLOR_MODE_8_COLORS:
             if (!(0 <= v1 && v1 < 8))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
             VSK_STATE()->m_palette[v0] = vsk_get_default_digital_color_8(v1);
             break;
-        case VSK_COLOR_MODE_8_COLORS_SUPER:
-            {
-                if (!(0 <= v1 && v1 <= 0777))
-                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-                auto blue = (v1 & 0x7) * 255 / 0x7;
-                auto red = ((v1 >> 4) & 0x7) * 255 / 0x7;
-                auto green = ((v1 >> 8) & 0x7) * 255 / 0x7;
-                VSK_STATE()->m_palette[v0] = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
-            }
-            break;
-        case VSK_COLOR_MODE_16_COLORS_SUPER:
+        case VSK_COLOR_MODE_16_COLORS:
             {
                 if (!(0 <= v1 && v1 <= 0xFFF))
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
@@ -9091,11 +9077,10 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr& self, const VskAstList& args)
                 switch (v1)
                 {
                 case 0:
-                    // TODO: 8色モード
-                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_8_COLORS_DIGITAL;
+                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_8_COLORS;
                     break;
                 case 1:
-                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_16_COLORS_SUPER;
+                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_16_COLORS;
                     break;
                 }
                 break;

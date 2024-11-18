@@ -121,9 +121,8 @@ int VskMachineState::get_graphics_num_planes() const
 
     switch (m_color_mode)
     {
-    case VSK_COLOR_MODE_8_COLORS_DIGITAL: return 3;
-    case VSK_COLOR_MODE_8_COLORS_SUPER: return 3;
-    case VSK_COLOR_MODE_16_COLORS_SUPER: return 4;
+    case VSK_COLOR_MODE_8_COLORS: return 3;
+    case VSK_COLOR_MODE_16_COLORS: return 4;
     }
     return 0;
 }
@@ -138,14 +137,6 @@ VskWebColor VskMachineState::palette_to_web_color(VskByte palette) const
 {
     assert(palette < _countof(m_palette));
     return m_palette[palette];
-}
-
-VskWebColor VskMachineState::color_code_to_web_color(VskDword color_code) const
-{
-    VskWebColor web_color;
-    if (!vsk_machine->is_valid_color_code(color_code, web_color))
-        return 0;
-    return web_color;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1828,10 +1819,9 @@ bool VskMachine::is_valid_color(int palette) const
 {
     switch (m_state->m_color_mode)
     {
-    case VSK_COLOR_MODE_8_COLORS_DIGITAL:
-    case VSK_COLOR_MODE_8_COLORS_SUPER:
+    case VSK_COLOR_MODE_8_COLORS:
         return 0 <= palette && palette < 8;
-    case VSK_COLOR_MODE_16_COLORS_SUPER:
+    case VSK_COLOR_MODE_16_COLORS:
         return 0 <= palette && palette < 16;
     default:
         assert(0);
@@ -1839,37 +1829,36 @@ bool VskMachine::is_valid_color(int palette) const
     }
 }
 
-bool VskMachine::is_valid_color_code(VskDword color_code, VskWebColor& web_color) const
+// デジタル8色カラーコードからWebカラーを計算
+bool vsk_web_color_from_digital_8_color_code(VskWebColor& web_color, VskDword color_code)
 {
-    switch (VSK_STATE()->m_color_mode)
-    {
-    case VSK_COLOR_MODE_8_COLORS_DIGITAL:
-        if (!(0 <= color_code && color_code < 8))
-            return false;
-        web_color = vsk_get_default_digital_color_8(color_code);
-        break;
-    case VSK_COLOR_MODE_8_COLORS_SUPER:
-        {
-            if (!(0 <= color_code && color_code <= 0777))
-                return false;
-            auto blue = (color_code & 0x7) * 255 / 0x7;
-            auto red = ((color_code >> 4) & 0x7) * 255 / 0x7;
-            auto green = ((color_code >> 8) & 0x7) * 255 / 0x7;
-            web_color = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
-        }
-        break;
-    case VSK_COLOR_MODE_16_COLORS_SUPER:
-        {
-            if (!(0 <= color_code && color_code <= 0xFFF))
-                return false;
-            auto blue = (color_code & 0xF) * 255 / 0xF;
-            auto red = ((color_code >> 4) & 0xF) * 255 / 0xF;
-            auto green = ((color_code >> 8) & 0xF) * 255 / 0xF;
-            web_color = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
-        }
-        break;
-    }
+    if (!(0 <= color_code && color_code < 8))
+        return false;
+    web_color = vsk_get_default_digital_color_8(color_code);
+    return true;
+}
 
+// アナログ8色カラーコードからWebカラーを計算
+bool vsk_web_color_from_analog_8_color_code(VskWebColor& web_color, VskDword color_code)
+{
+    if (!(0 <= color_code && color_code <= 0777))
+        return false;
+    auto blue = (color_code & 0x7) * 255 / 0x7;
+    auto red = ((color_code >> 4) & 0x7) * 255 / 0x7;
+    auto green = ((color_code >> 8) & 0x7) * 255 / 0x7;
+    web_color = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
+    return true;
+}
+
+// スーパー16色カラーコードからWebカラーを計算
+bool vsk_web_color_from_super_16_color_code(VskWebColor& web_color, VskDword color_code)
+{
+    if (!(0 <= color_code && color_code <= 0xFFF))
+        return false;
+    auto blue = (color_code & 0xF) * 255 / 0xF;
+    auto red = ((color_code >> 4) & 0xF) * 255 / 0xF;
+    auto green = ((color_code >> 8) & 0xF) * 255 / 0xF;
+    web_color = vsk_make_web_color(VskByte(red), VskByte(green), VskByte(blue));
     return true;
 }
 

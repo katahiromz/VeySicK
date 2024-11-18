@@ -934,16 +934,16 @@ void Vsk9801Machine::render_function_keys()
 // パレットのリセット
 void Vsk9801Machine::reset_palette()
 {
-    if (m_state->m_color_mode == VSK_COLOR_MODE_8_COLORS_DIGITAL ||
-        m_state->m_color_mode == VSK_COLOR_MODE_8_COLORS_SUPER)
+    switch (m_state->m_color_mode)
     {
+    case VSK_COLOR_MODE_8_COLORS:
         for (int i = 0; i < _countof(m_state->m_palette); ++i)
             m_state->m_palette[i] = vsk_get_default_digital_color_8(i);
-    }
-    else
-    {
+        break;
+    case VSK_COLOR_MODE_16_COLORS:
         for (int i = 0; i < _countof(m_state->m_palette); ++i)
             m_state->m_palette[i] = vsk_get_default_digital_color_16(i);
+        break;
     }
 }
 

@@ -1772,7 +1772,7 @@ void vsk_reset_border_color(int border_color)
     }
 
     VskWebColor web_color;
-    if (!vsk_machine->is_valid_color_code(border_color, web_color))
+    if (!vsk_web_color_from_digital_8_color_code(web_color, border_color))
         return;
 
     auto red = vsk_web_color_red(web_color);

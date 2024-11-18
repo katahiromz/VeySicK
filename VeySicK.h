@@ -91,15 +91,21 @@ inline VskWebColor vsk_make_web_color(VskByte red, VskByte green, VskByte blue)
 // グラフィック画面のカラーモード
 enum VskColorMode
 {
-    VSK_COLOR_MODE_8_COLORS_DIGITAL,
-    VSK_COLOR_MODE_8_COLORS_SUPER,
-    VSK_COLOR_MODE_16_COLORS_SUPER,
+    VSK_COLOR_MODE_8_COLORS,
+    VSK_COLOR_MODE_16_COLORS,
 };
 
 // デフォルトの色を取得
 VskWebColor vsk_get_default_digital_color_8(int palette);
 VskWebColor vsk_get_default_digital_color_16(int palette);
 VskWebColor vsk_get_default_analog_color_16(int palette);
+
+// デジタル8色カラーコードからWebカラーを計算
+bool vsk_web_color_from_digital_8_color_code(VskWebColor& web_color, VskDword color_code);
+// アナログ8色カラーコードからWebカラーを計算
+bool vsk_web_color_from_analog_8_color_code(VskWebColor& web_color, VskDword color_code);
+// スーパー16色カラーコードからWebカラーを計算
+bool vsk_web_color_from_super_16_color_code(VskWebColor& web_color, VskDword color_code);
 
 //////////////////////////////////////////////////////////////////////////////
 // VskError - VeySicKのエラー番号
@@ -433,14 +439,13 @@ struct VskMachineState
     int m_back_color                        = 0;            // グラフィック画面の背景色
     int m_border_color                      = -1;           // グラフィック画面の境界色
     bool m_green_console                    = false;        // テキスト画面がモノクロのとき緑色で表示するか？
-    VskColorMode m_color_mode               = VSK_COLOR_MODE_8_COLORS_DIGITAL;  // カラーモード
+    VskColorMode m_color_mode               = VSK_COLOR_MODE_8_COLORS;  // カラーモード
     VskWebColor m_palette[16];                              // パレット番号からWebカラーへ
 
     int get_graphics_num_planes() const;
 
     VskWebColor text_color_to_web_color(VskByte palette) const;
     VskWebColor palette_to_web_color(VskByte palette) const;
-    VskWebColor color_code_to_web_color(VskDword color_code) const;
 
     // line printer-related
     int m_line_printer_width                = 256;
@@ -666,12 +671,6 @@ struct VskMachine : VskObject
 
     bool is_valid_tile(const VskString& tile) const;
     bool is_valid_color(int palette) const;
-    bool is_valid_color_code(VskDword color_code) const
-    {
-        VskWebColor web_color = 0;
-        return is_valid_color_code(color_code, web_color);
-    }
-    bool is_valid_color_code(VskDword color_code, VskWebColor& web_color) const;
 
     int get_pixel(int x0, int y0);
     void set_pixel(int x0, int y0, int palette);
