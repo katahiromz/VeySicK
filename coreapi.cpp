@@ -4309,8 +4309,13 @@ static VskAstPtr VSKAPI vsk_LOCATE(VskAstPtr& self, const VskAstList& args)
         (args.size() <= 1 || !args[1] || vsk_int(v1, args[1])) &&
         (args.size() <= 2 || !args[2] || vsk_int(v2, args[2])))
     {
-        if (v0 < 0 || v1 < 0 || (vsk_machine->is_8801_mode() && v2 != 0 && v2 != 1))
-            vsk_machine->bad_call();
+        if (v0 < 0 || v1 < 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        if (!VSK_SETTINGS()->m_unlimited_mode)
+        {
+            if (vsk_machine->is_8801_mode() && v2 != 0 && v2 != 1)
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
         if (VSK_STATE()->m_text_width <= v0)
             v0 = VSK_STATE()->m_text_width - 1;
         if (VSK_STATE()->m_text_height <= v1)
@@ -4553,14 +4558,14 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
         if (v2 != "" && v2 != "R")
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
-        if (vsk_machine->is_8801_mode())
+        if (VSK_SETTINGS()->m_unlimited_mode || vsk_machine->is_8801_mode())
         {
-            if (v0 == "@exst*v1" || v0 == "@exst*v2")
+            if (v0.find("@exst*v1") != v0.npos || v0.find("@exst*v2") != v0.npos)
             {
                 VSK_STATE()->m_has_turtle = true;
                 return nullptr;
             }
-            if (v0 == "@exst")
+            if (v0.find("@exst") != v0.npos)
             {
                 VSK_STATE()->m_has_turtle = true;
                 VSK_STATE()->m_has_cmd_extension = true;
@@ -5114,8 +5119,8 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
         {
             if (arg6 && arg6->is_number()) // パレット番号2
             {
-                if (vsk_machine->is_8801_mode())
-                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+                if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+                    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
                 if (!vsk_int(v6, arg6))
                     return nullptr;
                 if (!vsk_machine->is_valid_color(v6))
@@ -5125,7 +5130,9 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
             }
             else if (arg6 && arg6->is_str()) // タイル文字列
             {
-                if (vsk_machine->is_8801_mode() || !vsk_machine->is_valid_tile(arg6->m_str))
+                if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+                    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+                if (!vsk_machine->is_valid_tile(arg6->m_str))
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
                 vsk_LINE_helper_1(v0, v1, v2, v3, v4, v5, -1, arg6->m_str);
                 vsk_LINE_helper_1(v0, v1, v2, v3, v4, "B");
@@ -7283,7 +7290,7 @@ static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
-    if (vsk_machine->is_8801_mode())
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
         VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 
     VskString v0;
@@ -9437,7 +9444,7 @@ static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr& self, const VskAstList& args)
 
     VskInt v0 = 0, v1 = 0;
     VskString v2 = "N";
-    if (vsk_machine->is_8801_mode())
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
     {
         if (args.size() >= 2)
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
