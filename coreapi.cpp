@@ -3362,7 +3362,7 @@ static VskAstPtr VSKAPI vsk_POKE(VskAstPtr& self, const VskAstList& args)
     VskWord v0, v1;
     if (vsk_wrd(v0, args[0]) && vsk_wrd(v1, args[1]))
     {
-        if (!(0 <= v1 && v1 <= 255))
+        if (!(0 <= v1 && v1 < 256))
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
         auto addr = vsk_machine->resolve_addr(v0);
@@ -3690,7 +3690,18 @@ static VskAstPtr VSKAPI vsk_ADD(VskAstPtr& self, const VskAstList& args)
     if (!arg1)
         return nullptr;
 
-    if (arg0->is_floating())
+    if (arg0->is_str() || arg1->is_str())
+    {
+        VskString v0, v1;
+        if (vsk_str(v0, arg0) && vsk_str(v1, arg1))
+        {
+            auto ret = v0 + v1;
+            if (!VSK_SETTINGS()->m_unlimited_mode && ret.size() > VSK_MAX_STR_LEN)
+                VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
+            return vsk_ast_str(ret);
+        }
+    }
+    else if (arg0->is_floating())
     {
         VskDouble v0;
         if (vsk_dbl(v0, arg0))
@@ -4227,7 +4238,13 @@ static VskAstPtr VSKAPI vsk_SPACE_dollar(VskAstPtr& self, const VskAstList& args
 
     VskInt v0;
     if (vsk_int(v0, args[0]))
+    {
+        if (v0 < 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        if (v0 > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         return vsk_ast_str(VskString(v0, ' '));
+    }
     return nullptr;
 }
 
@@ -4777,10 +4794,10 @@ static VskAstPtr VSKAPI vsk_LEFT_dollar(VskAstPtr& self, const VskAstList& args)
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
         if (v1 < 0)
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
+
         if (int(v0.size()) <= v1)
             return vsk_ast_str(v0);
         return vsk_ast_str(v0.substr(0, v1));
@@ -4799,11 +4816,10 @@ static VskAstPtr VSKAPI vsk_RIGHT_dollar(VskAstPtr& self, const VskAstList& args
     VskInt v1;
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (v1 < 0)
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (int(v0.size()) <= v1)
             return vsk_ast_str(v0);
         return vsk_ast_str(v0.substr(v0.size() - v1));
@@ -4903,11 +4919,8 @@ static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr& self, const VskAstList& arg
     auto v1 = vsk_eval_ast(args[1]);
     if (v1 && vsk_int(v0, args[0]))
     {
-        if (VSK_SETTINGS()->m_unlimited_mode ? !(0 <= v0) : !(0 <= v0 && v0 < 256))
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
+        if (VSK_SETTINGS()->m_unlimited_mode ? !(0 <= v0) : !(0 <= v0 && v0 <= VSK_MAX_STR_LEN))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         char ch;
         if (v1->is_number())
@@ -4926,6 +4939,8 @@ static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr& self, const VskAstList& arg
                     str += vsk_high_byte(n);
                     str += vsk_low_byte(n);
                 }
+                if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > VSK_MAX_STR_LEN)
+                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
                 return vsk_ast_str(str);
             }
             else
@@ -6083,6 +6098,8 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (!vsk_sound_sing(v0))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         if (!VSK_IMPL()->m_play_bgm)
@@ -6110,6 +6127,8 @@ static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (!vsk_get_turtle_items_from_string(VSK_IMPL()->m_turtle_items, v0))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_TURTLE;
@@ -6327,12 +6346,11 @@ static VskAstPtr VSKAPI vsk_AKCNV_dollar(VskAstPtr& self, const VskAstList& args
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         VskString str = vsk_ank_to_kanji(v0);
-        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > 255)
-        {
-            vsk_machine->do_error(VSK_ERR_STRING_TOO_LONG);
-            return nullptr;
-        }
+        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         return vsk_ast_str(str);
     }
 
@@ -6348,12 +6366,11 @@ static VskAstPtr VSKAPI vsk_KACNV_dollar(VskAstPtr& self, const VskAstList& args
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         VskString str = vsk_kanji_to_ank(v0);
-        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > 255)
-        {
-            vsk_machine->do_error(VSK_ERR_STRING_TOO_LONG);
-            return nullptr;
-        }
+        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         return vsk_ast_str(str);
     }
 
@@ -7065,6 +7082,10 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
         VskString str;
         if (!vsk_str(str, arg))
             return nullptr;
+
+        if (!VSK_SETTINGS()->m_unlimited_mode && str.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
+
         strs.push_back(str);
     }
 
@@ -7296,6 +7317,8 @@ static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr& self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (!vsk_get_draw_items_from_string(VSK_IMPL()->m_draw_items, v0))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_DRAW;
@@ -7534,7 +7557,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr& self, const VskAstList& args
         auto arg1 = args[1];
         assert(arg1->m_insn == INSN_LINE_NUMBERS);
 
-        if (!(0 <= v0 && v0 <= 255))
+        if (!(0 <= v0 && v0 < 256))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         if (v0 == 0 || v0 - 1 >= int(arg1->size()))
@@ -7584,7 +7607,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr& self, const VskAstList& arg
         auto arg1 = args[1];
         assert(arg1->m_insn == INSN_LINE_NUMBERS);
 
-        if (!(0 <= v0 && v0 <= 255))
+        if (!(0 <= v0 && v0 < 256))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         if (v0 == 0 || v0 - 1 >= int(arg1->size()))
@@ -7913,6 +7936,8 @@ static VskAstPtr VSKAPI vsk_KEXT_dollar(VskAstPtr& self, const VskAstList& args)
     VskInt v1;
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (v1 != 0 && v1 != 1)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
@@ -8007,6 +8032,8 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr& self, const VskAstList& args)
     VskInt v1, v2;
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (v1 <= 0)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
@@ -8481,6 +8508,8 @@ static VskAstPtr VSKAPI vsk_MID_dollar_func(VskAstPtr& self, const VskAstList& a
     VskInt v1, v2 = -1;
     if (vsk_str(v0, args[0]) && vsk_int(v1, args[1]))
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
+            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (v0 == "" || v1 <= 0 || v1 > int(v0.size()))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 

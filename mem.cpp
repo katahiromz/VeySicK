@@ -422,7 +422,7 @@ VskAddr vsk_var_get_varptr(const VskString& name, const VskIndexList& dimension)
             }
 
             auto& str_desc = reinterpret_cast<VskStringDesc *>(ptr)[i];
-            str_desc.m_length = VskByte(str.size() < 255 ? str.size() : 255);
+            str_desc.m_length = VskByte(str.size() < VSK_MAX_STR_LEN ? str.size() : VSK_MAX_STR_LEN);
             str_desc.m_relocation = 1; // VeySicKでは常に非ゼロ
             str_desc.m_addr = VskWord(str_addr);
         }
@@ -479,7 +479,7 @@ bool vsk_var_set_value(const VskString& name, const VskIndexList& dimension, con
             // そして追加
             VskString& str = *(VskString*)data;
             auto str_addr = vsk_str_add(str);
-            str_desc->m_length = VskByte((str.size() > 255) ? 255 : str.size());
+            str_desc->m_length = VskByte((str.size() > VSK_MAX_STR_LEN) ? VSK_MAX_STR_LEN : str.size());
             str_desc->m_addr = VskWord(str_addr);
             return true;
         }
@@ -565,8 +565,8 @@ bool vsk_var_get_value(const VskString& name, void **pptr, const VskIndexList& i
     assert(ptr3);
     if (ptr3)
     {
-        if (str_desc->m_length >= 255)
-            *pptr = new VskString(ptr3, 255 + std::strlen(ptr3 + 255));
+        if (str_desc->m_length >= VSK_MAX_STR_LEN)
+            *pptr = new VskString(ptr3, VSK_MAX_STR_LEN + std::strlen(ptr3 + VSK_MAX_STR_LEN));
         else
             *pptr = new VskString(ptr3, str_desc->m_length);
     }

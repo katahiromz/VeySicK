@@ -75,6 +75,8 @@ typedef std::wstring   VskWString;  // ワイド文字列
     typedef VskString  VskTString;  // テキスト文字列
 #endif
 
+#define VSK_MAX_STR_LEN 255         // 文字列の長さの限界（無制限モードを除く）
+
 typedef std::size_t     VskAddr;     // アドレス（符号なし）
 typedef std::ptrdiff_t  VskPtrDiff;  // ポインタの差（符号付き）
 typedef std::size_t     VskMemSize;  // メモリーサイズ（符号なし）
