@@ -97,14 +97,36 @@ VskByte *vsk_8801_get_page(int screen_mode, int iPage)
     return nullptr;
 }
 
+// 8801 フリーエリアのアドレスとサイズ
+#define VSK_8801_FREE_AREA_START    0xD600
+#define VSK_8801_FREE_AREA_END      0xE5FF
+#define VSK_8801_FREE_AREA_SIZE     (VSK_8801_FREE_AREA_END - VSK_8801_FREE_AREA_START + 1)
+
+
+// 8801 フリーエリアの実データ
+VskByte vsk_8801_free_area[VSK_8801_VRAM_SIZE];
+
+// 8801 フリーエリア
+struct Vsk8801FreeArea : VskSimpleMemoryBlock
+{
+    Vsk8801FreeArea()
+        : VskSimpleMemoryBlock(VSK_8801_FREE_AREA_START, VSK_8801_FREE_AREA_SIZE, vsk_8801_free_area)
+    {
+    }
+};
+
 // 8801のマシン
 struct Vsk8801Machine : VskMachine
 {
-    Vsk32BppImage m_screen_image;               // スクリーンイメージ
-    std::shared_ptr<Vsk8801VRAM> m_vram;        // VRAM
+    Vsk32BppImage m_screen_image;                   // スクリーンイメージ
+    std::shared_ptr<Vsk8801VRAM> m_vram;            // VRAM
+    std::shared_ptr<Vsk8801FreeArea> m_free_area;   // フリーエリア
 
     // コンストラクタ
     Vsk8801Machine(VskMachineState *state, VskSettings *settings);
+
+    // メモリーのクリア
+    bool clear_memory(VskDword addr) override;
 
     // パレットのリセット
     void reset_palette() override;
@@ -305,14 +327,18 @@ struct Vsk8801Machine : VskMachine
         if (do_connect)
         {
             m_vram = std::make_shared<Vsk8801VRAM>(m_state);
+            m_free_area = std::make_shared<Vsk8801FreeArea>();
             m_state->m_memory->add_block(m_vram.get());
+            m_state->m_memory->add_block(m_free_area.get());
             VskMachine::connect(true);
             clear_text();
         }
         else
         {
             VskMachine::connect(false);
+            m_state->m_memory->remove_block(m_free_area.get());
             m_state->m_memory->remove_block(m_vram.get());
+            m_free_area = nullptr;
             m_vram = nullptr;
         }
         return true;
@@ -1053,6 +1079,42 @@ void Vsk8801Machine::clear_planes(bool blue, bool red, bool green, bool intensit
 std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state, VskSettings *settings)
 {
     return std::make_shared<Vsk8801Machine>(state, settings);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+// フリーエリアのアドレスチェックを行う特殊メモリー
+#define VSK_8801_FREE_AREA_START_CHECK  0xEB1B
+#define VSK_8801_FREE_AREA_END_CHECK    0xE7E8
+
+bool vsk_special_memory_read_8801(VskByte *ptr, VskAddr addr)
+{
+    switch (addr)
+    {
+    case VSK_8801_FREE_AREA_START_CHECK + 0:
+        *ptr = vsk_low_byte(VSK_8801_FREE_AREA_START);
+        return true;
+    case VSK_8801_FREE_AREA_START_CHECK + 1:
+        *ptr = vsk_high_byte(VSK_8801_FREE_AREA_START);
+        return true;
+    case VSK_8801_FREE_AREA_END_CHECK + 0:
+        *ptr = vsk_low_byte(VSK_8801_FREE_AREA_END);
+        return true;
+    case VSK_8801_FREE_AREA_END_CHECK + 1:
+        *ptr = vsk_high_byte(VSK_8801_FREE_AREA_END);
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Vsk8801Machine::clear_memory(VskDword addr)
+{
+    if (!(VSK_8801_FREE_AREA_START <= addr && addr <= VSK_8801_FREE_AREA_END))
+        return false;
+
+    std::memset(vsk_8801_free_area, 0, sizeof(vsk_8801_free_area));
+    return true;
 }
 
 #endif  // def ENABLE_PC8801

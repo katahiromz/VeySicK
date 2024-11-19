@@ -219,6 +219,9 @@ struct Vsk9801Machine : VskMachine
     // コンストラクタ
     Vsk9801Machine(VskMachineState *state, VskSettings *settings);
 
+    // メモリーのクリア
+    bool clear_memory(VskDword addr) override;
+
     // パレットのリセット
     void reset_palette() override;
     // テキスト画面のリセット
@@ -1287,6 +1290,18 @@ void Vsk9801Machine::clear_planes(bool blue, bool red, bool green, bool intensit
 std::shared_ptr<VskMachine> vsk_create_9801_machine(VskMachineState *state, VskSettings *settings)
 {
     return std::make_shared<Vsk9801Machine>(state, settings);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+bool vsk_special_memory_read_9801(VskByte *ptr, VskAddr addr)
+{
+    return false;
+}
+
+bool Vsk9801Machine::clear_memory(VskDword addr)
+{
+    return true;
 }
 
 #endif  // def ENABLE_PC9801

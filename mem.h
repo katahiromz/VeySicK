@@ -133,3 +133,11 @@ struct VskMemoryModel : public VskObject
 };
 
 //////////////////////////////////////////////////////////////////////////////
+
+#ifdef ENABLE_PC8801
+bool vsk_special_memory_read_8801(VskByte *ptr, VskAddr addr);
+#endif
+
+#ifdef ENABLE_PC9801
+bool vsk_special_memory_read_9801(VskByte *ptr, VskAddr addr);
+#endif

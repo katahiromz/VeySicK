@@ -6802,6 +6802,14 @@ static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 3))
         return nullptr;
+
+    VskWord v1;
+    if (args.size() > 1 && args[1] && vsk_wrd(v1, args[1]))
+    {
+        if (!vsk_machine->clear_memory(v1))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    }
+
     // 変数を全部消す
     vsk_var_clear_all();
     // 乱数の初期化
