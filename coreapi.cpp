@@ -228,7 +228,7 @@ struct VskMachineImpl
     VskIndexList m_control_path;
     // 停止中のコントロールパス
     VskIndexList m_stopping_path;
-    // 現在のデータポインタ（インデックスリスト）
+    // 現在のDATAの読み込み位置（インデックスリスト）
     VskIndexList m_data_pointer;
     // コントロールパスのスタック
     std::stack<VskIndexList> m_path_stack;
@@ -729,8 +729,8 @@ VskError vsk_scan_loop_info(VskAstPtr node, const VskIndexList& indices, VskLoop
     return error;
 }
 
-// プログラムデータもスキャンする
-VskError vsk_scan_program_data(void)
+// プログラムリストをスキャンする
+VskError vsk_scan_program_list(void)
 {
     VSK_IMPL()->m_label_map.clear();
 
@@ -767,7 +767,7 @@ VskError vsk_scan_direct_data(VskAstPtr data)
     vsk_want_program_data(data, wanted);
     if (wanted)
     {
-        error = vsk_scan_program_data();
+        error = vsk_scan_program_list();
         if (error)
             return error;
     }
@@ -2901,13 +2901,23 @@ bool vsk_arity_in_range(const VskAstList& args, size_t min_, size_t max_)
 VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE })
 {
     mdbg_traceA("vsk_run\n");
+    // オプションベースを初期化
     VSK_STATE()->m_option_base = -1;
+    // エラーをクリアする
     VSK_STATE()->error_clear();
+    // コントロールパスをセット
     VSK_IMPL()->m_control_path = index_list;
+    // DATAの読み込み位置を初期化
     VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
+    // 変数を全部消す
     vsk_var_clear_all();
+    // 乱数の初期化
     vsk_rand_init(0);
-    vsk_scan_program_data();
+    // DEF FNのデータを消す
+    VSK_IMPL()->m_fn_to_path.clear();
+    // プログラムリストをスキャン
+    vsk_scan_program_list();
+
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
 
@@ -6792,8 +6802,12 @@ static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 3))
         return nullptr;
+    // 変数を全部消す
     vsk_var_clear_all();
+    // 乱数の初期化
     vsk_rand_init(0);
+    // DEF FNのデータを消す
+    VSK_IMPL()->m_fn_to_path.clear();
     // 継続(CONT)はできなくなった
     VSK_IMPL()->m_stopping_path.clear();
     return nullptr;
@@ -7438,10 +7452,15 @@ static VskAstPtr VSKAPI vsk_END(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
+    // ファイルを全部閉じる
     vsk_file_close_all();
+    // DATAの読み込み位置を初期化
     VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
+    // CONT可能にする
     VSK_IMPL()->m_stopping_path = VSK_IMPL()->m_control_path;
+    // コマンドレベルに戻る
     vsk_enter_command_level();
+
     return nullptr;
 }
 
@@ -8841,17 +8860,31 @@ static VskAstPtr VSKAPI vsk_NEW(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
+    // プログラムリストをクリアする
     VSK_IMPL()->m_program_text.clear();
+    // コントロールパスをクリアする
     VSK_IMPL()->m_control_path.clear();
-    VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
+    // ループ情報を消す
     VSK_IMPL()->m_loop_map.clear();
+    // ターゲット行をクリアする
     VSK_IMPL()->m_target_line_text.clear();
+    // ダイレクトコードをクリアする
     VSK_IMPL()->m_direct_code = nullptr;
+    // DATAの読み込み位置を初期化
+    VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
+    // トレースをOFFにする
     VSK_IMPL()->m_trace_on = false;
+    // エラーをクリア
     VSK_STATE()->error_clear();
+    // 変数を全部消す
     vsk_var_clear_all();
+    // ファイルを全部閉じる
     vsk_file_close_all();
+    // 乱数の初期化
     vsk_rand_init(0);
+    // DEF FNのデータを消す
+    VSK_IMPL()->m_fn_to_path.clear();
+    // コマンドレベルに戻る
     vsk_enter_command_level();
 
     return nullptr;
