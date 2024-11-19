@@ -6109,10 +6109,13 @@ static VskAstPtr VSKAPI vsk_CONT(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_NEW_CMD
+// INSN_NEW_CMD (NEW CMD) @implemented
 static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
+        return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_9801_mode())
         return nullptr;
 
     VSK_STATE()->m_has_cmd_extension = true;
