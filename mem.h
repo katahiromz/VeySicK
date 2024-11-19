@@ -54,6 +54,8 @@ VskString vsk_var_get_typed_name(const VskString& name);
 VskString vsk_var_get_typed_name(const VskString& name, bool is_array);
 // 変数名の型を取得する
 VskType vsk_var_get_type(const VskString& name);
+// 変数名の型を取得する(タイプゼロ)
+VskType vsk_var_get_type_0(const VskString& name);
 // 変数をすべてクリアする
 void vsk_var_clear_all(void);
 // 添え字を解決する

@@ -137,22 +137,19 @@ void vsk_set_def_type(VskByte ch, VskType type)
     }
 }
 
-// 変数名の型を取得する
-VskType vsk_var_get_type(const VskString& name)
+// 変数名の型を取得する(タイプゼロ)
+VskType vsk_var_get_type_0(const VskString& name)
 {
     // 変数名は空ではないはず
-    assert(!name.empty());
+    assert(name.size());
     if (name.empty())
         return VSK_TYPE_SINGLE;
 
-    // 変数名を大文字にする
-    auto typed_name = name;
-    vsk_upper(typed_name);
-
     // 変数名に応じた型を返す
-    auto type = name[typed_name.size() - 1];
-    if (type == VSK_TYPE_ARRAY && typed_name.size() > 2)
-        type = name[typed_name.size() - 2];
+    auto type = name[name.size() - 1];
+    if (type == VSK_TYPE_ARRAY && name.size() > 2)
+        type = name[name.size() - 2];
+
     switch (type)
     {
     case VSK_TYPE_SINGLE:
@@ -161,13 +158,18 @@ VskType vsk_var_get_type(const VskString& name)
     case VSK_TYPE_STRING:
     case VSK_TYPE_LONG:
         return type;
-    default:
-        if (vsk_isalpha(type))
-            type = vsk_machine->m_state->def_var_types[typed_name[0] - 'A'];
-        else
-            type = 0;
-        return type ? type : VSK_TYPE_SINGLE;
     }
+    return 0;
+}
+
+// 変数名の型を取得する。必要ならdef_var_typesを使用する
+VskType vsk_var_get_type(const VskString& name)
+{
+    VskType type = vsk_var_get_type_0(name);
+    if (type)
+        return type;
+    type = vsk_machine->m_state->def_var_types[name[0] - 'A'];
+    return type ? type : VSK_TYPE_SINGLE;
 }
 
 // 型付き変数名を取得する

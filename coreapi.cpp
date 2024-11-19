@@ -7672,8 +7672,12 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
     auto ret = vsk_eval_ast(expr);
     if (!ret)
         return nullptr;
+    // 関数の型を取得
+    auto type = vsk_var_get_type_0(name);
+    if (!type)
+        type = VSK_TYPE_SINGLE;
     // 型キャスト
-    return vsk_type_cast(ret, vsk_var_get_type(name));
+    return vsk_type_cast(ret, type);
 }
 
 // INSN_FPOS
