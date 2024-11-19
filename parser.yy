@@ -418,7 +418,7 @@ function_name
     | TK_STRING_dollar    { vsk_targeting($1); $$ = vsk_ast(INSN_STRING_dollar); }
     | TK_STR_dollar       { vsk_targeting($1); $$ = vsk_ast(INSN_STR_dollar); }
     | TK_TAN              { vsk_targeting($1); $$ = vsk_ast(INSN_TAN); }
-    | TK_USR              { vsk_targeting($1); $$ = vsk_ast(INSN_USR); }
+    | TK_USR              { $$ = $1; }
     | TK_VAL              { vsk_targeting($1); $$ = vsk_ast(INSN_VAL); }
     | TK_VIEW             { vsk_targeting($1); $$ = vsk_ast(INSN_VIEW_func); }
     | TK_WINDOW           { vsk_targeting($1); $$ = vsk_ast(INSN_WINDOW_func); }
