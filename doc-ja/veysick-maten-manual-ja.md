@@ -567,8 +567,7 @@ VeySicKと実機のBASICは、処理速度が桁違いに違いますので、�
 
 ```txt
 ...
-295 IF INKEY$<>"" GOTO 295
-300 IF INKEY$="" GOTO 300
+300 WHILE INKEY$<>"":WEND:WHILE INKEY$="":WEND
 ...
 ```
 
