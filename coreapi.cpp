@@ -7654,10 +7654,20 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
         VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
     }
 
-    // 式に代入
+    // 実引数を評価して値リストを作成
+    VskAstList value_list;
+    for (size_t iarg = 0; iarg < args.size(); ++iarg)
+    {
+        auto value = vsk_eval_ast(args[iarg]);
+        if (!value)
+            return nullptr;
+        value_list.push_back(value);
+    }
+
+    // 値を式に代入
     auto expr = node->at(2);
     for (size_t iarg = 0; iarg < args.size(); ++iarg)
-        expr = expr->substitute(lvalue_list->at(iarg), args[iarg]);
+        expr = expr->substitute(lvalue_list->at(iarg), value_list[iarg]);
     // 評価
     auto ret = vsk_eval_ast(expr);
     if (!ret)
