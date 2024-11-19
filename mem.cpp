@@ -635,25 +635,6 @@ void vsk_var_clear_all(void)
     VSK_STATE()->m_option_base = -1;
 }
 
-bool vsk_special_memory_read(VskByte *ptr, VskAddr addr)
-{
-#ifdef ENABLE_PC8801
-    if (vsk_machine->is_8801_mode())
-    {
-        if (vsk_special_memory_read_8801(ptr, addr))
-            return true;
-    }
-#endif
-#ifdef ENABLE_PC9801
-    if (vsk_machine->is_9801_mode())
-    {
-        if (vsk_special_memory_read_9801(ptr, addr))
-            return true;
-    }
-#endif
-    return false;
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // memory model
 
@@ -664,7 +645,7 @@ bool VskMemoryModel::read(VskByte *ptr, VskAddr addr, VskMemSize size) const
     for (VskAddr ib = 0; ib < size; ++ib)
     {
         VskByte byte;
-        if (vsk_special_memory_read(&byte, addr + ib))
+        if (vsk_machine->special_memory_read(&byte, addr + ib))
         {
             ptr[ib] = byte;
             continue;

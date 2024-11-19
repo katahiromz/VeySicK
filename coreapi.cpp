@@ -6133,9 +6133,12 @@ static VskAstPtr VSKAPI vsk_FRE(VskAstPtr& self, const VskAstList& args)
     {
         switch (v0)
         {
-        case 0: return vsk_ast_dbl(99999);
-        case 1: return vsk_ast_dbl(99999);
-        case 2: return vsk_ast_dbl(99999);
+        case 0:
+        case 2:
+            // TODO: ガーベジコレクション
+            return vsk_ast_dbl(vsk_machine->get_free_size());
+        case 1:
+            return vsk_ast_dbl(99999); // ダミー
         case 3:
             if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
                 VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
@@ -6818,15 +6821,17 @@ static VskAstPtr VSKAPI vsk_ERASE(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CLEAR (CLEAR)
+// INSN_CLEAR (CLEAR) @implemented
 static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 3))
         return nullptr;
 
-    VskWord v1;
-    if (args.size() > 1 && args[1] && vsk_wrd(v1, args[1]))
+    VskLong v1;
+    if (args.size() > 1 && args[1])
     {
+        if (!vsk_lng(v1, args[1]))
+            return nullptr;
         if (!vsk_machine->clear_memory(v1))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
     }

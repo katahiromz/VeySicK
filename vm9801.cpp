@@ -209,12 +209,25 @@ int vsk_9801_get_color_display_page(int screen_mode, int display_pages)
     return -1;
 }
 
+// 9801 フリーエリアのアドレスとサイズ
+#define VSK_9801_FREE_AREA_START      0x10C00
+#define VSK_9801_FREE_AREA_END_MAX    0x7FFFF
+#define VSK_9801_FREE_AREA_SIZE       (VSK_9801_FREE_AREA_END_MAX - VSK_9801_FREE_AREA_START + 1)
+
+// 9801 フリーエリア
+struct Vsk9801FreeArea : VskSimpleMemoryBlock
+{
+    Vsk9801FreeArea() : VskSimpleMemoryBlock(VSK_9801_FREE_AREA_START, VSK_9801_FREE_AREA_SIZE)
+    { }
+};
+
 // 9801 マシン
 struct Vsk9801Machine : VskMachine
 {
     Vsk32BppImage m_screen_image;   // スクリーンイメージ
     std::shared_ptr<Vsk9801TextVRAM> m_text_vram; // テキストVRAM
     std::shared_ptr<Vsk9801GraphVRAM> m_graph_vram; // グラフィック VRAM
+    std::shared_ptr<Vsk9801FreeArea> m_free_area;   // フリーエリア
 
     // コンストラクタ
     Vsk9801Machine(VskMachineState *state, VskSettings *settings);
@@ -223,6 +236,10 @@ struct Vsk9801Machine : VskMachine
     bool clear_memory(VskDword addr) override;
     // フリーエリアのサイズ
     VskDword get_free_size() override;
+    // フリーエリアの最後のアドレス
+    VskDword get_free_ubound() override;
+    // 特殊なメモリー読み込み
+    bool special_memory_read(VskByte *ptr, VskAddr addr) override;
 
     // パレットのリセット
     void reset_palette() override;
@@ -610,16 +627,20 @@ struct Vsk9801Machine : VskMachine
         {
             m_text_vram = std::make_shared<Vsk9801TextVRAM>(m_state);
             m_graph_vram = std::make_shared<Vsk9801GraphVRAM>(m_state);
+            m_free_area = std::make_shared<Vsk9801FreeArea>();
             m_state->m_memory->add_block(m_text_vram.get());
             m_state->m_memory->add_block(m_graph_vram.get());
+            m_state->m_memory->add_block(m_free_area.get());
             VskMachine::connect(true);
             clear_text();
         }
         else
         {
             VskMachine::connect(false);
+            m_state->m_memory->remove_block(m_free_area.get());
             m_state->m_memory->remove_block(m_graph_vram.get());
             m_state->m_memory->remove_block(m_text_vram.get());
+            m_free_area = nullptr;
             m_graph_vram = nullptr;
             m_text_vram = nullptr;
         }
@@ -1296,19 +1317,30 @@ std::shared_ptr<VskMachine> vsk_create_9801_machine(VskMachineState *state, VskS
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-bool vsk_special_memory_read_9801(VskByte *ptr, VskAddr addr)
+// フリーエリアの最後のアドレス
+VskDword Vsk9801Machine::get_free_ubound()
+{
+    return VSK_9801_FREE_AREA_END_MAX;
+}
+
+// フリーエリアのサイズ
+VskDword Vsk9801Machine::get_free_size()
+{
+    return (get_free_ubound() - VSK_9801_FREE_AREA_START + 1);
+}
+
+bool Vsk9801Machine::special_memory_read(VskByte *ptr, VskAddr addr)
 {
     return false;
 }
 
 bool Vsk9801Machine::clear_memory(VskDword addr)
 {
-    return true;
-}
+    if (!(addr <= VSK_9801_FREE_AREA_END_MAX))
+        return false;
 
-VskDword Vsk9801Machine::get_free_size()
-{
-    return 0;
+    m_free_area->clear();
+    return true;
 }
 
 #endif  // def ENABLE_PC9801

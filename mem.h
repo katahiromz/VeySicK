@@ -90,16 +90,36 @@ struct VskSimpleMemoryBlock : VskMemoryBlockBase
     VskAddr m_addr = 0;
     VskMemSize m_size = 0;
     VskByte *m_ptr = NULL;
+    bool m_is_alloc = false;
 
     VskSimpleMemoryBlock() { }
     VskSimpleMemoryBlock(VskAddr addr, VskMemSize size, VskByte *ptr)
         : m_addr(addr)
         , m_size(size)
         , m_ptr(ptr)
+        , m_is_alloc(false)
     {
+    }
+    VskSimpleMemoryBlock(VskAddr addr, VskMemSize size)
+        : m_addr(addr)
+        , m_size(size)
+        , m_ptr(new VskByte[size])
+        , m_is_alloc(true)
+    {
+        assert(m_ptr);
     }
     ~VskSimpleMemoryBlock()
     {
+        if (m_is_alloc)
+        {
+            delete[] m_ptr;
+            m_ptr = nullptr;
+        }
+    }
+
+    void clear()
+    {
+        std::memset(m_ptr, 0, m_size);
     }
 
           VskByte& operator[](VskDword index)       { return m_ptr[index]; }
@@ -133,11 +153,3 @@ struct VskMemoryModel : public VskObject
 };
 
 //////////////////////////////////////////////////////////////////////////////
-
-#ifdef ENABLE_PC8801
-bool vsk_special_memory_read_8801(VskByte *ptr, VskAddr addr);
-#endif
-
-#ifdef ENABLE_PC9801
-bool vsk_special_memory_read_9801(VskByte *ptr, VskAddr addr);
-#endif

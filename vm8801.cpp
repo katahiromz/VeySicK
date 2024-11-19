@@ -51,8 +51,7 @@ struct Vsk8801VRAM : VskMemoryBlockBase
     VskMachineState *m_state;
 
     // コンストラクタ
-    Vsk8801VRAM(VskMachineState *state)
-        : m_state(state)
+    Vsk8801VRAM(VskMachineState *state) : m_state(state)
     {
     }
 
@@ -102,13 +101,10 @@ VskByte *vsk_8801_get_page(int screen_mode, int iPage)
 #define VSK_8801_FREE_AREA_END_MAX    0xE5FF
 #define VSK_8801_FREE_AREA_SIZE       (VSK_8801_FREE_AREA_END_MAX - VSK_8801_FREE_AREA_START + 1)
 
-// 8801 フリーエリアの実データ
-VskByte vsk_8801_free_area[VSK_8801_FREE_AREA_SIZE];
-
 // 8801 フリーエリア
 struct Vsk8801FreeArea : VskSimpleMemoryBlock
 {
-    Vsk8801FreeArea() : VskSimpleMemoryBlock(VSK_8801_FREE_AREA_START, VSK_8801_FREE_AREA_SIZE, vsk_8801_free_area)
+    Vsk8801FreeArea() : VskSimpleMemoryBlock(VSK_8801_FREE_AREA_START, VSK_8801_FREE_AREA_SIZE)
     { }
 };
 
@@ -128,6 +124,8 @@ struct Vsk8801Machine : VskMachine
     VskDword get_free_size() override;
     // フリーエリアの最後のアドレス
     VskDword get_free_ubound() override;
+    // 特殊なメモリー読み込み
+    bool special_memory_read(VskByte *ptr, VskAddr addr) override;
 
     // パレットのリセット
     void reset_palette() override;
@@ -1097,12 +1095,13 @@ VskDword Vsk8801Machine::get_free_ubound()
         return (m_state->m_has_cmd_extension) ? 0xE0FF : 0xE5FF;
 }
 
+// フリーエリアのサイズ
 VskDword Vsk8801Machine::get_free_size()
 {
     return (get_free_ubound() - VSK_8801_FREE_AREA_START + 1);
 }
 
-bool vsk_special_memory_read_8801(VskByte *ptr, VskAddr addr)
+bool Vsk8801Machine::special_memory_read(VskByte *ptr, VskAddr addr)
 {
     switch (addr)
     {
@@ -1128,7 +1127,7 @@ bool Vsk8801Machine::clear_memory(VskDword addr)
     if (!(VSK_8801_FREE_AREA_START <= addr && addr <= VSK_8801_FREE_AREA_END_MAX))
         return false;
 
-    std::memset(vsk_8801_free_area, 0, sizeof(vsk_8801_free_area));
+    m_free_area->clear();
     return true;
 }
 
