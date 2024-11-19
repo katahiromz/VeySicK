@@ -3455,7 +3455,7 @@ static VskAstPtr VSKAPI vsk_POKE(VskAstPtr& self, const VskAstList& args)
     if (vsk_wrd(v0, args[0]) && vsk_wrd(v1, args[1]))
     {
         if (!(0 <= v1 && v1 < 256))
-            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         auto addr = vsk_machine->resolve_addr(v0);
         auto byte = VskByte(v1);
