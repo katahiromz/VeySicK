@@ -7647,6 +7647,8 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
         expr = expr->substitute(lvalue_list->at(iarg), args[iarg]);
     // 評価
     auto ret = vsk_eval_ast(expr);
+    if (!ret)
+        return nullptr;
     // 型キャスト
     return vsk_type_cast(ret, vsk_var_get_type(name));
 }
