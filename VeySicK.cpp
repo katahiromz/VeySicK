@@ -2247,6 +2247,10 @@ bool VskMachine::load(VskString filename, std::string& data)
     if (error)
         error = file_manager->open(file, filename + ".BAS", VskFile::MODE_INPUT);
     if (error)
+        error = file_manager->open(file, filename + ".n88", VskFile::MODE_INPUT);
+    if (error)
+        error = file_manager->open(file, filename + ".N88", VskFile::MODE_INPUT);
+    if (error)
     {
         do_error(error);
         return false;
