@@ -7616,20 +7616,13 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
     auto& path = it->second;
 
-    // コントロールパスを解決する
+    // コントロールパスを解決し、関数名などを確認する
     auto node = vsk_resolve_index_list(path);
-    if (!node || node->m_insn != INSN_DEF_FN)
+    if (!node || name != node->at(0)->m_str || node->m_insn != INSN_DEF_FN)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
-
-    // 関数名を確認する
-    auto fn = node->at(0);
-    if (name != fn->to_str())
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
-
-    auto lvalue_list = node->at(1);     // 仮引数リスト
-    auto expr = node->at(2);            // 式
 
     // 引数の数が不一致なら失敗
+    auto lvalue_list = node->at(1); // 仮引数リスト
     if (lvalue_list)
     {
         if (args.size() < lvalue_list->size())
@@ -7643,6 +7636,7 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
     }
 
     // 式に代入
+    auto expr = node->at(2);
     for (size_t iarg = 0; iarg < args.size(); ++iarg)
         expr = expr->substitute(lvalue_list->at(iarg), args[iarg]);
     // 評価
