@@ -377,7 +377,7 @@ function_name
     | TK_DSKI_dollar      { vsk_targeting($1); $$ = vsk_ast(INSN_DSKI_dollar); }
     | TK_EXP              { vsk_targeting($1); $$ = vsk_ast(INSN_EXP); }
     | TK_FIX              { vsk_targeting($1); $$ = vsk_ast(INSN_FIX); }
-    | TK_FN               { vsk_targeting($1); $$ = vsk_ast(INSN_FN); }
+    | TK_FN               { $$ = $1; }
     | TK_FPOS             { vsk_targeting($1); $$ = vsk_ast(INSN_FPOS); }
     | TK_FRE              { vsk_targeting($1); $$ = vsk_ast(INSN_FRE); }
     | TK_HEX_dollar       { vsk_targeting($1); $$ = vsk_ast(INSN_HEX_dollar); }
@@ -807,15 +807,15 @@ primary_statement
     }
     | TK_DEF TK_FN TK_EQUAL expression {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_FN, { $2, nullptr, $4 });
+        $$ = vsk_ast(INSN_DEF_FN, { $2, nullptr, $4 });
     }
     | TK_DEF TK_FN TK_L_PAREN TK_R_PAREN TK_EQUAL expression {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_FN, { $2, nullptr, $6 });
+        $$ = vsk_ast(INSN_DEF_FN, { $2, nullptr, $6 });
     }
-    | TK_DEF TK_FN TK_L_PAREN parameter_list TK_R_PAREN TK_EQUAL expression {
+    | TK_DEF TK_FN TK_L_PAREN lvalue_list TK_R_PAREN TK_EQUAL expression {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_FN, { $2, $4, $7 });
+        $$ = vsk_ast(INSN_DEF_FN, { $2, $4, $7 });
     }
     | TK_COM TK_OFF                                     { vsk_targeting($1); $$ = vsk_ast(INSN_COM_OFF); }
     | TK_COM TK_ON                                      { vsk_targeting($1); $$ = vsk_ast(INSN_COM_ON); }

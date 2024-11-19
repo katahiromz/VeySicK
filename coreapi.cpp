@@ -250,6 +250,8 @@ struct VskMachineImpl
     VskString m_target_line_text;
     // 現在の行
     VskLineNo m_current_line = 0;
+    // DEF FNの情報
+    std::map<VskString, VskIndexList> m_fn_to_path;
     // トラップ情報
     VskTrapInfo m_traps[VSK_TRAP_MAX];
     // トラップ時刻
@@ -1310,6 +1312,56 @@ bool vsk_dimension_from_lvalue(VskString& name, VskIndexList& dimension, const V
     return true;
 }
 
+// 型キャスト
+VskAstPtr vsk_type_cast(VskAstPtr arg, VskType type)
+{
+    switch (type)
+    {
+    case VSK_TYPE_SINGLE:
+        {
+            VskSingle v0;
+            if (!vsk_sng(v0, arg))
+                return nullptr;
+            return vsk_ast_sng(v0);
+        }
+        break;
+    case VSK_TYPE_DOUBLE:
+        {
+            VskDouble v0;
+            if (!vsk_dbl(v0, arg))
+                return nullptr;
+            return vsk_ast_dbl(v0);
+        }
+        break;
+    case VSK_TYPE_INTEGER:
+        {
+            VskInt v0;
+            if (!vsk_int(v0, arg))
+                return nullptr;
+            return vsk_ast_int(v0);
+        }
+        break;
+    case VSK_TYPE_STRING:
+        {
+            VskString v0;
+            if (!vsk_str(v0, arg))
+                return nullptr;
+            return vsk_ast_str(v0);
+        }
+        break;
+    case VSK_TYPE_LONG:
+        {
+            VskLong v0;
+            if (!vsk_lng(v0, arg))
+                return nullptr;
+            return vsk_ast_lng(v0);
+        }
+        break;
+    }
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
+}
+
 // 変数に代入
 bool vsk_var_assign(VskAstPtr arg0, VskAstPtr arg1)
 {
@@ -1493,6 +1545,29 @@ VskDouble VskAst::value() const
 void VskAst::set_column()
 {
     m_column = vsk_target_column;
+}
+
+void VskAst::copy_node(VskAst *src)
+{
+    m_insn = src->m_insn;
+    m_str = src->m_str;
+    m_dbl = src->m_dbl;
+    m_program_line = src->m_program_line;
+    m_column = src->m_column;
+}
+
+VskAstPtr VskAst::substitute(VskAstPtr var, VskAstPtr value)
+{
+    auto clone = vsk_ast(m_insn);
+    clone->copy_node(this);
+    for (auto child : m_children)
+    {
+        if (child->compare(var.get()) == 0)
+            clone->m_children.push_back(value);
+        else
+            clone->m_children.push_back(child->substitute(var, value));
+    }
+    return clone;
 }
 
 void vsk_targeting(VskAstPtr ast)
@@ -7512,11 +7587,68 @@ static VskAstPtr VSKAPI vsk_LFILES(VskAstPtr& self, const VskAstList& args)
     return vsk_FILES_LFILES_helper(args, true);
 }
 
-// INSN_FN
+// INSN_DEF_FN (DEF FN)
+static VskAstPtr VSKAPI vsk_DEF_FN(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 3, 3))
+        return nullptr;
+
+    // ダイレクトモードなら失敗
+    if (VSK_IMPL()->m_control_path.size() && VSK_IMPL()->m_control_path[0] == I_DIRECT_CODE)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
+
+    // m_fn_to_pathにDEF FNのあるコントロールパスを保存する
+    auto fn = args[0];
+    assert(fn->m_insn == INSN_FN);
+    assert(fn->m_str.size());
+    VSK_IMPL()->m_fn_to_path[fn->to_str()] = VSK_IMPL()->m_control_path;
+
+    return nullptr;
+}
+
+// INSN_FN (ユーザー定義関数)
 static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
-    return nullptr;
+    // m_fn_to_pathからDEF FNのあるコントロールパスを取得する
+    auto name = self->to_str();
+    auto it = VSK_IMPL()->m_fn_to_path.find(name);
+    if (it == VSK_IMPL()->m_fn_to_path.end())
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
+    auto& path = it->second;
+
+    // コントロールパスを解決する
+    auto node = vsk_resolve_index_list(path);
+    if (!node || node->m_insn != INSN_DEF_FN)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
+
+    // 関数名を確認する
+    auto fn = node->at(0);
+    if (name != fn->to_str())
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DIRECT, nullptr);
+
+    auto lvalue_list = node->at(1);     // 仮引数リスト
+    auto expr = node->at(2);            // 式
+
+    // 引数の数が不一致なら失敗
+    if (lvalue_list)
+    {
+        if (args.size() < lvalue_list->size())
+            VSK_ERROR_AND_RETURN(VSK_ERR_MISSING_OPERAND, nullptr);
+        if (args.size() > lvalue_list->size())
+            VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
+    }
+    else if (args.size())
+    {
+        VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
+    }
+
+    // 式に代入
+    for (size_t iarg = 0; iarg < args.size(); ++iarg)
+        expr = expr->substitute(lvalue_list->at(iarg), args[iarg]);
+    // 評価
+    auto ret = vsk_eval_ast(expr);
+    // 型キャスト
+    return vsk_type_cast(ret, vsk_var_get_type(name));
 }
 
 // INSN_FPOS

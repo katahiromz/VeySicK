@@ -140,6 +140,8 @@ struct VskAst : VskObject
     int compare(const VskAst *other) const;
     VskDouble value() const;
     void set_column();
+    void copy_node(VskAst *src);
+    VskAstPtr substitute(VskAstPtr var, VskAstPtr value);
 };
 
 inline VskAstPtr

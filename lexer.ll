@@ -137,9 +137,13 @@ REM([ \t]|:).* {
     vsk_upper(str);
     int token = vsk_token_from_text(yytext);
     if (token == TK_IDENTIFIER)
-        yylval = vsk_ast(INSN_IDENTIFIER, str.c_str());
+        yylval = vsk_ast(INSN_IDENTIFIER, str);
+    else if (token == TK_FN)
+        yylval = vsk_ast(INSN_FN, str);
+    else if (token == TK_USR)
+        yylval = vsk_ast(INSN_USR, str);
     else
-        yylval = vsk_ast(INSN_KEYWORD, str.c_str());
+        yylval = vsk_ast(INSN_KEYWORD, str);
     vsk_target_column += yyleng;
     if (str == "DATA")
         vsk_in_data = true;
