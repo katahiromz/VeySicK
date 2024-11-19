@@ -221,6 +221,8 @@ struct Vsk9801Machine : VskMachine
 
     // メモリーのクリア
     bool clear_memory(VskDword addr) override;
+    // フリーエリアのサイズ
+    VskDword get_free_size() override;
 
     // パレットのリセット
     void reset_palette() override;
@@ -1302,6 +1304,11 @@ bool vsk_special_memory_read_9801(VskByte *ptr, VskAddr addr)
 bool Vsk9801Machine::clear_memory(VskDword addr)
 {
     return true;
+}
+
+VskDword Vsk9801Machine::get_free_size()
+{
+    return 0;
 }
 
 #endif  // def ENABLE_PC9801

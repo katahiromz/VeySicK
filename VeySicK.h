@@ -576,6 +576,7 @@ struct VskMachine : VskObject
     virtual void clear_graphic(const VskRectI *rect);
     virtual void clear_screen_image() { }
     virtual bool clear_memory(VskDword addr) { return true; }
+    virtual VskDword get_free_size() { return 0; }
 
     virtual VskByte& line_link(int y)       { return m_state->m_line_link[y]; }
     virtual VskByte  line_link(int y) const { return m_state->m_line_link[y]; }

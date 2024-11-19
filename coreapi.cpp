@@ -6119,10 +6119,28 @@ static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_FRE
+// INSN_FRE (FRE)
 static VskAstPtr VSKAPI vsk_FRE(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskInt v0;
+    if (vsk_int(v0, args[0]))
+    {
+        switch (v0)
+        {
+        case 0: return vsk_ast_dbl(99999);
+        case 1: return vsk_ast_dbl(99999);
+        case 2: return vsk_ast_dbl(99999);
+        case 3:
+            if (!VSK_SETTINGS()->m_unlimited_mode && vsk_machine->is_8801_mode())
+                VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+            return vsk_ast_dbl(99999);
+        default:
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+    }
     return nullptr;
 }
 

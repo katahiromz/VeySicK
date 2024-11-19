@@ -127,6 +127,8 @@ struct Vsk8801Machine : VskMachine
 
     // メモリーのクリア
     bool clear_memory(VskDword addr) override;
+    // フリーエリアのサイズ
+    VskDword get_free_size();
 
     // パレットのリセット
     void reset_palette() override;
@@ -1115,6 +1117,11 @@ bool Vsk8801Machine::clear_memory(VskDword addr)
 
     std::memset(vsk_8801_free_area, 0, sizeof(vsk_8801_free_area));
     return true;
+}
+
+VskDword Vsk8801Machine::get_free_size()
+{
+    return sizeof(vsk_8801_free_area);
 }
 
 #endif  // def ENABLE_PC8801
