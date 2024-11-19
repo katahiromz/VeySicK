@@ -667,6 +667,13 @@ inline void vk_draw_wide_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0,
 template <typename T_PUTTER, typename T_GETTER>
 inline void vsk_flood_fill(T_PUTTER& putter, T_GETTER& border_getter, int x, int y, const VskRectI *clipping = nullptr)
 {
+    if (border_getter(x, y))
+        return;
+
+    std::vector<VskPointI> points;
+    VskPointI pt = { x, y };
+    points.push_back(pt);
+
     struct VskPointILess {
         inline bool operator()(const VskPointI& p0, const VskPointI& p1) const {
             if (p0.m_x < p1.m_x)
@@ -675,46 +682,28 @@ inline void vsk_flood_fill(T_PUTTER& putter, T_GETTER& border_getter, int x, int
         }
     };
 
-    if (border_getter(x, y))
-        return;
-
-    std::vector<VskPointI> points;
-    VskPointI pt = { x, y };
-    points.push_back(pt);
-
     std::set<VskPointI, VskPointILess> point_set;
     point_set.insert(pt);
 
-    for (size_t i = 0; i < points.size(); ++i) {
-        pt = points[i];
+    while (!points.empty()) {
+        pt = points.back();
+        points.pop_back();
+
         if (border_getter(pt.m_x, pt.m_y))
             continue;
 
         putter(pt.m_x, pt.m_y);
 
-        --pt.m_x; // left
-        if (!border_getter(pt.m_x, pt.m_y) && !point_set.count(pt)) {
-            points.push_back(pt);
-            point_set.insert(pt);
-        }
-        ++pt.m_x;
-        --pt.m_y; // up
-        if (!border_getter(pt.m_x, pt.m_y) && !point_set.count(pt)) {
-            points.push_back(pt);
-            point_set.insert(pt);
-        }
-        ++pt.m_x;
-        ++pt.m_y; // right
-        if (!border_getter(pt.m_x, pt.m_y) && !point_set.count(pt)) {
-            points.push_back(pt);
-            point_set.insert(pt);
-        }
-        --pt.m_x;
-        ++pt.m_y; // down
-        if (!border_getter(pt.m_x, pt.m_y) && !point_set.count(pt)) {
-            points.push_back(pt);
-            point_set.insert(pt);
-        }
+        auto add_point = [&](int new_x, int new_y) {
+            if (!border_getter(new_x, new_y) && point_set.insert({new_x, new_y}).second) {
+                points.push_back({new_x, new_y});
+            }
+        };
+
+        if (!clipping || (pt.m_x > clipping->m_x0)) add_point(pt.m_x - 1, pt.m_y); // left
+        if (!clipping || (pt.m_y > clipping->m_y0)) add_point(pt.m_x, pt.m_y - 1); // up
+        if (!clipping || (pt.m_x < clipping->m_x1)) add_point(pt.m_x + 1, pt.m_y); // right
+        if (!clipping || (pt.m_y < clipping->m_y1)) add_point(pt.m_x, pt.m_y + 1); // down
     }
 }
 
