@@ -8851,7 +8851,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         VskDword offset;
         if (!file->get_pos(&offset))
             VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
-        return vsk_ast_dbl(offset / 256); // セクタ数
+        return vsk_ast_dbl(offset / VSK_SECTOR_SIZE); // セクタ数
     }
 
     if (file->is_keyboard() || file->is_com()) // キーボードか通信ファイル？
@@ -8882,7 +8882,7 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
         VskDword size;
         if (!file->get_size(&size))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-        return vsk_ast_dbl(size / 256); // セクタ数
+        return vsk_ast_dbl(size / VSK_SECTOR_SIZE); // セクタ数
     }
 
     if (file->is_random()) // ランダムファイル？
@@ -8891,7 +8891,7 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
         if (!file->get_size(&size))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VskInt record_len = vsk_field_get_len(fileno);
-        return vsk_ast_dbl(offset / record_len + 1); // レコード番号
+        return vsk_ast_dbl(size / record_len + 1); // レコード番号
     }
 
     if (file->is_com()) // 通信ファイル？
