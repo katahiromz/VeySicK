@@ -382,11 +382,17 @@ bool vsk_field_store(int fileno, VskString& str)
 // フィールドを閉じる
 void vsk_field_close(int fileno)
 {
+    if (fileno == -1)
+    {
+        VSK_IMPL()->m_field_table.clear();
+        return;
+    }
+
     for (size_t index = VSK_IMPL()->m_field_table.size(); index > 0; )
     {
         --index;
         auto& entry = VSK_IMPL()->m_field_table[index];
-        if (fileno == -1 || entry.m_fileno == fileno)
+        if (entry.m_fileno == fileno)
             VSK_IMPL()->m_field_table.erase(VSK_IMPL()->m_field_table.begin() + index);
     }
 }
