@@ -7069,6 +7069,9 @@ static VskAstPtr VSKAPI vsk_EOF(VskAstPtr& self, const VskAstList& args)
     if (!file)
         VSK_ERROR_AND_RETURN(error, nullptr);
 
+    if (!(file->is_sequential() || file->is_com()))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
     return vsk_ast_int(file->eof() ? -1 : 0);
 }
 
