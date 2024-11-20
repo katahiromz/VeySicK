@@ -1358,7 +1358,11 @@ bool vsk_file_number(VskInt& number, VskAstPtr arg)
         VSK_SYNTAX_ERROR_AND_RETURN(false);
     if (arg->m_insn == INSN_FILE_NUMBER)
         return vsk_int(number, arg->at(0));
-    return vsk_int(number, arg);
+    if (!vsk_int(number, arg))
+        return false;
+    if (number <= 0 || VSK_STATE()->m_how_many_files < number)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NO, false);
+    return true;
 }
 
 // ファイル番号を解釈
@@ -1367,12 +1371,6 @@ VskFilePtr vsk_eval_file_number(VskAstPtr arg, VskError& error)
     VskInt v0;
     if (!vsk_file_number(v0, arg))
         return nullptr;
-
-    if (v0 <= 0 || VSK_STATE()->m_how_many_files < v0)
-    {
-        error = VSK_ERR_BAD_FILE_NO;
-        return nullptr;
-    }
 
     auto file_manager = vsk_get_file_manager();
     assert(file_manager);
@@ -7236,7 +7234,6 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
     if (!arg0)
     {
         vsk_file_close_all();
-        vsk_field_close(-1);
         return nullptr;
     }
 
@@ -7248,13 +7245,7 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
         if (!vsk_file_number(fileno, arg))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NO, nullptr);
 
-        VskError error;
-        VskFilePtr file = vsk_eval_file_number(arg, error);
-        if (!file)
-            VSK_ERROR_AND_RETURN(error, nullptr);
-
-        vsk_get_file_manager()->close(file);
-        vsk_field_close(fileno);
+        vsk_get_file_manager()->close(fileno);
     }
 
     return nullptr;

@@ -2462,6 +2462,7 @@ void VskFileManager::close(int file_no)
     if (it != m_file_no_to_file_map.end())
     {
         m_file_no_to_file_map.erase(it);
+        vsk_field_close(file_no);
     }
 }
 
@@ -2480,6 +2481,7 @@ void VskFileManager::close(VskFilePtr file)
 void VskFileManager::close_all()
 {
     m_file_no_to_file_map.clear();
+    vsk_field_close(-1);
 }
 
 // ファイルを全部閉じる
@@ -2488,6 +2490,7 @@ void vsk_file_close_all(void)
     VSK_STATE()->m_file_manager = nullptr;
     VSK_STATE()->m_screen_device = nullptr;
     VSK_STATE()->m_line_printer = nullptr;
+    vsk_field_close(-1);
 }
 
 //////////////////////////////////////////////////////////////////////////////

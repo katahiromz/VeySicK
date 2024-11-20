@@ -799,3 +799,5 @@ VskLineNo vsk_line_number_from_line_text(const VskString& line, char **endptr = 
 VskString vsk_get_next_line_text(VskLineNo number, int which);
 // IMEをオンまたはオフにする
 void vsk_ime_on_off(bool on);
+// フィールドを閉じる
+void vsk_field_close(int fileno);
