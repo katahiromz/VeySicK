@@ -7243,7 +7243,7 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
     {
         VskInt fileno;
         if (!vsk_file_number(fileno, arg))
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NO, nullptr);
+            return nullptr;
 
         vsk_get_file_manager()->close(fileno);
     }
