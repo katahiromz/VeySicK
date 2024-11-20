@@ -1546,7 +1546,6 @@ protected:
     void OnChar(HWND hwnd, TCHAR ch, int cRepeat);
     void OnSysChar(HWND hwnd, TCHAR ch, int cRepeat);
     BOOL OnSetCursor(HWND hwnd, HWND hwndCursor, UINT codeHitTest, UINT msg);
-    LRESULT OnImeNotify(WPARAM wParam, LPARAM lParam);
     void OnMouseMove(HWND hwnd, int x, int y, UINT keyFlags);
     void OnLButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT keyFlags);
     void OnLButtonUp(HWND hwnd, int x, int y, UINT keyFlags);
@@ -3084,27 +3083,6 @@ BOOL VskWin32App::OnSetCursor(HWND hwnd, HWND hwndCursor, UINT codeHitTest, UINT
     return FORWARD_WM_SETCURSOR(hwnd, hwndCursor, codeHitTest, msg, ::DefWindowProc);
 }
 
-// WM_IME_NOTIFY
-LRESULT VskWin32App::OnImeNotify(WPARAM wParam, LPARAM lParam)
-{
-#ifdef JAPAN
-    if (::ImmGetOpenStatus(m_hIMC)) // IMEが開いている？
-    {
-        m_state.m_kana_mode = false;
-        m_state.m_kanji_mode = true;
-    }
-    else
-    {
-        m_state.m_kanji_mode = false;
-        // IMEを閉じ、IME特有のキーを無効化する。
-        ::ImmSetOpenStatus(m_hIMC, FALSE);
-        ::ImmAssociateContext(m_hWnd, nullptr);
-    }
-#endif
-
-    return 0;
-}
-
 LRESULT CALLBACK
 VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3134,8 +3112,6 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_SIZE, OnSize);
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
-    case WM_IME_NOTIFY:
-        return OnImeNotify(wParam, lParam);
     case MYWM_IME_ON_OFF:
         vsk_ime_on_off_real(hwnd, wParam);
         break;
