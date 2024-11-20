@@ -8066,7 +8066,7 @@ static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_GOTO @implemented
+// INSN_GOTO (GOTO) @implemented
 static VskAstPtr VSKAPI vsk_GOTO(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -8080,7 +8080,7 @@ static VskAstPtr VSKAPI vsk_GOTO(VskAstPtr& self, const VskAstList& args)
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
 
-// INSN_ON_EXPR_GOTO @implemented
+// INSN_ON_EXPR_GOTO (ON ... GOTO) @implemented
 static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
@@ -8113,7 +8113,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr& self, const VskAstList& args
     return nullptr;
 }
 
-// INSN_GOSUB @implemented
+// INSN_GOSUB (GOSUB) @implemented
 static VskAstPtr VSKAPI vsk_GOSUB(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -8130,7 +8130,7 @@ static VskAstPtr VSKAPI vsk_GOSUB(VskAstPtr& self, const VskAstList& args)
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
 
-// INSN_ON_EXPR_GOSUB @implemented
+// INSN_ON_EXPR_GOSUB (ON ... GOSUB) @implemented
 static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
@@ -8166,7 +8166,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr& self, const VskAstList& arg
     return nullptr;
 }
 
-// INSN_RETURN @implemented
+// INSN_RETURN (RETURN) @implemented
 static VskAstPtr VSKAPI vsk_RETURN(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
@@ -8205,7 +8205,7 @@ static VskAstPtr VSKAPI vsk_RETURN(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_HELP_OFF @implemented
+// INSN_HELP_OFF (HELP OFF) @implemented
 static VskAstPtr VSKAPI vsk_HELP_OFF(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
@@ -8215,7 +8215,7 @@ static VskAstPtr VSKAPI vsk_HELP_OFF(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_HELP_ON @implemented
+// INSN_HELP_ON (HELP ON) @implemented
 static VskAstPtr VSKAPI vsk_HELP_ON(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
@@ -8225,7 +8225,7 @@ static VskAstPtr VSKAPI vsk_HELP_ON(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_HELP_STOP @implemented
+// INSN_HELP_STOP (HELP STOP) @implemented
 static VskAstPtr VSKAPI vsk_HELP_STOP(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
@@ -8741,7 +8741,7 @@ static VskAstPtr VSKAPI vsk_LET(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LINE_INPUT (LINE INPUT)
+// INSN_LINE_INPUT (LINE INPUT) @implemented
 static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
@@ -8769,7 +8769,7 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LINE_INPUT_WAIT (LINE INPUT WAIT)
+// INSN_LINE_INPUT_WAIT (LINE INPUT WAIT) @implemented
 static VskAstPtr VSKAPI vsk_LINE_INPUT_WAIT(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
@@ -8880,13 +8880,13 @@ static VskAstPtr vsk_INPUT_WAIT_helper(const VskAstList& args, bool semicolon)
     return nullptr;
 }
 
-// INSN_INPUT_WAIT (INPUT WAIT)
+// INSN_INPUT_WAIT (INPUT WAIT) @implemented
 static VskAstPtr VSKAPI vsk_INPUT_WAIT(VskAstPtr& self, const VskAstList& args)
 {
     return vsk_INPUT_WAIT_helper(args, false);
 }
 
-// INSN_INPUT_WAIT_semicolon (INPUT WAIT;)
+// INSN_INPUT_WAIT_semicolon (INPUT WAIT;) @implemented
 static VskAstPtr VSKAPI vsk_INPUT_WAIT_semicolon(VskAstPtr& self, const VskAstList& args)
 {
     return vsk_INPUT_WAIT_helper(args, true);
