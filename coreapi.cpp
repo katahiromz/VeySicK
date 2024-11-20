@@ -8833,12 +8833,11 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
     if (!vsk_file_number(fileno, args[0]))
         return nullptr;
 
-    VskError error;
-    auto file = vsk_eval_file_number(args[0], error);
+    auto file = vsk_get_file_manager()->assoc(fileno);
     if (!file)
-        VSK_ERROR_AND_RETURN(error, nullptr);
+        VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
 
-    if (file->is_random())
+    if (file->is_random()) // ランダムファイル？
     {
         VskDword offset;
         if (!file->get_pos(&offset))
@@ -8847,7 +8846,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         return vsk_ast_dbl(offset / record_len + 1);
     }
 
-    if (file->is_sequential())
+    if (file->is_sequential()) // シーケンシャルファイル？
     {
         VskDword offset;
         if (!file->get_pos(&offset))
@@ -8855,7 +8854,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         return vsk_ast_dbl(offset / 256);
     }
 
-    if (file->is_keyboard() || file->is_com())
+    if (file->is_keyboard() || file->is_com()) // キーボードか通信ファイル？
     {
         mdbg_traceA("TODO:\n");
         VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
