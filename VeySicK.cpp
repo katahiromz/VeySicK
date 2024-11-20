@@ -139,6 +139,24 @@ VskWebColor VskMachineState::palette_to_web_color(VskByte palette) const
     return m_palette[palette];
 }
 
+bool VskMachineState::is_caret_blinking() const
+{
+    switch (m_wait_for)
+    {
+    case VSK_NO_WAIT:
+    case VSK_WAIT_FOR_INPORT:
+    case VSK_WAIT_FOR_DRAW:
+    case VSK_WAIT_FOR_TURTLE:
+    case VSK_WAIT_FOR_PLAY:
+    case VSK_WAIT_FOR_SLEEP:
+        break;
+    case VSK_WAIT_FOR_COMMAND:
+    case VSK_WAIT_FOR_INPUT:
+        return true;
+    }
+    return false;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // basic types
 

@@ -397,6 +397,7 @@ enum VskWaitFor
     VSK_WAIT_FOR_DRAW,
     VSK_WAIT_FOR_TURTLE,
     VSK_WAIT_FOR_PLAY,
+    VSK_WAIT_FOR_SLEEP,
 };
 
 // マシン状態
@@ -509,10 +510,7 @@ struct VskMachineState
     VskFilePtr m_line_printer;
     std::shared_ptr<VskFileManager> m_file_manager;
 
-    bool is_caret_blinking() const
-    {
-        return m_wait_for != VSK_NO_WAIT;
-    }
+    bool is_caret_blinking() const;
 
     VskMachineState();
     VskMachineState(VskMachineMode mode);

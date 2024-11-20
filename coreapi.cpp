@@ -296,7 +296,10 @@ struct VskMachineImpl
     bool m_play_bgm = true; // CMD BGM (PLAY / CMD PLAY / CMD SINGを並列動作モードにするか？)
     // ランダムファイルのフィールド表
     std::vector<VskFieldEntry> m_field_table;
-
+    // Sleepが終わるまで待つための変数
+    VskDword m_sleep_start = 0;
+    VskLong m_sleep_amount = 0;
+    VskIndexList m_after_sleep_path;
     // 初期化
     void init();
 };
@@ -2632,6 +2635,7 @@ void vsk_default_trap(VskTrapType type)
         case VSK_NO_WAIT:
         case VSK_WAIT_FOR_INPUT:
         case VSK_WAIT_FOR_DRAW:
+        case VSK_WAIT_FOR_SLEEP:
             // 必要ならば停止メッセージを表示
             if (!VSK_IMPL()->m_auto_mode && !VSK_STATE()->m_edit_mode)
             {
@@ -2919,6 +2923,14 @@ bool vsk_wait(void)
     case VSK_WAIT_FOR_COMMAND:
         return true; // 待つ
     case VSK_WAIT_FOR_INPUT:
+        return true; // 待つ
+    case VSK_WAIT_FOR_SLEEP:
+        if (vsk_get_tick_count() - VSK_IMPL()->m_sleep_start >= VSK_IMPL()->m_sleep_amount)
+        {
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+            VSK_IMPL()->m_control_path = VSK_IMPL()->m_after_sleep_path;
+            return false; // 待たない
+        }
         return true; // 待つ
     case VSK_WAIT_FOR_INPORT:
         {
@@ -10316,20 +10328,47 @@ static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
         vsk_dbl(v2, args[2]) &&
         (!args[3] || vsk_dbl(v3, args[3])))
     {
+        VskDouble steps = 0;
         if (v3 > 0)
         {
             if (v1 > v2)
+            {
                 VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+                return nullptr;
+            }
+            steps = (v2 - v1) / v3;
         }
         else if (v3 < 0)
         {
             if (v1 < v2)
+            {
                 VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+                return nullptr;
+            }
+            steps = (v1 - v2) / v3;
         }
         else
         {
             if (v1 == v2)
+            {
                 VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+                return nullptr;
+            }
+            steps = 0;
+        }
+
+        if (steps > 0)
+        {
+            auto next_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
+            auto node = vsk_resolve_index_list(next_path);
+            if (node && node->m_insn == INSN_NEXT && loop_info.m_paths[1] == next_path)
+            {
+                VSK_IMPL()->m_sleep_start = vsk_get_tick_count();
+                VSK_IMPL()->m_sleep_amount = VskLong(steps);
+                VSK_IMPL()->m_after_sleep_path = next_path;
+                VSK_STATE()->m_wait_for = VSK_WAIT_FOR_SLEEP;
+                return vsk_ast(INSN_DONT_GO_NEXT);
+            }
         }
     }
 
