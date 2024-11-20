@@ -384,6 +384,30 @@ bool vsk_field_store(int fileno, VskString& bin)
     return true;
 }
 
+// レコ―ドからフィールド文字列を取得
+bool vsk_field_fetch(int fileno, const VskString& bin)
+{
+    int record_len = vsk_field_get_len(fileno);
+    assert(record_len == bin.size());
+    if (record_len != bin.size())
+        return false;
+
+    int index = 0;
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_fileno == fileno)
+        {
+            VskString field_str(entry.m_field_len, ' ');
+            std::memcpy(&field_str[0], &bin[index], entry.m_field_len);
+            if (!vsk_var_assign(entry.m_lvalue, vsk_ast_str(field_str)))
+                return false;
+            index += entry.m_field_len;
+        }
+    }
+
+    return true;
+}
+
 // フィールドを閉じる
 void vsk_field_close(int fileno)
 {
@@ -1923,8 +1947,8 @@ bool vsk_wrd(VskWord& value, VskAstPtr arg)
 
     switch (ret->m_insn)
     {
-    case INSN_INT_LITERAL:
-        value = ret->m_int;
+    case INSN_SHT_LITERAL:
+        value = ret->m_sht;
         break;
     case INSN_LNG_LITERAL:
         {
@@ -2002,34 +2026,32 @@ bool vsk_lng(VskLong& value, VskAstPtr arg)
 
     switch (ret->m_insn)
     {
-    case INSN_INT_LITERAL:
-        value = ret->m_int;
-        break;
+    case INSN_SHT_LITERAL:
+        value = ret->m_sht;
+        return true;
     case INSN_LNG_LITERAL:
         value = ret->m_lng;
-        break;
+        return true;
     case INSN_SNG_LITERAL:
         {
-            VskDouble v = ret->m_sng + 0.5;
+            VskDouble v = ret->m_sng;
             if (std::numeric_limits<VskDword>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
             value = (VskLong)std::round(v);
         }
-        break;
+        return true;
     case INSN_DBL_LITERAL:
         {
-            VskDouble v = ret->m_dbl + 0.5;
+            VskDouble v = ret->m_dbl;
             if (std::numeric_limits<VskDword>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
             value = (VskLong)std::round(v);
         }
-        break;
+        return true;
     case INSN_STR_LITERAL:
     default:
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, false);
     }
-
-    return true;
 }
 
 // 単精度型を取得する
@@ -2049,8 +2071,8 @@ bool vsk_sng(VskSingle& value, VskAstPtr arg)
     case INSN_SNG_LITERAL:
         value = ret->m_sng;
         break;
-    case INSN_INT_LITERAL:
-        value = ret->m_int;
+    case INSN_SHT_LITERAL:
+        value = ret->m_sht;
         break;
     case INSN_LNG_LITERAL:
         value = VskSingle(ret->m_lng);
@@ -2094,8 +2116,8 @@ bool vsk_dbl(VskDouble& value, VskAstPtr arg)
     case INSN_SNG_LITERAL:
         value = ret->m_sng;
         break;
-    case INSN_INT_LITERAL:
-        value = ret->m_int;
+    case INSN_SHT_LITERAL:
+        value = ret->m_sht;
         break;
     case INSN_LNG_LITERAL:
         value = ret->m_lng;
@@ -7784,7 +7806,7 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
             }
             else
             {
-                if (!file->set_pos(v1 * bin.size()))
+                if (!file->set_pos((v1 - 1) * bin.size()))
                     VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
                 if (auto error = file->write_bin(bin.c_str(), bin.size()))
                     VSK_ERROR_AND_RETURN(error, nullptr);
@@ -7816,10 +7838,58 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_GET_sharp
+// INSN_GET_sharp (GET#)
 static VskAstPtr VSKAPI vsk_GET_sharp(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskInt fileno;
+    if (!vsk_file_number(fileno, args[0]))
+        return nullptr;
+
+    auto file = vsk_get_file_manager()->assoc(fileno);
+    if (!file)
+        VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+    VskLong v1 = 0;
+    if (!args[1] || vsk_lng(v1, args[1]))
+    {
+        int record_len = vsk_field_get_len(fileno);
+        if (!(0 <= v1 && v1 <= 65000) || record_len <= 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        VskString bin(record_len, ' ');
+
+        if (file->is_sequential())
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (file->is_random())
+        {
+            if (v1 == 0)
+            {
+                if (auto error = file->read_bin(&bin[0], bin.size()))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            else
+            {
+                if (!file->set_pos((v1 - 1) * bin.size()))
+                    VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
+                if (auto error = file->read_bin(&bin[0], bin.size()))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            vsk_field_fetch(fileno, bin);
+            return nullptr;
+        }
+
+        if (file->is_keyboard())
+        {
+            mdbg_traceA("TODO:\n");
+        }
+
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     return nullptr;
 }
 
@@ -8955,7 +9025,7 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
         if (!file->get_size(&size))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VskInt record_len = vsk_field_get_len(fileno);
-        return vsk_ast_dbl(size / record_len + 1); // レコード番号
+        return vsk_ast_dbl(size / record_len); // レコード番号
     }
 
     if (file->is_com()) // 通信ファイル？
@@ -10240,12 +10310,25 @@ static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
     if (!vsk_var_assign(args[0], args[1]))
         return nullptr;
 
-    VskDouble v0, v2;
-    if (vsk_dbl(v0, args[0]) && vsk_dbl(v2, args[2]))
+    VskDouble v1, v2, v3 = 1;
+    if (vsk_dbl(v1, args[1]) &&
+        vsk_dbl(v2, args[2]) &&
+        (!args[3] || vsk_dbl(v3, args[3])))
     {
-        if (v0 > v2)
+        if (v3 > 0)
         {
-            VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+            if (v1 > v2)
+                VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+        }
+        else if (v3 < 0)
+        {
+            if (v1 < v2)
+                VSK_IMPL()->m_control_path = loop_info.m_paths[1];
+        }
+        else
+        {
+            if (v1 == v2)
+                VSK_IMPL()->m_control_path = loop_info.m_paths[1];
         }
     }
 
@@ -10282,10 +10365,21 @@ static VskAstPtr VSKAPI vsk_NEXT(VskAstPtr& self, const VskAstList& args)
         VskDouble v0, v2;
         if (vsk_dbl(v0, expr0) && vsk_dbl(v2, expr2))
         {
-            if (v0 <= v2)
+            if (v3 > 0)
             {
-                VSK_IMPL()->m_control_path = loop_info.m_paths[1 + i];
-                return nullptr;
+                if (v0 <= v2)
+                {
+                    VSK_IMPL()->m_control_path = loop_info.m_paths[1 + i];
+                    return nullptr;
+                }
+            }
+            else if (v3 < 0)
+            {
+                if (v0 >= v2)
+                {
+                    VSK_IMPL()->m_control_path = loop_info.m_paths[1 + i];
+                    return nullptr;
+                }
             }
         }
     }

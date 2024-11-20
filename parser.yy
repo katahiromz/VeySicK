@@ -723,10 +723,15 @@ primary_statement
     | TK_RESUME line_number                             { vsk_targeting($1); $$ = vsk_ast(INSN_RESUME, { $2 }); }
     | TK_RESUME                                         { vsk_targeting($1); $$ = vsk_ast(INSN_RESUME);}
     // GET#
-    | TK_GET file_number TK_COMMA expression            { vsk_targeting($1); $$ = vsk_ast(INSN_GET_sharp, { $2, $4 }); }
+    | TK_GET file_number     TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_GET_sharp, { $2, $4 }); }
     | TK_GET file_number                                { vsk_targeting($1); $$ = vsk_ast(INSN_GET_sharp, { $2, nullptr }); }
     | TK_GET_sharp TK_DIGITS TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_GET_sharp, { $2, $4 }); }
     | TK_GET_sharp TK_DIGITS                            { vsk_targeting($1); $$ = vsk_ast(INSN_GET_sharp, { $2, nullptr }); }
+    // PUT#
+    | TK_PUT file_number     TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, $4 });}
+    | TK_PUT file_number                                { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, nullptr });}
+    | TK_PUT_sharp TK_DIGITS TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, $4 });}
+    | TK_PUT_sharp TK_DIGITS                            { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, nullptr });}
     // GET@(0,0)-STEP(100,100)
     | get_at TK_L_PAREN expression TK_COMMA expression TK_R_PAREN TK_MINUS TK_STEP TK_L_PAREN expression TK_COMMA expression TK_R_PAREN TK_COMMA lvalue {
         vsk_targeting($1);
@@ -1030,10 +1035,6 @@ lead_statement_0
 lead_statement_1
     : TK_INPUT_sharp TK_DIGITS                          { vsk_targeting($1); $$ = vsk_ast(INSN_INPUT_sharp, { $2 });}
     | TK_INPUT file_number                              { vsk_targeting($1); $$ = vsk_ast(INSN_INPUT_sharp, { $2 });}
-    | TK_PUT file_number     TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, $4 });}
-    | TK_PUT file_number                                { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, nullptr });}
-    | TK_PUT_sharp TK_DIGITS TK_COMMA expression        { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, $4 });}
-    | TK_PUT_sharp TK_DIGITS                            { vsk_targeting($1); $$ = vsk_ast(INSN_PUT_sharp, { $2, nullptr });}
     | TK_LINE TK_MINUS TK_STEP TK_L_PAREN expression TK_COMMA expression TK_R_PAREN {
         // LINE -STEP(100,100) likely
         vsk_targeting($1);

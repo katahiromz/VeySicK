@@ -294,3 +294,5 @@ bool vsk_complete_lvalue_input(VskAstPtr lvalue, const VskString& data, bool pro
 void vsk_split_input_text(std::vector<VskString>& data, const VskString& text);
 // 左辺値（lvalue）を最適化する
 VskAstPtr vsk_lvalue_optimize(VskAstPtr& lvalue, int base);
+// 変数に代入
+bool vsk_var_assign(VskAstPtr arg0, VskAstPtr arg1);

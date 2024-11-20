@@ -299,8 +299,6 @@ VskError VskWin32File::read_bin(void *ptr, VskDword size)
     DWORD cbRead;
     if (::ReadFile(m_hFile, ptr, size, &cbRead, nullptr) && cbRead == size)
         return VSK_NO_ERROR;
-    if (eof())
-        return VSK_ERR_INPUT_PAST_END;
     return VSK_ERR_DISK_IO_ERROR;
 }
 
