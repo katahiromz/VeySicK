@@ -7790,8 +7790,8 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
         {
             if (v1 == 0)
             {
-                bin.resize(255, ' ');
-                if (auto error = file->write_bin(bin.c_str(), 255))
+                bin.resize(256, ' ');
+                if (auto error = file->write_bin(bin.c_str(), 256))
                     VSK_ERROR_AND_RETURN(error, nullptr);
             }
             else
