@@ -2929,8 +2929,9 @@ bool vsk_wait(void)
         {
             VSK_STATE()->m_wait_for = VSK_NO_WAIT;
             VSK_IMPL()->m_control_path = VSK_IMPL()->m_after_sleep_path;
-            return false; // 待たない
+            return true; // 待たない
         }
+        vsk_sleep(0);
         return true; // 待つ
     case VSK_WAIT_FOR_INPORT:
         {
@@ -10360,12 +10361,11 @@ static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
         if (steps > 0)
         {
             auto next_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
-            auto node = vsk_resolve_index_list(next_path);
-            if (node && node->m_insn == INSN_NEXT && loop_info.m_paths[1] == next_path)
+            if (loop_info.m_paths[1] == next_path)
             {
                 VSK_IMPL()->m_sleep_start = vsk_get_tick_count();
-                VSK_IMPL()->m_sleep_amount = VskLong(steps);
-                VSK_IMPL()->m_after_sleep_path = next_path;
+                VSK_IMPL()->m_sleep_amount = VskLong(steps / 100);
+                VSK_IMPL()->m_after_sleep_path = vsk_next_control_path(next_path);
                 VSK_STATE()->m_wait_for = VSK_WAIT_FOR_SLEEP;
                 return vsk_ast(INSN_DONT_GO_NEXT);
             }

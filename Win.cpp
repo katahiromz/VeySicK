@@ -2841,6 +2841,10 @@ void VskWin32App::OnPaint(HWND hwnd)
 
 // INKEY$ 用
 VskByte vsk_inkey = 0;
+VskByte vsk_vk = 0;
+VskByte vsk_shift = 0;
+VskByte vsk_ctrl = 0;
+
 // VK_PROCESSKEYの処理前の仮想キーコード
 UINT vsk_vkey = 0;
 
@@ -2864,7 +2868,13 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
         ::ClipCursor(nullptr);
 
     const bool caps = (::GetKeyState(VK_CAPITAL) < 0);
-    vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
+    bool shift = vsk_is_shift_pressed();
+    bool ctrl = vsk_is_ctrl_pressed();
+    if (!(vk == vsk_vk && shift == vsk_shift && ctrl == vsk_ctrl))
+        vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
+    vsk_vk = vk;
+    vsk_shift = shift;
+    vsk_ctrl = ctrl;
 
 #ifdef JAPAN
     if (vk == VK_KANJI || vk == VK_OEM_ENLW) // 漢字のON/OFFを変えようとした？
