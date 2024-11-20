@@ -5051,8 +5051,7 @@ static VskAstPtr VSKAPI vsk_LEFT_dollar(VskAstPtr& self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
             VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
-
-        if (int(v0.size()) <= v1)
+        if (v1 > int(v0.size()))
             return vsk_ast_str(v0);
         return vsk_ast_str(v0.substr(0, v1));
     }
@@ -5073,8 +5072,10 @@ static VskAstPtr VSKAPI vsk_RIGHT_dollar(VskAstPtr& self, const VskAstList& args
         if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
             VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
         if (v1 < 0)
-            VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
-        if (int(v0.size()) <= v1)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        if (v1 == 0)
+            return vsk_ast_str("");
+        if (v1 > int(v0.size()))
             return vsk_ast_str(v0);
         return vsk_ast_str(v0.substr(v0.size() - v1));
     }
