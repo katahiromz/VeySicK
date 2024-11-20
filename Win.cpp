@@ -1513,7 +1513,6 @@ struct VskWin32App : VskObject
     void exit_app();
     int run();
     void error(const _TCHAR *msg);
-    void update_caret_position(HWND hwnd);
 
 protected:
     void render();
@@ -1529,6 +1528,7 @@ protected:
     bool load_settings();
     bool save_settings();
     void ime_on_off_real(bool on);
+    void update_caret_position();
 
 protected:
     // メッセージ ハンドラ
@@ -1679,15 +1679,14 @@ void VskWin32App::ime_on_off_real(bool on)
         DWORD dwConversion, dwSentence;
         ::ImmGetConversionStatus(m_hIMC, &dwConversion, &dwSentence);
         ::ImmSetConversionStatus(m_hIMC, IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE, dwSentence);
-        m_state.m_kanji_mode = true;
-        update_caret_position(m_hWnd);
+        update_caret_position();
     }
     else
     {
-        m_state.m_kanji_mode = false;
         ::ImmSetOpenStatus(m_hIMC, FALSE);
         ::ImmAssociateContext(m_hWnd, nullptr);
     }
+    m_state.m_kanji_mode = on;
 }
 
 // WM_DESTROY
@@ -1788,9 +1787,9 @@ void vsk_reset_border_color(int border_color)
 }
 
 // キャレット位置を更新
-void VskWin32App::update_caret_position(HWND hwnd)
+void VskWin32App::update_caret_position()
 {
-    HIMC hImc = ::ImmGetContext(hwnd);
+    HIMC hImc = ::ImmGetContext(m_hWnd);
     if (!hImc)
         return;
 
@@ -1802,7 +1801,7 @@ void VskWin32App::update_caret_position(HWND hwnd)
     comp_form.ptCurrentPos = { LONG(x), LONG(y) };
 
     ::ImmSetCompositionWindow(hImc, &comp_form);
-    ::ImmReleaseContext(hwnd, hImc);
+    ::ImmReleaseContext(m_hWnd, hImc);
 }
 
 /// マウスクリックでキャレット位置を移動する
@@ -1883,7 +1882,7 @@ void VskWin32App::OnTimer(HWND hwnd, UINT id)
         m_state.m_blink_flag %= 4;
 
         // キャレット位置に応じて処理
-        update_caret_position(hwnd);
+        update_caret_position();
     }
     else if (id == VSK_TIMER_ID_FPS_CHECK) // FPSチェック処理
     {
