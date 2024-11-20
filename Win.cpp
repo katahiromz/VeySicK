@@ -2843,7 +2843,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
         return;
     }
 
-    //mdbg_printfA("vk: 0x%X\n", vk);
+    mdbg_traceA("OnKeyLocked: vk: 0x%X\n", vk);
 
     if (vk == VK_CONTROL)
         ::ClipCursor(nullptr);
