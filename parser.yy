@@ -335,6 +335,8 @@ primary_expression
     | TK_LOF TK_L_PAREN expression  TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_LOF, { $3 }); }
     | TK_EOF TK_L_PAREN file_number TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_EOF, { $3 }); }
     | TK_EOF TK_L_PAREN expression  TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_EOF, { $3 }); }
+    | TK_LOC TK_L_PAREN expression  TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_LOC, { $3 }); }
+    | TK_LOC TK_L_PAREN file_number TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_LOC, { $3 }); }
     ;
 
 parameter_list
@@ -396,7 +398,6 @@ function_name
     | TK_KTYPE            { vsk_targeting($1); $$ = vsk_ast(INSN_KTYPE); }
     | TK_LEFT_dollar      { vsk_targeting($1); $$ = vsk_ast(INSN_LEFT_dollar); }
     | TK_LEN              { vsk_targeting($1); $$ = vsk_ast(INSN_LEN); }
-    | TK_LOC              { vsk_targeting($1); $$ = vsk_ast(INSN_LOC); }
     | TK_LOG              { vsk_targeting($1); $$ = vsk_ast(INSN_LOG); }
     | TK_LPOS             { vsk_targeting($1); $$ = vsk_ast(INSN_LPOS); }
     | TK_MAP              { vsk_targeting($1); $$ = vsk_ast(INSN_MAP); }

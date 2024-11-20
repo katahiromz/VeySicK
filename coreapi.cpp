@@ -338,7 +338,7 @@ VskFieldEntry *vsk_field_find(VskAstPtr lvalue)
 }
 
 // フィールドの長さ or レコードの長さを取得
-VskInt vsk_field_get_len(int fileno, int field_index = -1)
+int vsk_field_get_len(int fileno, int field_index = -1)
 {
     int index = 0, record_len = 0;
     for (auto& entry : VSK_IMPL()->m_field_table)
@@ -8823,11 +8823,45 @@ static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LOC
+// INSN_LOC (LOC)
 static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
-    return nullptr;
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskInt fileno;
+    if (!vsk_file_number(fileno, args[0]))
+        return nullptr;
+
+    VskError error;
+    auto file = vsk_eval_file_number(args[0], error);
+    if (!file)
+        VSK_ERROR_AND_RETURN(error, nullptr);
+
+    if (file->is_random())
+    {
+        VskDword offset;
+        if (!file->get_pos(&offset))
+            VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
+        VskInt record_len = vsk_field_get_len(fileno);
+        return vsk_ast_dbl(offset / record_len + 1);
+    }
+
+    if (file->is_sequential())
+    {
+        VskDword offset;
+        if (!file->get_pos(&offset))
+            VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
+        return vsk_ast_dbl(offset / 256);
+    }
+
+    if (file->is_keyboard() || file->is_com())
+    {
+        mdbg_traceA("TODO:\n");
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 }
 
 // INSN_LOF (LOF) @implemented
