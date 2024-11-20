@@ -7769,6 +7769,9 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
         if (!vsk_field_store(fileno, bin))
             return nullptr;
 
+        if (file->is_sequential())
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
         if (file->is_random())
         {
             if (v1 == 0)
