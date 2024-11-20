@@ -181,6 +181,14 @@ int vsk_index_list_compare(const VskIndexList& x, const VskIndexList& y)
     return 0;
 }
 
+// ランダムファイルのフィールド
+struct VskFieldEntry
+{
+    int             m_fileno    = 0;
+    VskAstPtr       m_lvalue    = nullptr;
+    int             m_field_len = 0;
+};
+
 struct VskIndexListLess
 {
     bool operator()(const VskIndexList& x, const VskIndexList& y) const
@@ -286,9 +294,110 @@ struct VskMachineImpl
     std::vector<VskTurtleItem> m_turtle_items;
     // PLAY / CMD PLAY
     bool m_play_bgm = true; // CMD BGM (PLAY / CMD PLAY / CMD SINGを並列動作モードにするか？)
+    // ランダムファイルのフィールド表
+    std::vector<VskFieldEntry> m_field_table;
+
     // 初期化
     void init();
 };
+
+//////////////////////////////////////////////////////////////////////////////
+
+// フィールドを追加
+bool vsk_field_add(VskAstPtr lvalue, int fileno, int field_len)
+{
+    lvalue = vsk_lvalue_optimize(lvalue, -(VSK_STATE()->m_option_base == 1));
+
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_fileno == fileno && entry.m_lvalue->compare(lvalue.get()) == 0)
+        {
+            entry.m_field_len = field_len;
+            return true;
+        }
+    }
+
+    VSK_IMPL()->m_field_table.push_back({ fileno, lvalue, field_len });
+    return true;
+}
+
+// フィールドを探す
+VskFieldEntry *vsk_field_find(VskAstPtr lvalue)
+{
+    lvalue = vsk_lvalue_optimize(lvalue, -(VSK_STATE()->m_option_base == 1));
+
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_lvalue->compare(lvalue.get()) == 0)
+        {
+            return &entry;
+        }
+    }
+
+    return nullptr;
+}
+
+// フィールドの長さ or レコードの長さを取得
+VskInt vsk_field_get_len(int fileno, int field_index = -1)
+{
+    int index = 0, record_len = 0;
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_fileno == fileno)
+        {
+            if (field_index == -1)
+            {
+                record_len += entry.m_field_len;
+            }
+            else if (index == field_index)
+            {
+                return entry.m_field_len;
+            }
+            ++index;
+        }
+    }
+    return record_len;
+}
+
+// レコ―ドにフィールド文字列を格納
+bool vsk_field_store(int fileno, VskString& str)
+{
+    int index = 0;
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_fileno == fileno)
+        {
+            VskString field_str;
+            if (!vsk_str(field_str, entry.m_lvalue))
+                return false;
+            if (index + entry.m_field_len > str.size() || field_str.size() < entry.m_field_len)
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false);
+            std::memcpy(&str[index], field_str.c_str(), entry.m_field_len);
+            index += entry.m_field_len;
+        }
+    }
+    return true;
+}
+
+// フィールドを閉じる
+void vsk_field_close(int fileno)
+{
+    size_t index;
+
+retry:
+    index = 0;
+    for (auto& entry : VSK_IMPL()->m_field_table)
+    {
+        if (entry.m_fileno == fileno || fileno == -1)
+        {
+            VSK_IMPL()->m_field_table.erase(VSK_IMPL()->m_field_table.begin() + index);
+            goto retry;
+        }
+        ++index;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 // トラップをクリアする
 void vsk_clear_trap(void)
@@ -1277,6 +1386,32 @@ VskFilePtr vsk_eval_file_number(VskAstPtr arg, VskError& error)
     return file;
 }
 
+// 左辺値（lvalue）を最適化する
+VskAstPtr vsk_lvalue_optimize(VskAstPtr& lvalue, int base)
+{
+    if (lvalue->is_ident())
+    {
+        assert(lvalue->size() == 0);
+        return lvalue;
+    }
+
+    auto& param_list = lvalue->at(1);
+    VskAstPtr index_list = vsk_ast(INSN_PARAM_LIST);
+    for (auto& param : param_list->children())
+    {
+        VskInt value;
+        if (!vsk_int(value, param))
+            return nullptr;
+        index_list->push_back(vsk_ast_int(base + value));
+    }
+
+    auto new_lvalue = vsk_ast(INSN_LVALUE);
+    new_lvalue->copy_node(lvalue.get());
+    new_lvalue->push_back(lvalue->at(0));
+    new_lvalue->push_back(index_list);
+    return new_lvalue;
+}
+
 // 左辺値（lvalue）から名前と次元を取得
 bool vsk_dimension_from_lvalue(VskString& name, VskIndexList& dimension, const VskAstPtr& lvalue, int base, bool is_array = false)
 {
@@ -1303,7 +1438,7 @@ bool vsk_dimension_from_lvalue(VskString& name, VskIndexList& dimension, const V
         VskInt value;
         if (!vsk_int(value, param))
             return false;
-        dimension.push_back(value + base);
+        dimension.push_back(base + value);
     }
 
     if (dimension.size() || is_array)
@@ -6557,13 +6692,6 @@ static VskAstPtr VSKAPI vsk_DEFSTR(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_PUT_sharp
-static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
-
 static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
 {
     if (!vsk_arity_in_range(args, 5, 5))
@@ -7108,6 +7236,7 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
     if (!arg0)
     {
         vsk_file_close_all();
+        vsk_field_close(-1);
         return nullptr;
     }
 
@@ -7115,12 +7244,17 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
 
     for (auto& arg : arg0->children())
     {
+        VskInt fileno;
+        if (!vsk_file_number(fileno, arg))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NO, nullptr);
+
         VskError error;
         VskFilePtr file = vsk_eval_file_number(arg, error);
         if (!file)
             VSK_ERROR_AND_RETURN(error, nullptr);
 
         vsk_get_file_manager()->close(file);
+        vsk_field_close(fileno);
     }
 
     return nullptr;
@@ -7514,49 +7648,109 @@ static VskAstPtr VSKAPI vsk_ERR(VskAstPtr& self, const VskAstList& args)
     return vsk_ast_int(VskInt(VSK_STATE()->error_code()));
 }
 
-// INSN_FIELD
+// INSN_FIELD (FIELD) @implemented
 static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    auto arg1 = args[1];
-    assert(arg1->m_insn == INSN_FIELD_ITEMS);
+    assert(args[1]->m_insn == INSN_FIELD_ITEMS);
+    auto& items = args[1];
 
-    for (auto item : arg1->children())
+    VskInt fileno, field_len;
+    if (vsk_file_number(fileno, args[0]))
     {
-        VskString str;
-        if (item->m_insn != INSN_FIELD_ITEM || !vsk_ident(str, item->at(1)) || str != "AS")
-            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+        for (auto& item : items->children())
+        {
+            assert(item->m_insn == INSN_FIELD_ITEM);
+            if (item->at(1)->m_str != "AS")
+                VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+
+            // フィールド長を取得
+            auto expr = item->at(0);
+            if (!vsk_int(field_len, expr))
+                return nullptr;
+
+            // 左辺値を最適化
+            auto lvalue = vsk_lvalue_optimize(item->at(2), -(VSK_STATE()->m_option_base == 1));
+            if (!lvalue)
+                return nullptr;
+
+            // フィールドを追加
+            vsk_field_add(lvalue, fileno, field_len);
+            // フィールド変数に空白を代入する
+            VskString str(field_len, ' ');
+            if (!vsk_var_assign(lvalue, vsk_ast_str(str)))
+                return nullptr;
+        }
     }
 
-    VskError error;
-    VskFilePtr file = vsk_eval_file_number(args[0], error);
-    if (!file)
-        VSK_ERROR_AND_RETURN(error, nullptr);
-
-    for (auto item : arg1->children())
-    {
-        VskInt num;
-        if (!vsk_int(num, item->at(0)))
-            return nullptr;
-        if (num <= 0)
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-    }
-
-    assert(0);
     return nullptr;
 }
 
-// INSN_LSET
+// LSET / RSET helper
+static VskAstPtr VSKAPI vsk_LSET_RSET(VskAstPtr& self, const VskAstList& args, bool right)
+{
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    // 左辺値を最適化
+    VskAstPtr arg0 = args[0];
+    auto lvalue = vsk_lvalue_optimize(arg0, -(VSK_STATE()->m_option_base == 1));
+    if (!lvalue)
+        return nullptr;
+
+    // 文字列を取得
+    VskString str;
+    if (!vsk_str(str, args[1]))
+        return nullptr;
+
+    // フィールドを探す
+    auto *entry = vsk_field_find(lvalue);
+    if (!entry)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+    // 文字列を更新(左そろえまたは右そろえ)
+    auto field_len = entry->m_field_len;
+    if (str.size() < field_len)
+    {
+        auto diff = field_len - str.size();
+        if (right)
+            str = VskString(diff, ' ') + str;
+        else
+            str += VskString(diff, ' ');
+    }
+    else
+    {
+        str.resize(field_len, ' ');
+    }
+
+    // 文字列を代入
+    vsk_var_assign(lvalue, vsk_ast_str(str));
+    return nullptr;
+}
+
+// INSN_LSET (LSET) @implemented
 static VskAstPtr VSKAPI vsk_LSET(VskAstPtr& self, const VskAstList& args)
+{
+    return vsk_LSET_RSET(self, args, false);
+}
+
+// INSN_RSET (RSET) @implemented
+static VskAstPtr VSKAPI vsk_RSET(VskAstPtr& self, const VskAstList& args)
+{
+    return vsk_LSET_RSET(self, args, true);
+}
+
+// INSN_PUT_sharp
+static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
-// INSN_RSET
-static VskAstPtr VSKAPI vsk_RSET(VskAstPtr& self, const VskAstList& args)
+// INSN_GET_sharp
+static VskAstPtr VSKAPI vsk_GET_sharp(VskAstPtr& self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
@@ -7716,13 +7910,6 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
 
 // INSN_FPOS
 static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
-
-// INSN_GET_sharp
-static VskAstPtr VSKAPI vsk_GET_sharp(VskAstPtr& self, const VskAstList& args)
 {
     assert(0);
     return nullptr;

@@ -713,8 +713,8 @@ primary_statement
         vsk_targeting($1);
         $$ = vsk_ast(INSN_INPUT_WAIT, { $3, nullptr, $5 });
     }
-    | TK_LSET TK_IDENTIFIER TK_EQUAL expression         { vsk_targeting($1); $$ = vsk_ast(INSN_LSET, { $2, $4 }); }
-    | TK_RSET TK_IDENTIFIER TK_EQUAL expression         { vsk_targeting($1); $$ = vsk_ast(INSN_RSET, { $2, $4 }); }
+    | TK_LSET lvalue TK_EQUAL expression                { vsk_targeting($1); $$ = vsk_ast(INSN_LSET, { $2, $4 }); }
+    | TK_RSET lvalue TK_EQUAL expression                { vsk_targeting($1); $$ = vsk_ast(INSN_RSET, { $2, $4 }); }
     | TK_TIME_dollar TK_EQUAL expression                { vsk_targeting($1); $$ = vsk_ast(INSN_TIME_dollar, { $3 }); }
     | TK_DATE_dollar TK_EQUAL expression                { vsk_targeting($1); $$ = vsk_ast(INSN_DATE_dollar, { $3 }); }
     | TK_DELETE line_range                              { vsk_targeting($1); $$ = vsk_ast(INSN_DELETE, { $2 }); }
