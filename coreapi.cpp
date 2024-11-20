@@ -7648,11 +7648,14 @@ static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr& self, const VskAstList& args)
     assert(args[1]->m_insn == INSN_FIELD_ITEMS);
     auto& items = args[1];
 
-    VskInt fileno, field_len;
+    // ファイル番号を取得
+    VskInt fileno;
     if (vsk_file_number(fileno, args[0]))
     {
+        // フィールドを削除
         vsk_field_close(fileno);
 
+        // 各フィールド項目について
         for (auto& item : items->children())
         {
             assert(item->m_insn == INSN_FIELD_ITEM);
@@ -7661,6 +7664,7 @@ static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr& self, const VskAstList& args)
 
             // フィールド長を取得
             auto expr = item->at(0);
+            VskInt field_len;
             if (!vsk_int(field_len, expr))
                 return nullptr;
 
