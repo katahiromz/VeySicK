@@ -35,7 +35,7 @@
 
 static DWORD s_dwFpsCounter = 0; // FPSチェック用の変数
 
-CRITICAL_SECTION vsk_cs_lock; // クリティカルセクション
+CRITICAL_SECTION vsk_cs_lock; // クリティカルセクション（排他制御用）
 
 // ロックする
 void vsk_lock(void)
@@ -1513,11 +1513,11 @@ struct VskWin32App : VskObject
     void exit_app();
     int run();
     void error(const _TCHAR *msg);
+    void update_caret_position(HWND hwnd);
 
 protected:
     void render();
     void OnIdle();
-    void update_caret_position(HWND hwnd);
     bool do_load(HWND hwnd, const char *file, bool do_run);
     bool do_save(HWND hwnd, const char *file, bool protect);
     void show_popup_menu(HWND hwnd, INT iSubMenu);
@@ -1642,8 +1642,10 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     vsk_machine->test_pattern(0);
 
     // IMEを一時的に無効化する。
-    m_hIMC = ::ImmGetContext(hwnd);
+    HIMC hIMC = ::ImmGetContext(hwnd);
     ::ImmAssociateContext(hwnd, nullptr);
+    ::ImmDestroyContext(hIMC);
+    m_hIMC = ::ImmCreateContext();
 
     // タイマーを開始
     start_stop_timers(hwnd, true);
@@ -1668,6 +1670,7 @@ void vsk_ime_on_off(bool on)
 // IMEをオンまたはオフにする(本物、実体)
 void vsk_ime_on_off_real(HWND hwnd, bool on)
 {
+    mdbg_traceA("vsk_ime_on_off_real: %d\n", on);
     HIMC hIMC = vsk_pMainWnd->m_hIMC;
     if (on)
     {
@@ -1676,9 +1679,12 @@ void vsk_ime_on_off_real(HWND hwnd, bool on)
         DWORD dwConversion, dwSentence;
         ::ImmGetConversionStatus(hIMC, &dwConversion, &dwSentence);
         ::ImmSetConversionStatus(hIMC, IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE, dwSentence);
+        vsk_pMainWnd->m_state.m_kanji_mode = true;
+        vsk_pMainWnd->update_caret_position(vsk_pMainWnd->m_hWnd);
     }
     else
     {
+        vsk_pMainWnd->m_state.m_kanji_mode = false;
         ::ImmSetOpenStatus(hIMC, FALSE);
         ::ImmAssociateContext(hwnd, nullptr);
     }
@@ -1697,7 +1703,8 @@ void VskWin32App::OnDestroy(HWND hwnd)
 #endif
 
     // 行儀よくIMEの後始末。
-    ::ImmAssociateContext(hwnd, m_hIMC);
+    ::ImmAssociateContext(hwnd, nullptr);
+    ImmDestroyContext(m_hIMC);
     m_hIMC = nullptr;
 
     // タイマーを破棄
@@ -2828,6 +2835,8 @@ void VskWin32App::OnPaint(HWND hwnd)
 
 // INKEY$ 用
 VskByte vsk_inkey = 0;
+// VK_PROCESSKEYの処理前の仮想キーコード
+UINT vsk_vkey = 0;
 
 void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT flags)
 {
@@ -2844,6 +2853,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
 
     mdbg_traceA("OnKeyLocked: vk: 0x%X\n", vk);
 
+    // Ctrlキーを押したらマウスクリッピングを解除
     if (vk == VK_CONTROL)
         ::ClipCursor(nullptr);
 
@@ -2851,27 +2861,25 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
     vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
 
 #ifdef JAPAN
-    if (vk == VK_OEM_ENLW || vk == VK_KANJI) // 漢字
+    if (vk == VK_KANJI || vk == VK_OEM_ENLW) // 漢字のON/OFFを変えようとした？
     {
-        m_state.m_kanji_mode = !m_state.m_kanji_mode; // 漢字モードを切り替える
-        if (m_state.m_kanji_mode)
+        vsk_ime_on_off_real(hwnd, !m_state.m_kanji_mode);
+        return;
+    }
+    if (vk == VK_PROCESSKEY) // IMEで何らかの処理が行われた？
+    {
+        mdbg_traceA("vsk_vkey: 0x%X\n", vsk_vkey);
+        if (vsk_vkey == VK_OEM_AUTO) // IMEをOFFにしようとした？
         {
-            // IMEを有効化する。
-            ::ImmAssociateContext(hwnd, m_hIMC);
-            ::ImmSetOpenStatus(m_hIMC, TRUE);
-        }
-        else
-        {
-            // IMEを閉じ、IME特有のキーを無効化する。
-            ::ImmSetOpenStatus(m_hIMC, FALSE);
-            ::ImmAssociateContext(hwnd, nullptr);
+            mdbg_traceA("VK_PROCESSKEY:VK_OEM_AUTO\n");
+            vsk_ime_on_off_real(hwnd, false);
+            return;
         }
         return;
     }
-
-    if (vk == VK_OEM_COPY) // かなキー（IMEがOFFのときのみ）
+    if (vk == VK_OEM_COPY) // かなキー（IMEがOFFのときのみ）か？
     {
-        m_state.m_kanji_mode = false;
+        vsk_ime_on_off(false); // IMEをOFFにする
         m_state.m_kana_mode = !m_state.m_kana_mode; // かなモードを切り替える。
         return;
     }
@@ -3201,20 +3209,26 @@ int VskWin32App::run()
     MSG msg;
     for (;;)
     {
-        if (!PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE))
+        if (!::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE))
         {
             DWORD dwTick0 = GetTickCount();
             OnIdle();
             DWORD dwTick1 = GetTickCount();
             DWORD dwDiff = dwTick1 - dwTick0;
             if (dwDiff < VSK_ONE_SECOND / VSK_IDEAL_FPS)
-                Sleep((VSK_ONE_SECOND / VSK_IDEAL_FPS) - dwDiff);
+                ::Sleep((VSK_ONE_SECOND / VSK_IDEAL_FPS) - dwDiff);
             continue;
         }
-        if (!GetMessage(&msg, nullptr, 0, 0))
+
+        if (!::GetMessage(&msg, nullptr, 0, 0))
             break;
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+
+        // VK_PROCESSKEYの処理前の仮想キーコードを取得する
+        if (msg.message == WM_KEYDOWN)
+            vsk_vkey = ::ImmGetVirtualKey(m_hWnd);
+
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
     }
     return (int)msg.wParam;
 }
