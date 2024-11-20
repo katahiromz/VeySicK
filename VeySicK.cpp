@@ -2336,6 +2336,8 @@ std::shared_ptr<VskFileManager> vsk_get_file_manager(void)
 // 画面印字
 struct VskScreenPrinter : VskFile
 {
+    VskScreenPrinter() : VskFile(TYPE_SCREEN, MODE_OUTPUT) { }
+
     int  get_x() const override {
         return VSK_STATE()->m_caret_x;
     }
@@ -2388,7 +2390,7 @@ VskError VskFileManager::open(VskFilePtr& file, VskString descriptor, VskFile::M
     switch (type)
     {
     case VskFile::TYPE_HOST_FILE:
-        error = open_host_file(file, raw_path, mode);
+        error = open_host_file(file, raw_path, mode, type);
         break;
     case VskFile::TYPE_SCREEN:
         error = open_screen(file, mode);
@@ -2407,6 +2409,7 @@ VskError VskFileManager::open(VskFilePtr& file, VskString descriptor, VskFile::M
 
 struct VskLinePrinter : VskFile
 {
+    VskLinePrinter() : VskFile(TYPE_LINE_PRINTER, MODE_OUTPUT) { }
     int m_x = 0;
 
     int  get_x() const override         { return m_x; }

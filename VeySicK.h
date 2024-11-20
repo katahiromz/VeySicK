@@ -236,22 +236,32 @@ public:
     // ファイルの種類
     enum TYPE
     {
-        TYPE_HOST_FILE,
-        TYPE_SCREEN,
-        TYPE_KEYBOARD,
-        TYPE_CASETTE,
-        TYPE_COM,
-        TYPE_LINE_PRINTER,
+        TYPE_HOST_FILE, TYPE_SCREEN, TYPE_KEYBOARD, TYPE_CASETTE, TYPE_COM, TYPE_LINE_PRINTER,
     };
+
     // ファイルのモード
     enum MODE
     {
-        MODE_INPUT,
-        MODE_OUTPUT,
-        MODE_APPEND,
-        MODE_DEFAULT,
+        MODE_INPUT, MODE_OUTPUT, MODE_APPEND, MODE_DEFAULT,
     };
 
+    bool is_sequential() const      { return m_type == TYPE_HOST_FILE && m_mode != MODE_DEFAULT; }
+    bool is_random() const          { return m_type == TYPE_HOST_FILE && m_mode == MODE_DEFAULT; }
+    bool is_keyboard() const        { return m_type == TYPE_KEYBOARD; }
+    bool is_screen() const          { return m_type == TYPE_SCREEN; }
+    bool is_com() const             { return m_type == TYPE_COM; }
+    bool is_line_printer() const    { return m_type == TYPE_LINE_PRINTER; }
+    bool is_casette() const         { return m_type == TYPE_CASETTE; }
+
+protected:
+    TYPE m_type;
+    MODE m_mode;
+    friend struct VskFileManager;
+    VskFile() = delete;
+    VskFile(TYPE type, MODE mode) : m_type(type), m_mode(mode) { }
+    virtual ~VskFile() { close(); }
+
+public:
     // Close file (CLOSE)
     virtual void close()                            { flush(); }
     // End of file? (EOF)
@@ -277,11 +287,6 @@ public:
     virtual VskError write_line(const std::string& data)        { return VSK_ERR_BAD_CALL; }
     // flush
     virtual void flush() { }
-
-protected:
-    friend struct VskFileManager;
-    VskFile() { }
-    virtual ~VskFile() { close(); }
 };
 typedef std::shared_ptr<VskFile> VskFilePtr;
 
@@ -296,7 +301,7 @@ struct VskFileManager : VskObject
     std::map<int, VskFilePtr> m_file_no_to_file_map;
 
     VskError open(VskFilePtr& file, VskString descriptor, VskFile::MODE mode = VskFile::MODE_DEFAULT);
-    VskError open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode = VskFile::MODE_DEFAULT);
+    VskError open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode = VskFile::MODE_DEFAULT, VskFile::TYPE type = VskFile::TYPE_HOST_FILE);
     VskError open_screen(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
     VskError open_line_printer(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
 

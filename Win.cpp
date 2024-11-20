@@ -165,7 +165,8 @@ public:
     HANDLE m_hFile;
     int m_x = 0;
 
-    VskWin32File(HANDLE hFile) : m_hFile(hFile) { }
+    VskWin32File() = delete;
+    VskWin32File(HANDLE hFile, MODE mode, TYPE type) : VskFile(type, mode), m_hFile(hFile) { }
     ~VskWin32File() { close(); }
 
     void close() override;
@@ -186,7 +187,7 @@ protected:
     friend struct VskFileManager;
 };
 
-VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode)
+VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode, VskFile::TYPE type)
 {
     HANDLE hFile = INVALID_HANDLE_VALUE;
     switch (mode)
@@ -243,7 +244,7 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
         }
     }
 
-    file = std::make_shared<VskWin32File>(hFile);
+    file = std::make_shared<VskWin32File>(hFile, mode, type);
     return VSK_NO_ERROR;
 }
 
