@@ -8823,7 +8823,7 @@ static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LOC (LOC)
+// INSN_LOC (LOC) @implemented
 static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -8843,7 +8843,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         if (!file->get_pos(&offset))
             VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
         VskInt record_len = vsk_field_get_len(fileno);
-        return vsk_ast_dbl(offset / record_len + 1);
+        return vsk_ast_dbl(offset / record_len + 1); // レコード番号
     }
 
     if (file->is_sequential()) // シーケンシャルファイル？
@@ -8851,7 +8851,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         VskDword offset;
         if (!file->get_pos(&offset))
             VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
-        return vsk_ast_dbl(offset / 256);
+        return vsk_ast_dbl(offset / 256); // セクタ数
     }
 
     if (file->is_keyboard() || file->is_com()) // キーボードか通信ファイル？
@@ -8869,16 +8869,38 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
-    VskError error;
-    auto file = vsk_eval_file_number(args[0], error);
+    VskInt fileno;
+    if (!vsk_file_number(fileno, args[0]))
+        return nullptr;
+
+    auto file = vsk_get_file_manager()->assoc(fileno);
     if (!file)
-        VSK_ERROR_AND_RETURN(error, nullptr);
+        VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
 
-    VskDword size = 0;
-    if (!file->get_size(&size))
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    if (file->is_sequential()) // シーケンシャルファイル？
+    {
+        VskDword size;
+        if (!file->get_size(&size))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        return vsk_ast_dbl(size / 256); // セクタ数
+    }
 
-    return vsk_ast_dbl(size);
+    if (file->is_random()) // ランダムファイル？
+    {
+        VskDword size;
+        if (!file->get_size(&size))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        VskInt record_len = vsk_field_get_len(fileno);
+        return vsk_ast_dbl(offset / record_len + 1); // レコード番号
+    }
+
+    if (file->is_com()) // 通信ファイル？
+    {
+        mdbg_traceA("TODO:\n");
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 }
 
 // INSN_MAP (MAP) @implemented
