@@ -1528,6 +1528,7 @@ protected:
     void reset_settings();
     bool load_settings();
     bool save_settings();
+    void ime_on_off_real(bool on);
 
 protected:
     // メッセージ ハンドラ
@@ -1668,25 +1669,24 @@ void vsk_ime_on_off(bool on)
 }
 
 // IMEをオンまたはオフにする(本物、実体)
-void vsk_ime_on_off_real(HWND hwnd, bool on)
+void VskWin32App::ime_on_off_real(bool on)
 {
-    mdbg_traceA("vsk_ime_on_off_real: %d\n", on);
-    HIMC hIMC = vsk_pMainWnd->m_hIMC;
+    mdbg_traceA("ime_on_off_real: %d\n", on);
     if (on)
     {
-        ::ImmAssociateContext(hwnd, hIMC);
-        ::ImmSetOpenStatus(hIMC, TRUE);
+        ::ImmAssociateContext(m_hWnd, m_hIMC);
+        ::ImmSetOpenStatus(m_hIMC, TRUE);
         DWORD dwConversion, dwSentence;
-        ::ImmGetConversionStatus(hIMC, &dwConversion, &dwSentence);
-        ::ImmSetConversionStatus(hIMC, IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE, dwSentence);
-        vsk_pMainWnd->m_state.m_kanji_mode = true;
-        vsk_pMainWnd->update_caret_position(vsk_pMainWnd->m_hWnd);
+        ::ImmGetConversionStatus(m_hIMC, &dwConversion, &dwSentence);
+        ::ImmSetConversionStatus(m_hIMC, IME_CMODE_NATIVE | IME_CMODE_FULLSHAPE, dwSentence);
+        m_state.m_kanji_mode = true;
+        update_caret_position(m_hWnd);
     }
     else
     {
-        vsk_pMainWnd->m_state.m_kanji_mode = false;
-        ::ImmSetOpenStatus(hIMC, FALSE);
-        ::ImmAssociateContext(hwnd, nullptr);
+        m_state.m_kanji_mode = false;
+        ::ImmSetOpenStatus(m_hIMC, FALSE);
+        ::ImmAssociateContext(m_hWnd, nullptr);
     }
 }
 
@@ -2863,7 +2863,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
 #ifdef JAPAN
     if (vk == VK_KANJI || vk == VK_OEM_ENLW) // 漢字のON/OFFを変えようとした？
     {
-        vsk_ime_on_off_real(hwnd, !m_state.m_kanji_mode);
+        ime_on_off_real(!m_state.m_kanji_mode);
         return;
     }
     if (vk == VK_PROCESSKEY) // IMEで何らかの処理が行われた？
@@ -2872,8 +2872,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
         if (vsk_vkey == VK_OEM_AUTO) // IMEをOFFにしようとした？
         {
             mdbg_traceA("VK_PROCESSKEY:VK_OEM_AUTO\n");
-            vsk_ime_on_off_real(hwnd, false);
-            return;
+            ime_on_off_real(false);
         }
         return;
     }
@@ -3121,7 +3120,7 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
     case MYWM_IME_ON_OFF:
-        vsk_ime_on_off_real(hwnd, wParam);
+        ime_on_off_real((bool)wParam);
         break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
