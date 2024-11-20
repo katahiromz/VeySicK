@@ -252,6 +252,8 @@ public:
     bool is_com() const             { return m_type == TYPE_COM; }
     bool is_line_printer() const    { return m_type == TYPE_LINE_PRINTER; }
     bool is_casette() const         { return m_type == TYPE_CASETTE; }
+    bool is_input() const           { return m_mode == MODE_INPUT || m_mode == MODE_DEFAULT; }
+    bool is_output() const          { return m_mode == MODE_OUTPUT || m_mode == MODE_APPEND || m_mode == MODE_DEFAULT; }
 
 protected:
     TYPE m_type;
