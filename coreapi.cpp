@@ -7651,6 +7651,8 @@ static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr& self, const VskAstList& args)
     VskInt fileno, field_len;
     if (vsk_file_number(fileno, args[0]))
     {
+        vsk_field_close(fileno);
+
         for (auto& item : items->children())
         {
             assert(item->m_insn == INSN_FIELD_ITEM);
