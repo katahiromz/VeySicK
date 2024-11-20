@@ -7713,7 +7713,10 @@ static VskAstPtr VSKAPI vsk_LSET_RSET(VskAstPtr& self, const VskAstList& args, b
     }
     else
     {
-        str.resize(field_len, ' ');
+        if (right)
+            str.erase(0, str.size() - field_len);
+        else
+            str.resize(field_len);
     }
 
     // 文字列を代入
