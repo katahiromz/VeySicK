@@ -2808,7 +2808,7 @@ bool vsk_check_trap(void)
     return false;
 }
 
-void vsk_processor_unit_tests(void);
+void vsk_coreapi_tests(void);
 
 // 装置に印字する
 bool vsk_do_printing(void)
@@ -3004,7 +3004,7 @@ void vsk_step(void)
     if (!s_flag)
     {
         s_flag = true;
-        vsk_processor_unit_tests();
+        vsk_coreapi_tests();
     }
 #endif
 
@@ -10511,7 +10511,7 @@ std::shared_ptr<VskMachineImpl> vsk_create_machine_impl(void)
 //////////////////////////////////////////////////////////////////////////////
 
 // 単体テスト
-void vsk_processor_unit_tests(void)
+void vsk_coreapi_tests(void)
 {
 #ifndef NDEBUG
     VskParseResult data;
