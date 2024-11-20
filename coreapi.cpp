@@ -7765,6 +7765,9 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
     VskLong v1 = 0;
     if (!args[1] || vsk_lng(v1, args[1]))
     {
+        if (!(0 <= v1 && v1 <= 65000))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
         VskString bin;
         if (!vsk_field_store(fileno, bin))
             return nullptr;
