@@ -274,6 +274,7 @@ public:
 
     // File position (POS / FPOS / LPOS)
     virtual bool get_pos(VskDword *poffset) const   { return false; }
+    virtual bool set_pos(VskDword pos)              { return false; }
     // File size (LOF)
     virtual bool get_size(VskDword *psize) const    { return false; }
     // width of one line (WIDTH# / WIDTH LPRINT)

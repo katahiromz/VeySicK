@@ -174,6 +174,7 @@ public:
 
     int  get_x() const override;
     bool get_pos(VskDword *poffset) const override;
+    bool set_pos(VskDword pos) override;
     bool get_size(VskDword *psize) const override;
 
     VskError read_bin(void *ptr, VskDword size) override;
@@ -272,6 +273,13 @@ bool VskWin32File::get_pos(VskDword *poffset) const
         return false;
     *poffset = ::SetFilePointer(m_hFile, 0, NULL, FILE_CURRENT);
     return *poffset != 0xFFFFFFFF;
+}
+
+bool VskWin32File::set_pos(VskDword pos)
+{
+    if (m_hFile == INVALID_HANDLE_VALUE)
+        return false;
+    return ::SetFilePointer(m_hFile, pos, NULL, FILE_BEGIN) != 0xFFFFFFFF;
 }
 
 bool VskWin32File::get_size(VskDword *psize) const

@@ -360,8 +360,11 @@ int vsk_field_get_len(int fileno, int field_index = -1)
 }
 
 // レコ―ドにフィールド文字列を格納
-bool vsk_field_store(int fileno, VskString& str)
+bool vsk_field_store(int fileno, VskString& bin)
 {
+    int record_len = vsk_field_get_len(fileno);
+    bin.resize(record_len, ' ');
+
     int index = 0;
     for (auto& entry : VSK_IMPL()->m_field_table)
     {
@@ -370,9 +373,11 @@ bool vsk_field_store(int fileno, VskString& str)
             VskString field_str;
             if (!vsk_str(field_str, entry.m_lvalue))
                 return false;
-            if (index + entry.m_field_len > str.size() || field_str.size() < entry.m_field_len)
+            if (field_str.size() < entry.m_field_len)
+                field_str.resize(entry.m_field_len, ' ');
+            if (index + entry.m_field_len > record_len)
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false);
-            std::memcpy(&str[index], field_str.c_str(), entry.m_field_len);
+            std::memcpy(&bin[index], field_str.c_str(), entry.m_field_len);
             index += entry.m_field_len;
         }
     }
@@ -1372,9 +1377,7 @@ VskFilePtr vsk_eval_file_number(VskAstPtr arg, VskError& error)
     if (!vsk_file_number(v0, arg))
         return nullptr;
 
-    auto file_manager = vsk_get_file_manager();
-    assert(file_manager);
-    auto file = file_manager->assoc(v0);
+    auto file = vsk_get_file_manager()->assoc(v0);
     if (!file)
     {
         error = VSK_ERR_FILE_NOT_OPEN;
@@ -7745,10 +7748,65 @@ static VskAstPtr VSKAPI vsk_RSET(VskAstPtr& self, const VskAstList& args)
     return vsk_LSET_RSET(self, args, true);
 }
 
-// INSN_PUT_sharp
+// INSN_PUT_sharp (PUT#) @implemented
 static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskInt fileno;
+    if (!vsk_file_number(fileno, args[0]))
+        return nullptr;
+
+    auto file = vsk_get_file_manager()->assoc(fileno);
+    if (!file)
+        VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+    VskLong v1 = 0;
+    if (!args[1] || vsk_lng(v1, args[1]))
+    {
+        VskString bin;
+        if (!vsk_field_store(fileno, bin))
+            return nullptr;
+
+        if (file->is_random())
+        {
+            if (v1 == 0)
+            {
+                if (auto error = file->write_bin(bin.c_str(), bin.size()))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            else
+            {
+                if (!file->set_pos(v1 * bin.size()))
+                    VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
+                if (auto error = file->write_bin(bin.c_str(), bin.size()))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            return nullptr;
+        }
+
+        if (file->is_screen())
+        {
+            if (v1 == 0)
+            {
+                bin.resize(255, ' ');
+                if (auto error = file->write_bin(bin.c_str(), 255))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            else
+            {
+                if (v1 >= bin.size())
+                    v1 = bin.size();
+                if (auto error = file->write_bin(bin.c_str(), v1))
+                    VSK_ERROR_AND_RETURN(error, nullptr);
+            }
+            return nullptr;
+        }
+
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
     return nullptr;
 }
 
