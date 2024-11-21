@@ -311,13 +311,13 @@ bool vsk_turtle_shown(void)
 }
 
 // タートルの位置を返す
-VskPointD vsk_turtle_pos(void)
+VskPointD vsk_turtle_pos_in_screen(void)
 {
     return VSK_IMPL()->m_turtle_engine.m_last_ref;
 }
 
 // タートルの向きを返す
-VskDouble vsk_turtle_direction(void)
+VskDouble vsk_turtle_direction_in_radian(void)
 {
     return VSK_IMPL()->m_turtle_engine.get_turtle_direction_in_radian();
 }

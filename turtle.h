@@ -44,7 +44,7 @@ struct VskTurtleEngine
     VskDouble get_turtle_direction_in_radian() const;
 
 protected:
-    void update_LP(const VskPointD& pt1);
+    void update_LP(const VskPointD& pt_in_screen);
 };
 
 void vsk_turtle_draw_cursor(Vsk32BppImage& image);

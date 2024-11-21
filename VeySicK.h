@@ -809,7 +809,7 @@ void vsk_ime_on_off(bool on);
 void vsk_field_close(int fileno);
 // タートルが表示されているか？
 bool vsk_turtle_shown(void);
-// タートルの位置を返す
-VskPointD vsk_turtle_pos(void);
-// タートルの向きを返す
-VskDouble vsk_turtle_direction(void);
+// タートルの位置をスクリーン座標で返す
+VskPointD vsk_turtle_pos_in_screen(void);
+// タートルの向きをラジアンで返す
+VskDouble vsk_turtle_direction_in_radian(void);

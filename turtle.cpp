@@ -3,6 +3,7 @@
 #include "draw_algorithm.h"
 #include "coreapi.h"
 
+// タートル項目を展開する
 static bool vsk_expand_turtle_items(std::vector<VskTurtleItem>& items)
 {
 retry:;
@@ -38,6 +39,7 @@ retry:;
     return true;
 } // vsk_expand_turtle_items
 
+// 文字列からタートル項目群を取得
 bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const VskString& str)
 {
     items.clear();
@@ -168,21 +170,25 @@ void VskTurtleEngine::reset()
     m_is_init = false;
 }
 
+// タートルを表示・非表示
 void VskTurtleEngine::show(bool do_show)
 {
     m_is_shown = do_show;
 }
 
+// ペンを下ろす、上げる
 void VskTurtleEngine::pen_down(bool down)
 {
     m_pen_down = down;
 }
 
+// スクリーン座標でタートルの位置を取得
 VskPointD VskTurtleEngine::get_pos_in_screen() const
 {
     return vsk_machine->world_to_screen(m_last_ref);
 }
 
+// パラメータを取得
 VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
 {
     if (index >= item.m_params.size() || item.m_params[index].empty())
@@ -190,17 +196,20 @@ VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
     return vsk_eval_text(item.m_params[index]);
 } // vsk_get_play_param
 
-void VskTurtleEngine::update_LP(const VskPointD& pt1)
+// 最終点を更新する
+void VskTurtleEngine::update_LP(const VskPointD& pt_in_screen)
 {
-    m_last_ref = pt1;
-    VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt1);
+    m_last_ref = pt_in_screen;
+    VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt_in_screen);
 }
 
+// タートルの向きをラジアンで返す
 VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
 {
     return -(m_direction_in_degree - 90) * M_PI / 180.0;
 }
 
+// タートルエンジンのしょおきか
 void VskTurtleEngine::init()
 {
     if (!m_is_init) {
@@ -212,6 +221,7 @@ void VskTurtleEngine::init()
 
 #define PT2INTS(pt) vsk_round((pt).m_x), vsk_round((pt).m_y)
 
+// タートル項目を描画する
 bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 {
     init();
@@ -319,35 +329,45 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
     return false;
 } // VskTurtleEngine::turtle_item
 
+// タートルを描画する
 void vsk_turtle_draw_cursor(Vsk32BppImage& image)
 {
-    VskPointD pos = vsk_turtle_pos();
-    VskDouble direction = vsk_turtle_direction();
+    // 位置と角度を取得
+    VskPointD pos = vsk_turtle_pos_in_screen();
+    VskDouble direction = vsk_turtle_direction_in_radian();
 
-    int dx = 16, dy = 16, multi = 1;
+    // 画面が引き伸ばされているときの対策
+    int screen_ratio = 1;
     if (VSK_STATE()->is_height_200()) {
-        multi = 2;
+        screen_ratio = 2;
     }
 
+    // タートル図形の頂点を決める
     VskPointD apt[4];
-    apt[0].m_x = pos.m_x + dx * std::cos(direction - M_PI / 2) / 2 * multi;
-    apt[0].m_y = pos.m_y - dy * std::sin(direction - M_PI / 2) / 2;
-    apt[1].m_x = pos.m_x + dx * std::cos(direction + M_PI / 2) / 2 * multi;
-    apt[1].m_y = pos.m_y - dy * std::sin(direction + M_PI / 2) / 2;
-    apt[2].m_x = pos.m_x + dx * std::cos(direction) * multi;
-    apt[2].m_y = pos.m_y - dy * std::sin(direction);
-    apt[3].m_x = pos.m_x + dx * std::cos(direction - M_PI / 2) / 2 * multi;
-    apt[3].m_y = pos.m_y - dy * std::sin(direction - M_PI / 2) / 2;
+    int radian = 16; // 半径
+    apt[0].m_x = pos.m_x + radian * std::cos(direction - M_PI / 2) / 2 * screen_ratio;
+    apt[0].m_y = pos.m_y - radian * std::sin(direction - M_PI / 2) / 2;
+    apt[1].m_x = pos.m_x + radian * std::cos(direction + M_PI / 2) / 2 * screen_ratio;
+    apt[1].m_y = pos.m_y - radian * std::sin(direction + M_PI / 2) / 2;
+    apt[2].m_x = pos.m_x + radian * std::cos(direction) * screen_ratio;
+    apt[2].m_y = pos.m_y - radian * std::sin(direction);
+    apt[3].m_x = pos.m_x + radian * std::cos(direction - M_PI / 2) / 2 * screen_ratio;
+    apt[3].m_y = pos.m_y - radian * std::sin(direction - M_PI / 2) / 2;
 
+    // XOR演算でピクセルを描画する
     auto putter = [&](int x, int y) {
-        image.set_pixel(x, y, 0xFFFFFF);
+        auto pixel = image.get_pixel(x, y);
+        image.set_pixel(x, y, 0xFFFFFF ^ pixel);
     };
 
     int count = sizeof(apt) / sizeof(apt[0]);
     for (int i = 0; i < count; ++i)
     {
+        // 線を描く
         int k = (i + 1) % count;
-        vsk_draw_line(putter, vsk_round(apt[i].m_x), vsk_round(apt[i].m_y) * multi,
-                              vsk_round(apt[k].m_x), vsk_round(apt[k].m_y) * multi);
+        vsk_draw_line(putter, vsk_round(apt[i].m_x), vsk_round(apt[i].m_y) * screen_ratio,
+                              vsk_round(apt[k].m_x), vsk_round(apt[k].m_y) * screen_ratio);
+        // XOR演算により、重なった頂点が消えてしまうので対策
+        putter(vsk_round(apt[i].m_x), vsk_round(apt[i].m_y) * screen_ratio);
     }
 }
