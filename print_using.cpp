@@ -576,8 +576,8 @@ VskError vsk_PRINT_USING_helper(VskFilePtr file, const VskString& format_text, c
     is_sep = true;
     for (size_t iarg = 0; iarg < args.size(); ++iarg)
     {
-        is_sep = (args[iarg]->m_insn == INSN_PRINTING_COMMA ||
-                  args[iarg]->m_insn == INSN_PRINTING_SEMICOLON);
+        is_sep = (args[iarg]->m_insn == INSN_COMMA ||
+                  args[iarg]->m_insn == INSN_SEMICOLON);
         if (was_sep == is_sep)
             return VSK_ERR_SYNTAX;
 

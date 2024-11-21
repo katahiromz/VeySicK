@@ -692,6 +692,8 @@ primary_statement
     }
     | go_sub line_number                                { vsk_targeting($1); $$ = vsk_ast(INSN_GOSUB, { $2 }); }
     | go_to line_number                                 { vsk_targeting($1); $$ = vsk_ast_goto($2); }
+    | TK_CMD cmd_name cmd_parameter_list                { vsk_targeting($1); $$ = vsk_ast(INSN_CMD, { $2 }); $$->insert($$->end(), $3->begin(), $3->end()); }
+    | TK_CMD cmd_name                                   { vsk_targeting($1); $$ = vsk_ast(INSN_CMD, { $2 }); }
     | lead_statement_1 TK_COMMA trailing_parameter_list { $$ = $1; $$->insert($$->end(), $3->begin(), $3->end()); }
     | lead_statement_1                                  { $$ = $1; }
     | lead_statement_0 trailing_parameter_list          { $$ = $1; $$->insert($$->end(), $2->begin(), $2->end()); }
@@ -894,8 +896,6 @@ primary_statement
     | TK_RETURN line_number                             { vsk_targeting($1); $$ = vsk_ast(INSN_RETURN, { $2 }); }
     | TK_RETURN                                         { vsk_targeting($1); $$ = vsk_ast(INSN_RETURN); }
     | TK_NAME expression TK_IDENTIFIER expression       { vsk_targeting($1); $$ = vsk_ast(INSN_NAME, { $2, $3, $4 }); }
-    | TK_CMD TK_PLAY file_number TK_COMMA trailing_parameter_list  { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_PLAY, { $3, $5 }); }
-    | TK_CMD TK_PLAY                      trailing_parameter_list  { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_PLAY, { nullptr, $3 }); }
     | TK_PLAY file_number TK_COMMA trailing_parameter_list         { vsk_targeting($1); $$ = vsk_ast(INSN_PLAY, { $2, $4 }); }
     | TK_PLAY                      trailing_parameter_list         { vsk_targeting($1); $$ = vsk_ast(INSN_PLAY, { nullptr, $2 }); }
     | TK_AUTO line_number TK_COMMA expression           { vsk_targeting($1); $$ = vsk_ast(INSN_AUTO, { $2, $4 }); }
@@ -930,8 +930,8 @@ printing_list
 printing_list_2
     : expression                                        { vsk_targeting($1); $$ = vsk_ast(INSN_PRINTING, { $1 }); }
     | printing_list_2 expression                        { vsk_targeting($2); $$ = $1; $$->push_back($2); }
-    | printing_list_2 TK_COMMA                          { vsk_targeting($2); $$ = $1; $$->push_back(vsk_ast(INSN_PRINTING_COMMA)); }
-    | printing_list_2 TK_SEMICOLON                      { vsk_targeting($2); $$ = $1; $$->push_back(vsk_ast(INSN_PRINTING_SEMICOLON)); }
+    | printing_list_2 TK_COMMA                          { vsk_targeting($2); $$ = $1; $$->push_back(vsk_ast(INSN_COMMA)); }
+    | printing_list_2 TK_SEMICOLON                      { vsk_targeting($2); $$ = $1; $$->push_back(vsk_ast(INSN_SEMICOLON)); }
     ;
 
 go_to
@@ -948,8 +948,8 @@ printing_expression
     : expression                                { $$ = $1; }
     | TK_SPC TK_L_PAREN expression TK_R_PAREN   { vsk_targeting($1); $$ = vsk_ast(INSN_SPC, { $3 });}
     | TK_TAB TK_L_PAREN expression TK_R_PAREN   { vsk_targeting($1); $$ = vsk_ast(INSN_TAB, { $3 });}
-    | TK_COMMA                                  { vsk_targeting($1); $$ = vsk_ast(INSN_PRINTING_COMMA); }
-    | TK_SEMICOLON                              { vsk_targeting($1); $$ = vsk_ast(INSN_PRINTING_SEMICOLON); }
+    | TK_COMMA                                  { vsk_targeting($1); $$ = vsk_ast(INSN_COMMA); }
+    | TK_SEMICOLON                              { vsk_targeting($1); $$ = vsk_ast(INSN_SEMICOLON); }
     ;
 
 semicolon_or_comma
@@ -964,11 +964,6 @@ lead_statement_0
     | TK_CALL                                           { vsk_targeting($1); $$ = vsk_ast(INSN_CALL); }
     | TK_CLEAR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_CLEAR); }
     | TK_CLS                                            { vsk_targeting($1); $$ = vsk_ast(INSN_CLS); }
-    | TK_CMD TK_CLS                                     { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_CLS); }
-    | TK_CMD TK_IDENTIFIER                              { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_IDENT, { $2 }); }
-    | TK_CMD TK_IDENTIFIER TK_COPY                      { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_IDENT_COPY, { $2 }); }
-    | TK_CMD TK_IDENTIFIER TK_OFF                       { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_IDENT_OFF, { $2 }); }
-    | TK_CMD TK_IDENTIFIER TK_ON                        { vsk_targeting($1); $$ = vsk_ast(INSN_CMD_IDENT_ON, { $2 }); }
     | TK_COLOR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_COLOR); }
     | TK_COMMON                                         { vsk_targeting($1); $$ = vsk_ast(INSN_COMMON); }
     | TK_CONSOLE                                        { vsk_targeting($1); $$ = vsk_ast(INSN_CONSOLE); }
@@ -1256,6 +1251,21 @@ line_range
 dirty_8bit_sequence
     : TK_DIRTY_8BIT                      { vsk_targeting($1); $$ = vsk_ast(INSN_DIRTY_8BIT); }
     | dirty_8bit_sequence TK_DIRTY_8BIT  { $$ = $1; }
+    ;
+
+cmd_name
+    : TK_CLS                { $$ = $1; }
+    | TK_PLAY               { $$ = $1; }
+    | TK_IDENTIFIER         { $$ = $1; }
+    ;
+
+cmd_parameter_list
+    : TK_ON                                             { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | TK_OFF                                            { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | TK_COPY                                           { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | expression                                        { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | cmd_parameter_list TK_COMMA expression            { $$ = $1; $$->push_back($2); }
+    | file_number        TK_COMMA cmd_parameter_list    { $$ = $3; $$->insert($$->begin(), $1); }
     ;
 
 line

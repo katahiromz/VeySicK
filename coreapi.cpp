@@ -2836,7 +2836,7 @@ bool vsk_do_printing(void)
     VSK_IMPL()->m_printing_items.pop_front();
 
     // カンマか？
-    bool is_comma = (item->m_insn == INSN_PRINTING_COMMA);
+    bool is_comma = (item->m_insn == INSN_COMMA);
     if (is_comma)
     {
         if (VSK_IMPL()->m_printing_is_write) // WRITE文か？
@@ -2858,7 +2858,7 @@ bool vsk_do_printing(void)
     }
 
     // セミコロンか？
-    bool is_semicolon = (item->m_insn == INSN_PRINTING_SEMICOLON);
+    bool is_semicolon = (item->m_insn == INSN_SEMICOLON);
     if (is_semicolon)
     {
         if (VSK_IMPL()->m_printing_is_write) // WRITE文か？
@@ -3066,6 +3066,14 @@ bool vsk_arity_in_range(const VskAstList& args, size_t min_, size_t max_)
     if (args.size() > max_)
         VSK_SYNTAX_ERROR_AND_RETURN(false);
     return true;
+}
+
+// 引数にアクセスする
+VskAstPtr vsk_arg(const VskAstList& args, size_t index)
+{
+    if (index < args.size())
+        return args[index];
+    return nullptr;
 }
 
 // プログラムを実行する
@@ -3297,7 +3305,7 @@ static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr& self, const VskAstList& args)
 
     // 必要なら "\n" を追加
     if (printing_items.empty() ||
-        (printing_items.back()->m_insn != INSN_PRINTING_SEMICOLON &&
+        (printing_items.back()->m_insn != INSN_SEMICOLON &&
          printing_items.back()->m_insn != INSN_SPC))
     {
         printing_items.push_back(vsk_ast_str("\n"));
@@ -3307,7 +3315,7 @@ static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr& self, const VskAstList& args)
     for (size_t i = printing_items.size(); i > 0; )
     {
         --i;
-        if (printing_items.at(i)->m_insn == INSN_PRINTING_SEMICOLON)
+        if (printing_items.at(i)->m_insn == INSN_SEMICOLON)
         {
             printing_items.erase(printing_items.begin() + i);
         }
@@ -3349,14 +3357,14 @@ static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr& self, const VskAstList& args)
         printing_items = args[0]->children();
 
     // 最後にセミコロン(;)が付いてなかったら "\n" を追加
-    if (printing_items.empty() || printing_items.back()->m_insn != INSN_PRINTING_SEMICOLON)
+    if (printing_items.empty() || printing_items.back()->m_insn != INSN_SEMICOLON)
         printing_items.push_back(vsk_ast_str("\n"));
 
     // セミコロン(;)を取り除く
     for (size_t i = printing_items.size(); i > 0; )
     {
         --i;
-        if (printing_items.at(i)->m_insn == INSN_PRINTING_SEMICOLON)
+        if (printing_items.at(i)->m_insn == INSN_SEMICOLON)
         {
             printing_items.erase(printing_items.begin() + i);
         }
@@ -4786,7 +4794,7 @@ static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
     }
 
     VskInt v0 = 1;
-    auto arg0 = args[0];
+    auto arg0 = vsk_arg(args, 0);
     if ((!arg0 || vsk_int(v0, arg0)))
     {
         if (1 <= v0 && v0 <= 3)
@@ -6552,6 +6560,7 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr& self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
 
+    assert(0);
     return nullptr;
 }
 
@@ -6605,77 +6614,6 @@ static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr& self, const VskAstList& args)
     }
 
     return nullptr;
-}
-
-// INSN_CMD_IDENT
-static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 1, 3))
-        return nullptr;
-
-    VskString v0;
-    if (!vsk_ident(v0, args[0]))
-        return nullptr;
-
-    if (v0 == "PAL") // CMD PAL
-    {
-        if (args.size() == 1)
-            return vsk_CMD_PAL(self, {});
-        if (args.size() == 2)
-            return vsk_CMD_PAL(self, { args[1] });
-        if (args.size() == 3)
-            return vsk_CMD_PAL(self, { args[1], args[2] });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "CUT") // CMD CUT
-    {
-        if (args.size() == 1)
-            return vsk_CMD_CUT(self, { });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "SING") // CMD SING
-    {
-        if (args.size() == 2)
-            return vsk_CMD_SING(self, { args[1] });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "TURTLE") // CMD TURTLE
-    {
-        if (args.size() == 2)
-            return vsk_CMD_TURTLE(self, { args[1] });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "BGM") // CMD BGM
-    {
-        if (args.size() == 2)
-            return vsk_CMD_BGM(self, { args[1] });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "STOPM") // CMD STOPM
-    {
-        if (args.size() == 1)
-            return vsk_CMD_STOPM(self, { });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "UNLINK") // CMD UNLINK
-    {
-        if (args.size() == 1)
-            return vsk_CMD_UNLINK(self, { });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-    else if (v0 == "VOICE") // CMD VOICE
-    {
-        if (args.size() == 2)
-            return vsk_CMD_VOICE(self, { args[1] });
-        if (args.size() == 3)
-            return vsk_CMD_VOICE(self, { args[1], args[2] });
-        if (args.size() == 4)
-            return vsk_CMD_VOICE(self, { args[1], args[2], args[3] });
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-    }
-
-    assert(0);
-    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 }
 
 // INSN_STOP_OFF (STOP OFF) @implemented
@@ -7401,27 +7339,8 @@ static bool vsk_CMD_VOICE_COPY(VskInt v1, VskAstPtr arg2)
     return vsk_sound_voice_copy(ptr, v1);
 }
 
-// INSN_CMD_IDENT_COPY
-static VskAstPtr VSKAPI vsk_CMD_IDENT_COPY(VskAstPtr& self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 3, 3))
-        return nullptr;
-
-    VskString v0;
-    VskInt v1;
-    if (vsk_ident(v0, args[0]) && vsk_int(v1, args[1]))
-    {
-        if (v0 != "VOICE")
-            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-
-        if (!vsk_CMD_VOICE_COPY(v1, args[2]))
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
-    }
-    return nullptr;
-}
-
-// INSN_CMD_IDENT_OFF (CMD TEXT OFF) @implemented
-static VskAstPtr VSKAPI vsk_CMD_IDENT_OFF(VskAstPtr& self, const VskAstList& args)
+// INSN_CMD_TEXT_ON_OFF (CMD TEXT ON/OFF) @implemented
+static VskAstPtr VSKAPI vsk_CMD_TEXT_ON_OFF(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7435,35 +7354,14 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT_OFF(VskAstPtr& self, const VskAstList& arg
     VskString v0;
     if (vsk_ident(v0, args[0]))
     {
-        if (v0 == "TEXT") // CMD TEXT OFF
-        {
-            VSK_STATE()->m_show_text = false;
-            return nullptr;
-        }
-        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
-    }
-
-    return nullptr;
-}
-
-// INSN_CMD_IDENT_ON (CMD TEXT ON) @implemented
-static VskAstPtr VSKAPI vsk_CMD_IDENT_ON(VskAstPtr& self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 1, 1))
-        return nullptr;
-
-    if (!VSK_SETTINGS()->m_unlimited_mode)
-    {
-        if (vsk_machine->is_9801_mode() || !vsk_machine->has_turtle())
-            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
-    }
-
-    VskString v0;
-    if (vsk_ident(v0, args[0]))
-    {
-        if (v0 == "TEXT") // CMD TEXT ON
+        if (v0 == "ON") // CMD TEXT ON
         {
             VSK_STATE()->m_show_text = true;
+            return nullptr;
+        }
+        if (v0 == "OFF") // CMD TEXT OFF
+        {
+            VSK_STATE()->m_show_text = false;
             return nullptr;
         }
         VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
@@ -7475,7 +7373,7 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT_ON(VskAstPtr& self, const VskAstList& args
 // INSN_CMD_PLAY (CMD PLAY) @implemented
 static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
 {
-    if (!vsk_arity_in_range(args, 2, 2))
+    if (!vsk_arity_in_range(args, 1, 7))
         return nullptr;
 
     if (!VSK_SETTINGS()->m_unlimited_mode)
@@ -7484,16 +7382,24 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
     }
 
-    VskInt v0 = 2;
-    if (args[0] && !vsk_file_number(v0, args[0]))
-        return nullptr;
-
-    auto arg1 = args[1];
+    VskInt sharp = 2;
+    size_t i = 0;
+    if (args[0]->m_insn == INSN_FILE_NUMBER)
+    {
+        if (!vsk_file_number(sharp, args[0]))
+            return nullptr;
+        i = 1;
+    }
+    else
+    {
+        if (!vsk_arity_in_range(args, 1, 6))
+            return nullptr;
+    }
 
     std::vector<VskString> strs;
-    for (size_t i = 0; i < arg1->size(); ++i)
+    for (; i < args.size(); ++i)
     {
-        auto arg = arg1->at(i);
+        auto arg = args.at(i);
         if (!arg)
         {
             strs.push_back("");
@@ -7510,7 +7416,7 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
         strs.push_back(str);
     }
 
-    switch (v0)
+    switch (sharp)
     {
     case 0:
         if (!vsk_sound_play_ssg(strs))
@@ -7530,6 +7436,39 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_PLAY;
         return vsk_ast(INSN_DONT_GO_NEXT);
     }
+
+    return nullptr;
+}
+
+// INSN_CMD (CMD ...)
+static VskAstPtr VSKAPI vsk_CMD(VskAstPtr& self, const VskAstList& args)
+{
+    auto params = args;
+    auto cmd_name = params[0]->m_str;
+    params.erase(params.begin());
+
+    if (cmd_name == "CLS")
+        return vsk_CMD_CLS(self, params);
+    if (cmd_name == "BGM")
+        return vsk_CMD_BGM(self, params);
+    if (cmd_name == "CUT")
+        return vsk_CMD_CUT(self, params);
+    if (cmd_name == "PAL")
+        return vsk_CMD_PAL(self, params);
+    if (cmd_name == "PLAY")
+        return vsk_CMD_PLAY(self, params);
+    if (cmd_name == "SING")
+        return vsk_CMD_SING(self, params);
+    if (cmd_name == "TURTLE")
+        return vsk_CMD_TURTLE(self, params);
+    if (cmd_name == "STOPM")
+        return vsk_CMD_STOPM(self, params);
+    if (cmd_name == "UNLINK")
+        return vsk_CMD_UNLINK(self, params);
+    if (cmd_name == "VOICE")
+        return vsk_CMD_VOICE(self, params);
+    if (cmd_name == "TEXT")
+        return vsk_CMD_TEXT_ON_OFF(self, params);
 
     return nullptr;
 }
@@ -8072,7 +8011,7 @@ static VskAstPtr vsk_FILES_LFILES_helper(const VskAstList& args, bool is_line_pr
         if (first)
             first = false;
         else
-            printing_items.push_back(vsk_ast(INSN_PRINTING_COMMA));
+            printing_items.push_back(vsk_ast(INSN_COMMA));
 
         printing_items.push_back(vsk_ast_str(file));
     }
