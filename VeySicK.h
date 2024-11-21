@@ -279,7 +279,7 @@ public:
     // File size (LOF)
     virtual bool get_size(VskDword *psize) const    { return false; }
     // width of one line (WIDTH# / WIDTH LPRINT)
-    virtual int  line_width() const                 { return 1024; }
+    virtual int  line_width() const                 { return 1024;  }
     virtual bool line_width(int value)              { return false; }
 
     // input (INPUT / INPUT# / INPUT$ / LINE INPUT / LINE INPUT# / KINPUT)
@@ -456,10 +456,6 @@ struct VskMachineState
 
     VskWebColor text_color_to_web_color(VskByte palette) const;
     VskWebColor palette_to_web_color(VskByte palette) const;
-
-    // line printer-related
-    int m_line_printer_width                = 256;
-    int m_line_printer_pos                  = 0;
 
     // Function keys-related
     bool m_show_function_keys               = true;

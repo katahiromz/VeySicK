@@ -902,6 +902,8 @@ primary_statement
     | TK_AUTO             TK_COMMA expression           { vsk_targeting($1); $$ = vsk_ast(INSN_AUTO, { nullptr, $3 }); }
     | TK_AUTO line_number                               { vsk_targeting($1); $$ = vsk_ast(INSN_AUTO, { $2, nullptr }); }
     | TK_AUTO                                           { vsk_targeting($1); $$ = vsk_ast(INSN_AUTO, { nullptr, nullptr }); }
+    | TK_WIDTH_sharp TK_DIGITS   TK_COMMA expression    { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2, $4 }); }
+    | TK_WIDTH       file_number TK_COMMA expression    { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2, $4 }); }
     | dirty_8bit_sequence                               { vsk_targeting($1); $$ = $1; }
     ;
 
@@ -1020,8 +1022,6 @@ lead_statement_0
     | TK_WEND                                           { vsk_targeting($1); $$ = vsk_ast(INSN_WEND); }
     | TK_WHILE                                          { vsk_targeting($1); $$ = vsk_ast(INSN_WHILE); }
     | TK_WIDTH                                          { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH); }
-    | TK_WIDTH_sharp TK_DIGITS                          { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2 }); }
-    | TK_WIDTH       file_number                        { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2 }); }
     | TK_WIDTH TK_LPRINT                                { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_LPRINT); }
     | TK_MID_dollar TK_L_PAREN lvalue TK_COMMA expression TK_COMMA expression TK_R_PAREN TK_EQUAL expression {
         vsk_targeting($1);

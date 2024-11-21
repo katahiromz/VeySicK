@@ -2429,12 +2429,13 @@ struct VskLinePrinter : VskFile
 {
     VskLinePrinter() : VskFile(TYPE_LINE_PRINTER, MODE_OUTPUT) { }
     int m_x = 0;
+    int m_cx = 255;
 
     int  get_x() const override         { return m_x; }
     void set_x(int x) override          { m_x = x; }
 
-    int  line_width() const override    { return VSK_STATE()->m_line_printer_width; }
-    bool line_width(int value) override { VSK_STATE()->m_line_printer_width = value; return true; }
+    int  line_width() const override    { return m_cx; }
+    bool line_width(int value) override { m_cx = value; return true; }
 
     VskError write_str(const std::string& str) override {
         for (auto ch : str) {
@@ -2453,6 +2454,12 @@ struct VskLinePrinter : VskFile
             m_x = 0;
         } else {
             ++m_x;
+            if (m_x == m_cx)
+            {
+                ch = '\n';
+                std::fwrite(&ch, 1, 1, stdout);
+                m_x = 0;
+            }
         }
         return;
     }

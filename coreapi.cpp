@@ -4952,6 +4952,34 @@ static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr& self, const VskAstList& args)
     if (!args[0])
         VSK_ERROR_AND_RETURN(VSK_ERR_MISSING_OPERAND, nullptr);
 
+    auto arg0 = vsk_eval_ast(args[0]);
+    if (!arg0)
+        return nullptr;
+
+    if (arg0->is_str()) // 第一引数が文字列？
+    {
+        if (!vsk_arity_in_range(args, 2, 2))
+            return nullptr;
+
+        auto filename = arg0->m_str;
+        VskInt width;
+        if (!vsk_int(width, args[1]))
+            return nullptr;
+
+        if (!(0 <= width && width <= 255))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (width == 0)
+            width = 256;
+
+        VskFilePtr file;
+        if (auto error = vsk_get_file_manager()->open(file, filename))
+            VSK_ERROR_AND_RETURN(error, nullptr);
+
+        file->line_width(width);
+        return nullptr;
+    }
+
     VskInt v0, v1 = VSK_STATE()->m_text_height;
     auto arg1 = (args.size() > 1 ? args[1] : nullptr);
     if (vsk_int(v0, args[0]) &&
@@ -4980,10 +5008,38 @@ static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_WIDTH_sharp (WIDTH#)
+// INSN_WIDTH_sharp (WIDTH#) @implemented
 static VskAstPtr VSKAPI vsk_WIDTH_sharp(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskInt fileno, buf_size;
+    if (vsk_file_number(fileno, args[0]) && vsk_int(buf_size, args[1]))
+    {
+        auto file = vsk_get_file_manager()->assoc(fileno);
+        if (!file)
+            VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+        if (!(0 <= buf_size && buf_size <= 255))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (buf_size == 0)
+            buf_size = 256;
+
+        if (file->is_line_printer()) // ラインプリンタ？
+        {
+            file->line_width(buf_size);
+            return nullptr;
+        }
+
+        if (file->is_com()) // 通信ファイル？
+        {
+            file->line_width(buf_size);
+            return nullptr;
+        }
+    }
+
     return nullptr;
 }
 
@@ -4993,17 +5049,20 @@ static VskAstPtr VSKAPI vsk_WIDTH_LPRINT(VskAstPtr& self, const VskAstList& args
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
-    VskInt v0;
-    if (vsk_int(v0, args[0]))
+    VskInt width;
+    if (vsk_int(width, args[0]))
     {
-        if (!(0 <= v0 && v0 < 256))
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
-        if (v0 == 0)
-            v0 = 256;
-        VSK_STATE()->m_line_printer_width = v0;
+        if (!(0 <= width && width < 256))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (width == 0)
+            width = 256;
+
+        VskFilePtr file;
+        if (auto error = vsk_get_file_manager()->open_line_printer(file))
+            VSK_ERROR_AND_RETURN(error, nullptr);
+
+        file->line_width(width);
     }
 
     return nullptr;
@@ -5014,9 +5073,10 @@ static VskAstPtr VSKAPI vsk_LPOS(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
-    VskInt ret = VskInt(VSK_STATE()->m_line_printer_pos);
-    assert(ret > 0);
-    return vsk_ast_int(ret);
+    VskFilePtr file;
+    if (auto error = vsk_get_file_manager()->open_line_printer(file))
+        VSK_ERROR_AND_RETURN(error, nullptr);
+    return vsk_ast_int(file->get_x());
 }
 
 // INSN_ASC (ASC) @implemented
@@ -8059,7 +8119,7 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
     return vsk_type_cast(ret, type);
 }
 
-// INSN_FPOS (FPOS)
+// INSN_FPOS (FPOS) @implemented
 static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -8075,9 +8135,7 @@ static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
 
     if (file->is_line_printer()) // ラインプリンタ？
     {
-        VskInt ret = VskInt(VSK_STATE()->m_line_printer_pos);
-        assert(ret > 0);
-        return vsk_ast_int(ret);
+        return vsk_ast_int(file->get_x());
     }
 
     if (file->is_sequential() || file->is_random()) // ディスクファイル？
