@@ -394,7 +394,7 @@ bool vsk_field_store(int fileno, VskString& bin)
             VskString field_str;
             if (!vsk_str(field_str, entry.m_lvalue))
                 return false;
-            if (field_str.size() < entry.m_field_len)
+            if (int(field_str.size()) < entry.m_field_len)
                 field_str.resize(entry.m_field_len, ' ');
             if (index + entry.m_field_len > record_len)
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false);
@@ -7828,7 +7828,7 @@ static VskAstPtr VSKAPI vsk_LSET_RSET(VskAstPtr& self, const VskAstList& args, b
 
     // 文字列を更新(左そろえまたは右そろえ)
     auto field_len = entry->m_field_len;
-    if (str.size() < field_len)
+    if (int(str.size()) < field_len)
     {
         auto diff = field_len - str.size();
         if (right)
@@ -7915,7 +7915,7 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
             }
             else
             {
-                if (v1 >= bin.size())
+                if (v1 >= int(bin.size()))
                     v1 = bin.size();
                 if (auto error = file->write_bin(bin.c_str(), v1))
                     VSK_ERROR_AND_RETURN(error, nullptr);

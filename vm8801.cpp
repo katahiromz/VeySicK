@@ -50,7 +50,7 @@ struct Vsk8801VRAM : VskMemoryBlockBase
     // マシン状態
     VskMachineState *m_state;
     // 8801 VRAM の実データ
-    VskByte m_8801_vram_area[VSK_8801_VRAM_BANK_MAX][VSK_8801_VRAM_SIZE];
+    VskByte m_8801_vram_area[VSK_8801_VRAM_BANK_MAX][VSK_8801_VRAM_SIZE] = { { 0 } };
 
     // コンストラクタ
     Vsk8801VRAM(VskMachineState *state) : m_state(state)
@@ -107,7 +107,9 @@ struct Vsk8801VRAM : VskMemoryBlockBase
 struct Vsk8801FreeArea : VskSimpleMemoryBlock
 {
     Vsk8801FreeArea() : VskSimpleMemoryBlock(VSK_8801_FREE_AREA_START, VSK_8801_FREE_AREA_SIZE)
-    { }
+    {
+        std::memset(m_ptr, 0, m_size);
+    }
 };
 
 // 8801のマシン

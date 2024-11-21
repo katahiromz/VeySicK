@@ -37,7 +37,7 @@
 // 9801 VRAM クラス
 struct Vsk9801TextVRAM : VskSimpleMemoryBlock
 {
-    VskByte m_9801_text_vram_area[VSK_9801_TEXT_VRAM_TOTAL_SIZE];
+    VskByte m_9801_text_vram_area[VSK_9801_TEXT_VRAM_TOTAL_SIZE] = { 0 };
     Vsk9801TextVRAM(VskMachineState *state)
         : VskSimpleMemoryBlock(VSK_9801_TEXT_VRAM_TEXT_ADDR,
                                VSK_9801_TEXT_VRAM_TOTAL_SIZE,
@@ -70,7 +70,7 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
 
     // 9801 VRAM 実データ
     // [bank][plane][offset]
-    VskByte m_9801_graph_vram_planes[2][4][VSK_9801_GRAPH_VRAM_PLANE_SIZE];
+    VskByte m_9801_graph_vram_planes[2][4][VSK_9801_GRAPH_VRAM_PLANE_SIZE] = { { { 0 } } };
 
     // アドレス
     const VskAddr c_addrs[4] =
