@@ -50,10 +50,10 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
     for (size_t i = 0; i < str.size(); ++i)
     {
         char ch = vsk_toupper(str[i]);
+        if (vsk_isblank(ch))
+            continue;
         switch (status) {
         case 0:
-            if (vsk_isblank(ch))
-                continue;
             if (ch == ';')
                 continue;
             if (ch == '[') { // 繰り返しの始まり
@@ -164,6 +164,7 @@ void VskTurtleEngine::reset()
     m_direction_in_degree = 0;
     m_pen_color = 7;
     m_pos_adjustment = true;
+    m_last_ref = { -1, -1 };
 }
 
 void VskTurtleEngine::show(bool do_show)
@@ -178,7 +179,7 @@ void VskTurtleEngine::pen_down(bool down)
 
 VskPointD VskTurtleEngine::get_pos() const
 {
-    return vsk_machine->world_to_screen(VSK_STATE()->m_last_ref);
+    return vsk_machine->world_to_screen(m_last_ref);
 }
 
 VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
@@ -190,7 +191,7 @@ VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
 
 void VskTurtleEngine::update_LP(const VskPointD& pt1)
 {
-    VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt1);
+    m_last_ref = VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt1);
 }
 
 VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
@@ -202,6 +203,11 @@ VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
 
 bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 {
+    if (m_last_ref.m_x == -1 && m_last_ref.m_y == -1) {
+        m_last_ref.m_x = (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0;
+        m_last_ref.m_y = (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0;
+    }
+
     if (item.m_subcommand == "FD") { // FORWARD (前に進む)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->value();
@@ -297,10 +303,6 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         show(false);
         return true;
     } else if (item.m_subcommand == "ST") { // タートルを表示する
-        VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(VskPointD{
-            (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0,
-            (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0,
-        });
         show(true);
         return true;
     }
@@ -314,7 +316,7 @@ void vsk_turtle_draw_cursor(Vsk32BppImage& image)
     VskPointD pos = vsk_turtle_pos();
     VskDouble direction = vsk_turtle_direction();
 
-    int dx = 12, dy = 16, multi = 1;
+    int dx = 16, dy = 16, multi = 1;
     if (VSK_STATE()->is_height_200()) {
         multi = 2;
     }
@@ -330,15 +332,14 @@ void vsk_turtle_draw_cursor(Vsk32BppImage& image)
     apt[3].m_y = pos.m_y - dy * std::sin(direction - M_PI / 2) / 2;
 
     auto putter = [&](int x, int y) {
-        auto pixel = image.get_pixel(x, y);
-        image.set_pixel(x, y, pixel ^ 0xFFFFFF);
+        image.set_pixel(x, y, 0xFFFFFF);
     };
 
     int count = sizeof(apt) / sizeof(apt[0]);
     for (int i = 0; i < count; ++i)
     {
         int k = (i + 1) % count;
-        vsk_draw_line(putter, vsk_round(apt[i].m_x), vsk_round(apt[i].m_y * multi),
-                              vsk_round(apt[k].m_x), vsk_round(apt[k].m_y * multi));
+        vsk_draw_line(putter, vsk_round(apt[i].m_x), vsk_round(apt[i].m_y) * multi,
+                              vsk_round(apt[k].m_x), vsk_round(apt[k].m_y) * multi);
     }
 }
