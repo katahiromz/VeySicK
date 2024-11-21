@@ -2669,7 +2669,7 @@ bool vsk_save_screenshot(bool half)
         return false;
 
     vsk_machine->render();
-    HBITMAP hbm = (HBITMAP)::CopyImage(vsk_machine->get_screen_image(), IMAGE_BITMAP,
+    HBITMAP hbm = (HBITMAP)::CopyImage(*vsk_machine->get_screen_image(), IMAGE_BITMAP,
                                        0, 0, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
     if (!hbm)
         return false;
@@ -2707,7 +2707,7 @@ void VskWin32App::OnScreenshot(HWND hwnd, BOOL bFile)
 
     // スクリーンショットのコピーを作成
     start_stop_timers(hwnd, false);
-    HBITMAP hbm = (HBITMAP)::CopyImage(vsk_machine->get_screen_image(), IMAGE_BITMAP,
+    HBITMAP hbm = (HBITMAP)::CopyImage(*vsk_machine->get_screen_image(), IMAGE_BITMAP,
                                        0, 0, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
     start_stop_timers(hwnd, true);
     if (!hbm)
@@ -3272,7 +3272,7 @@ void VskWin32App::render()
     if (vsk_machine)
     {
         vsk_machine->render();
-        m_imageView.setImage((HBITMAP)vsk_machine->get_screen_image());
+        m_imageView.setImage((HBITMAP)(VskImageHandle)*vsk_machine->get_screen_image());
 #ifdef VSK_SINGLE_THREAD
         vsk_lock();
         vsk_machine->step();

@@ -1,5 +1,6 @@
 #include "turtle.h"
 #include "encoding.h"
+#include "draw_algorithm.h"
 #include "coreapi.h"
 
 static bool vsk_expand_turtle_items(std::vector<VskTurtleItem>& items)
@@ -86,6 +87,9 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
                 } else if (subcommand == "PD" || subcommand == "PU" || subcommand == "ST" || subcommand == "HT") {
                     items.push_back(item);
                     item.clear();
+                } else {
+                    assert(0);
+                    return false;
                 }
                 subcommand.clear();
             }
@@ -133,6 +137,21 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
             assert(0);
             return false;
         }
+    }
+
+    if (status == 2)
+    {
+        assert(0);
+        return false;
+    }
+
+    if (status == 1)
+    {
+        if (item.m_subcommand == "LT" || item.m_subcommand == "RT")
+            item.m_params.emplace_back("90");
+
+        if (--status == 0)
+            items.push_back(item);
     }
 
     return vsk_expand_turtle_items(items);
@@ -278,6 +297,10 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         show(false);
         return true;
     } else if (item.m_subcommand == "ST") { // タートルを表示する
+        VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(VskPointD{
+            (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0,
+            (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0,
+        });
         show(true);
         return true;
     }
@@ -285,3 +308,37 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
     assert(0);
     return false;
 } // VskTurtleEngine::turtle_item
+
+void vsk_turtle_draw_cursor(Vsk32BppImage& image)
+{
+    VskPointD pos = vsk_turtle_pos();
+    VskDouble direction = vsk_turtle_direction();
+
+    int dx = 12, dy = 16, multi = 1;
+    if (VSK_STATE()->is_height_200()) {
+        multi = 2;
+    }
+
+    VskPointD apt[4];
+    apt[0].m_x = pos.m_x + dx * std::cos(direction - M_PI / 2) / 2 * multi;
+    apt[0].m_y = pos.m_y - dy * std::sin(direction - M_PI / 2) / 2;
+    apt[1].m_x = pos.m_x + dx * std::cos(direction + M_PI / 2) / 2 * multi;
+    apt[1].m_y = pos.m_y - dy * std::sin(direction + M_PI / 2) / 2;
+    apt[2].m_x = pos.m_x + dx * std::cos(direction) * multi;
+    apt[2].m_y = pos.m_y - dy * std::sin(direction);
+    apt[3].m_x = pos.m_x + dx * std::cos(direction - M_PI / 2) / 2 * multi;
+    apt[3].m_y = pos.m_y - dy * std::sin(direction - M_PI / 2) / 2;
+
+    auto putter = [&](int x, int y) {
+        auto pixel = image.get_pixel(x, y);
+        image.set_pixel(x, y, pixel ^ 0xFFFFFF);
+    };
+
+    int count = sizeof(apt) / sizeof(apt[0]);
+    for (int i = 0; i < count; ++i)
+    {
+        int k = (i + 1) % count;
+        vsk_draw_line(putter, vsk_round(apt[i].m_x), vsk_round(apt[i].m_y * multi),
+                              vsk_round(apt[k].m_x), vsk_round(apt[k].m_y * multi));
+    }
+}

@@ -3,6 +3,7 @@
 
 #include "VeySicK.h"            // VeySicK
 #include "draw_algorithm.h"     // 描画アルゴリズム
+#include "turtle.h"             // タートル
 
 ////////////////////////////////////////////////////////////////////////////////////
 // 8801 machine
@@ -290,6 +291,9 @@ struct Vsk8801Machine : VskMachine
             render_color_graphics();
         else
             render_mono_graphics();
+
+        if (vsk_turtle_shown())
+            vsk_turtle_draw_cursor(*get_screen_image());
     }
 
     // 白黒グラフィック画面を描画する
@@ -315,9 +319,9 @@ struct Vsk8801Machine : VskMachine
     }
 
     // 描画したスクリーンイメージを取得する
-    VskImageHandle get_screen_image() override
+    Vsk32BppImage *get_screen_image() override
     {
-        return m_screen_image;
+        return &m_screen_image;
     }
 
     // マシンを接続、または接続を切断する

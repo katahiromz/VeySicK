@@ -1703,7 +1703,7 @@ void VskMachine::clear_graphic(const VskRectI *rect)
 }
 
 // ワールド座標をスクリーン座標に
-VskPointD VskMachine::world_to_screen(VskPointD pt) const
+VskPointD VskMachine::world_to_screen(const VskPointD& pt) const
 {
     VskDouble wx = m_state->m_window.width(),   wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
@@ -1712,7 +1712,7 @@ VskPointD VskMachine::world_to_screen(VskPointD pt) const
 }
 
 // スクリーン座標をワールド座標に
-VskPointD VskMachine::screen_to_world(VskPointD pt) const
+VskPointD VskMachine::screen_to_world(const VskPointD& pt) const
 {
     VskDouble wx = m_state->m_window.width(),   wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
@@ -1721,7 +1721,7 @@ VskPointD VskMachine::screen_to_world(VskPointD pt) const
 }
 
 // ワールド座標をクライアント座標に
-VskPointD VskMachine::world_to_client(VskPointD pt) const
+VskPointD VskMachine::world_to_client(const VskPointD& pt) const
 {
     auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
@@ -1730,7 +1730,7 @@ VskPointD VskMachine::world_to_client(VskPointD pt) const
 }
 
 // ワールド座標をクライアント座標に
-VskSizeI VskMachine::world_to_client(VskSizeD siz) const
+VskSizeI VskMachine::world_to_client(const VskSizeD& siz) const
 {
     auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
@@ -1738,7 +1738,7 @@ VskSizeI VskMachine::world_to_client(VskSizeD siz) const
 }
 
 // クライアント座標をワールド座標に
-VskPointD VskMachine::client_to_world(VskPointI pt) const
+VskPointD VskMachine::client_to_world(const VskPointI& pt) const
 {
     auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();

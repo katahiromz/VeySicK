@@ -304,6 +304,24 @@ struct VskMachineImpl
     void init();
 };
 
+// タートルが表示されているか？
+bool vsk_turtle_shown(void)
+{
+    return VSK_IMPL()->m_turtle_engine.m_is_shown;
+}
+
+// タートルの位置を返す
+VskPointD vsk_turtle_pos(void)
+{
+    return vsk_machine->world_to_screen(VSK_STATE()->m_last_ref);
+}
+
+// タートルの向きを返す
+VskDouble vsk_turtle_direction(void)
+{
+    return VSK_IMPL()->m_turtle_engine.get_turtle_direction_in_radian();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 // フィールドを追加
@@ -7470,7 +7488,7 @@ static VskAstPtr VSKAPI vsk_CMD(VskAstPtr& self, const VskAstList& args)
     if (cmd_name == "TEXT")
         return vsk_CMD_TEXT_ON_OFF(self, params);
 
-    return nullptr;
+    VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 }
 
 // INSN_COLOR_equal (COLOR=)

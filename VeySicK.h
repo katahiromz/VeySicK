@@ -586,7 +586,7 @@ struct VskMachine : VskObject
     virtual VskByte& line_link(int y)       { return m_state->m_line_link[y]; }
     virtual VskByte  line_link(int y) const { return m_state->m_line_link[y]; }
 
-    virtual VskImageHandle get_screen_image() { return nullptr; }
+    virtual Vsk32BppImage *get_screen_image() { return nullptr; }
     virtual void render() { }
     virtual bool connect(bool do_connect);
 
@@ -669,11 +669,14 @@ struct VskMachine : VskObject
     void set_line_column(int column);
     VskString get_input_text() const;
 
-    VskPointD world_to_screen(VskPointD pt) const;
-    VskPointD screen_to_world(VskPointD pt) const;
-    VskPointD world_to_client(VskPointD pt) const;
-    VskSizeI world_to_client(VskSizeD siz) const;
-    VskPointD client_to_world(VskPointI pt) const;
+    VskPointD world_to_screen(const VskPointI& pt) const { return world_to_screen(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
+    VskPointD world_to_screen(const VskPointD& pt) const;
+    VskPointD screen_to_world(const VskPointI& pt) const { return screen_to_world(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
+    VskPointD screen_to_world(const VskPointD& pt) const;
+    VskPointD world_to_client(const VskPointI& pt) const { return world_to_client(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
+    VskPointD world_to_client(const VskPointD& pt) const;
+    VskSizeI world_to_client(const VskSizeD& siz) const;
+    VskPointD client_to_world(const VskPointI& pt) const;
     virtual int get_display_pages_flags(int screen_mode, int display_pages) { return -1; }
 
     bool is_valid_tile(const VskString& tile) const;
@@ -804,3 +807,9 @@ VskString vsk_get_next_line_text(VskLineNo number, int which);
 void vsk_ime_on_off(bool on);
 // フィールドを閉じる
 void vsk_field_close(int fileno);
+// タートルが表示されているか？
+bool vsk_turtle_shown(void);
+// タートルの位置を返す
+VskPointD vsk_turtle_pos(void);
+// タートルの向きを返す
+VskDouble vsk_turtle_direction(void);

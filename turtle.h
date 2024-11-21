@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.h"
+#include "VeySicK.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // VskTurtleItem --- an item of CMD TURTLE
@@ -38,10 +38,12 @@ struct VskTurtleEngine
     void show(bool do_show);
     void pen_down(bool down);
     VskPointD get_pos() const;
+    VskDouble get_turtle_direction_in_radian() const;
 
 protected:
     void update_LP(const VskPointD& pt1);
-    VskDouble get_turtle_direction_in_radian() const;
 };
+
+void vsk_turtle_draw_cursor(Vsk32BppImage& image);
 
 //////////////////////////////////////////////////////////////////////////////
