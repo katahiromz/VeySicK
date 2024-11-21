@@ -8362,7 +8362,9 @@ static void vsk_MOUSE_ON_OFF_STOP_helper(const VskAstList& args, VskTrapMode mod
     {
         auto info = vsk_get_mouse_trap(v0);
         if (info)
+        {
             info->m_mode = mode;
+        }
     }
 }
 

@@ -653,7 +653,7 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
     }
 
     if (device == "COM")
-        device == "COM1";
+        device = "COM1";
 
     if (device == "COM1" || device == "COM2" || device == "COM3") // RS-232C 通信ファイル
     {
@@ -2961,9 +2961,9 @@ void VskWin32App::OnPaint(HWND hwnd)
 
 // INKEY$ 用
 VskByte vsk_inkey = 0;
-VskByte vsk_vk = 0;
-VskByte vsk_shift = 0;
-VskByte vsk_ctrl = 0;
+VskDword vsk_vk = 0;
+bool vsk_shift = false;
+bool vsk_ctrl = false;
 
 // VK_PROCESSKEYの処理前の仮想キーコード
 UINT vsk_vkey = 0;
@@ -2988,8 +2988,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
         ::ClipCursor(nullptr);
 
     const bool caps = (::GetKeyState(VK_CAPITAL) < 0);
-    bool shift = vsk_is_shift_pressed();
-    bool ctrl = vsk_is_ctrl_pressed();
+    bool shift = vsk_is_shift_pressed(), ctrl = vsk_is_ctrl_pressed();
     if (!(vk == vsk_vk && shift == vsk_shift && ctrl == vsk_ctrl))
         vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
     vsk_vk = vk;
