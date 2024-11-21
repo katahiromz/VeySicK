@@ -313,7 +313,7 @@ bool vsk_turtle_shown(void)
 // タートルの位置を返す
 VskPointD vsk_turtle_pos_in_screen(void)
 {
-    return VSK_IMPL()->m_turtle_engine.m_last_ref;
+    return VSK_IMPL()->m_turtle_engine.m_last_point_in_screen;
 }
 
 // タートルの向きを返す
@@ -4646,17 +4646,17 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr& self, const VskAstList& args)
             switch (v0)
             {
             case 0:
-                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_ref.m_x));
+                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_point_in_world.m_x));
             case 1:
-                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_ref.m_y));
+                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_point_in_world.m_y));
             case 2:
                 {
-                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_ref);
+                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world);
                     return vsk_ast_dbl(VskDouble(pt.m_x));
                 }
             case 3:
                 {
-                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_ref);
+                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world);
                     return vsk_ast_dbl(VskDouble(pt.m_y));
                 }
             default:
@@ -4690,7 +4690,7 @@ static VskAstPtr VSKAPI vsk_POINT(VskAstPtr& self, const VskAstList& args)
     VskDouble v0, v1;
     if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1]))
     {
-        VSK_STATE()->m_last_ref = { v0, v1 };
+        VSK_STATE()->m_last_point_in_world = { v0, v1 };
         return nullptr;
     }
     return nullptr;
@@ -4705,8 +4705,8 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr& self, const VskAstList& args)
     VskDouble v0, v1;
     if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1]))
     {
-        VSK_STATE()->m_last_ref.m_x += v0;
-        VSK_STATE()->m_last_ref.m_y += v1;
+        VSK_STATE()->m_last_point_in_world.m_x += v0;
+        VSK_STATE()->m_last_point_in_world.m_y += v1;
         return nullptr;
     }
     return nullptr;
@@ -4789,7 +4789,7 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr& self, const VskAstList& args)
         if (v0 & 2)
         {
             vsk_machine->clear_graphic();
-            VSK_STATE()->m_last_ref = vsk_machine->client_to_world(VSK_STATE()->m_viewport.m_pt0);
+            VSK_STATE()->m_last_point_in_world = vsk_machine->client_to_world(VSK_STATE()->m_viewport.m_pt0);
         }
 
         // 編集モードを解除
@@ -5436,7 +5436,7 @@ void vsk_LINE_helper_1(VskDouble v0, VskDouble v1, VskDouble v2, VskDouble v3, V
     else
         vsk_machine->draw_line(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), v4, v6);
 
-    VSK_STATE()->m_last_ref = { v2, v3 };
+    VSK_STATE()->m_last_point_in_world = { v2, v3 };
 }
 
 // 直線や長方形を描くヘルパー関数、その２
@@ -5449,8 +5449,8 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     auto arg5 = ((args.size() <= 5) ? nullptr : args[5]);
     auto arg6 = ((args.size() <= 6) ? nullptr : args[6]);
 
-    VskDouble v0 = VSK_STATE()->m_last_ref.m_x;
-    VskDouble v1 = VSK_STATE()->m_last_ref.m_y;
+    VskDouble v0 = VSK_STATE()->m_last_point_in_world.m_x;
+    VskDouble v1 = VSK_STATE()->m_last_point_in_world.m_y;
     VskDouble v2, v3;
     VskInt v4 = VSK_STATE()->m_fore_color;
     VskString v5;
@@ -5474,8 +5474,8 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
 
         if (step0)
         {
-            v0 += VSK_STATE()->m_last_ref.m_x;
-            v1 += VSK_STATE()->m_last_ref.m_y;
+            v0 += VSK_STATE()->m_last_point_in_world.m_x;
+            v1 += VSK_STATE()->m_last_point_in_world.m_y;
         }
 
         if (step1)
@@ -5570,7 +5570,7 @@ void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     {
         // 円を描画する
         vsk_machine->draw_circle(vsk_round(x0), vsk_round(y0), vsk_round(radius), palette);
-        VSK_STATE()->m_last_ref = { x0, y0 };
+        VSK_STATE()->m_last_point_in_world = { x0, y0 };
         return;
     }
 
@@ -5589,7 +5589,7 @@ void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     {
         // 楕円を描画する
         vsk_machine->draw_ellipse(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), palette);
-        VSK_STATE()->m_last_ref = { x0, y0 };
+        VSK_STATE()->m_last_point_in_world = { x0, y0 };
         return;
     }
 
@@ -5597,7 +5597,7 @@ void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     vsk_machine->draw_arc(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), start_angle, end_angle, palette);
 
     // LPを覚えておく
-    VSK_STATE()->m_last_ref = { x0, y0 };
+    VSK_STATE()->m_last_point_in_world = { x0, y0 };
 }
 
 // 円の弧または楕円の弧を塗りつぶすヘルパー関数
@@ -5608,7 +5608,7 @@ void vsk_fill_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     {
         // 円の内部を塗りつぶす
         vsk_machine->fill_circle(vsk_round(x0), vsk_round(y0), vsk_round(radius), palette);
-        VSK_STATE()->m_last_ref = { x0, y0 };
+        VSK_STATE()->m_last_point_in_world = { x0, y0 };
         return;
     }
 
@@ -5627,7 +5627,7 @@ void vsk_fill_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     {
         // 楕円の内部を塗りつぶす
         vsk_machine->fill_ellipse(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), palette, tile);
-        VSK_STATE()->m_last_ref = { x0, y0 };
+        VSK_STATE()->m_last_point_in_world = { x0, y0 };
         return;
     }
 
@@ -5635,7 +5635,7 @@ void vsk_fill_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     vsk_machine->fill_arc(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), start_angle, end_angle, palette, tile);
 
     // LPを覚えておく
-    VSK_STATE()->m_last_ref = { x0, y0 };
+    VSK_STATE()->m_last_point_in_world = { x0, y0 };
 }
 
 // "CIRCLE", "CIRCLE STEP"
@@ -5703,8 +5703,8 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
 
         if (step)
         {
-            v0 += VSK_STATE()->m_last_ref.m_x;
-            v1 += VSK_STATE()->m_last_ref.m_y;
+            v0 += VSK_STATE()->m_last_point_in_world.m_x;
+            v1 += VSK_STATE()->m_last_point_in_world.m_y;
         }
 
         if (v7 == "F")
@@ -5743,7 +5743,7 @@ void vsk_do_PSET_PRESET_helper_1(VskPointD pt, VskInt palette)
 {
     auto newpt = vsk_machine->world_to_client(pt);
     vsk_machine->set_pixel(vsk_round(newpt.m_x), vsk_round(newpt.m_y), palette);
-    VSK_STATE()->m_last_ref = pt;
+    VSK_STATE()->m_last_point_in_world = pt;
 }
 
 // 点を描画するヘルパー関数
@@ -5764,8 +5764,8 @@ void vsk_do_PSET_PRESET_helper_2(VskAstPtr& self, const VskAstList& args, bool s
 
         if (step)
         {
-            v0 += VSK_STATE()->m_last_ref.m_x;
-            v1 += VSK_STATE()->m_last_ref.m_y;
+            v0 += VSK_STATE()->m_last_point_in_world.m_x;
+            v1 += VSK_STATE()->m_last_point_in_world.m_y;
         }
 
         vsk_do_PSET_PRESET_helper_1({ v0, v1 }, v2);
@@ -5805,7 +5805,7 @@ static void vsk_PAINT_helper(VskDouble v0, VskDouble v1, VskInt v2, VskInt v3, V
 {
     auto pt = vsk_machine->world_to_client(VskPointD { v0, v1 });
     vsk_machine->flood_fill(vsk_round(pt.m_x), vsk_round(pt.m_y), v2, v3, v4);
-    VSK_STATE()->m_last_ref = { v0, v1 };
+    VSK_STATE()->m_last_point_in_world = { v0, v1 };
 }
 
 static VskAstPtr vsk_PAINT_helper(VskAstPtr& self, const VskAstList& args, bool step)
@@ -5821,8 +5821,8 @@ static VskAstPtr vsk_PAINT_helper(VskAstPtr& self, const VskAstList& args, bool 
         vsk_targeting(self);
         if (step)
         {
-            v0 += VSK_STATE()->m_last_ref.m_x;
-            v1 += VSK_STATE()->m_last_ref.m_y;
+            v0 += VSK_STATE()->m_last_point_in_world.m_x;
+            v1 += VSK_STATE()->m_last_point_in_world.m_y;
         }
 
         if (!(args.size() <= 2) && args[2])

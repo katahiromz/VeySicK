@@ -166,7 +166,7 @@ void VskTurtleEngine::reset()
     m_direction_in_degree = 0;
     m_pen_color = 7;
     m_pos_adjustment = true;
-    m_last_ref = { -1, -1 };
+    m_last_point_in_screen = { -1, -1 };
     m_is_init = false;
 }
 
@@ -185,7 +185,7 @@ void VskTurtleEngine::pen_down(bool down)
 // スクリーン座標でタートルの位置を取得
 VskPointD VskTurtleEngine::get_pos_in_screen() const
 {
-    return vsk_machine->world_to_screen(m_last_ref);
+    return vsk_machine->world_to_screen(m_last_point_in_screen);
 }
 
 // パラメータを取得
@@ -199,8 +199,8 @@ VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
 // 最終点を更新する
 void VskTurtleEngine::update_LP(const VskPointD& pt_in_screen)
 {
-    m_last_ref = pt_in_screen;
-    VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt_in_screen);
+    m_last_point_in_screen = pt_in_screen;
+    VSK_STATE()->m_last_point_in_world = vsk_machine->screen_to_world(pt_in_screen);
 }
 
 // タートルの向きをラジアンで返す
@@ -213,8 +213,10 @@ VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
 void VskTurtleEngine::init()
 {
     if (!m_is_init) {
-        m_last_ref.m_x = (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0;
-        m_last_ref.m_y = (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0;
+        m_last_point_in_screen = {
+            (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0,
+            (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0
+        };
         m_is_init = true;
     }
 }

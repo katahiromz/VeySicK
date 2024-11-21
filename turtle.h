@@ -30,7 +30,7 @@ struct VskTurtleEngine
     VskInt          m_pen_color;
     bool            m_pos_adjustment;
     VskDouble       m_direction_in_degree;
-    VskPointD       m_last_ref;
+    VskPointD       m_last_point_in_screen;
     bool            m_is_init;
 
     VskTurtleEngine() { reset(); }
