@@ -165,6 +165,7 @@ void VskTurtleEngine::reset()
     m_pen_color = 7;
     m_pos_adjustment = true;
     m_last_ref = { -1, -1 };
+    m_is_init = false;
 }
 
 void VskTurtleEngine::show(bool do_show)
@@ -191,7 +192,8 @@ VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
 
 void VskTurtleEngine::update_LP(const VskPointD& pt1)
 {
-    m_last_ref = VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt1);
+    m_last_ref = pt1;
+    VSK_STATE()->m_last_ref = vsk_machine->screen_to_world(pt1);
 }
 
 VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
@@ -199,14 +201,20 @@ VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
     return -(m_direction_in_degree - 90) * M_PI / 180.0;
 }
 
+void VskTurtleEngine::init()
+{
+    if (!m_is_init) {
+        m_last_ref.m_x = (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0;
+        m_last_ref.m_y = (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0;
+        m_is_init = true;
+    }
+}
+
 #define PT2INTS(pt) vsk_round((pt).m_x), vsk_round((pt).m_y)
 
 bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 {
-    if (m_last_ref.m_x == -1 && m_last_ref.m_y == -1) {
-        m_last_ref.m_x = (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2.0;
-        m_last_ref.m_y = (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2.0;
-    }
+    init();
 
     if (item.m_subcommand == "FD") { // FORWARD (前に進む)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {

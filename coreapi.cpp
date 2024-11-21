@@ -313,7 +313,7 @@ bool vsk_turtle_shown(void)
 // タートルの位置を返す
 VskPointD vsk_turtle_pos(void)
 {
-    return vsk_machine->world_to_screen(VSK_STATE()->m_last_ref);
+    return VSK_IMPL()->m_turtle_engine.m_last_ref;
 }
 
 // タートルの向きを返す

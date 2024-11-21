@@ -31,9 +31,11 @@ struct VskTurtleEngine
     bool            m_pos_adjustment;
     VskDouble       m_direction_in_degree;
     VskPointD       m_last_ref;
+    bool            m_is_init;
 
     VskTurtleEngine() { reset(); }
 
+    void init();
     bool turtle_item(const VskTurtleItem& item);
     void reset();
     void show(bool do_show);
