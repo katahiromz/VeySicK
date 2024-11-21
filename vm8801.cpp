@@ -42,14 +42,13 @@
 #define VSK_8801_ATTR_GET_COLOR(attr)   VskByte(((attr) >> 5) & 0x07)
 #define VSK_8801_ATTR_SET_COLOR(color)  VskByte(VSK_8801_ATTR_COLOR | (((color) & 0x07) << 5))
 
-// 8801 VRAM の実データ
-VskByte vsk_8801_vram_area[4][VSK_8801_VRAM_SIZE];
-
 // 8801 VRAM のクラス。
 struct Vsk8801VRAM : VskMemoryBlockBase
 {
     // マシン状態
     VskMachineState *m_state;
+    // 8801 VRAM の実データ
+    VskByte m_8801_vram_area[4][VSK_8801_VRAM_SIZE];
 
     // コンストラクタ
     Vsk8801VRAM(VskMachineState *state) : m_state(state)
@@ -69,7 +68,7 @@ struct Vsk8801VRAM : VskMemoryBlockBase
             return false;
         assert(0 <= m_state->m_vram_bank && m_state->m_vram_bank < 4);
         auto offset = addr - VSK_8801_VRAM_START_ADDR;
-        *ptr = vsk_8801_vram_area[m_state->m_vram_bank][offset];
+        *ptr = m_8801_vram_area[m_state->m_vram_bank][offset];
         return true;
     }
 
@@ -80,22 +79,22 @@ struct Vsk8801VRAM : VskMemoryBlockBase
             return false;
         assert(0 <= m_state->m_vram_bank && m_state->m_vram_bank < 4);
         auto offset = addr - VSK_8801_VRAM_START_ADDR;
-        vsk_8801_vram_area[m_state->m_vram_bank][offset] = *ptr;
+        m_8801_vram_area[m_state->m_vram_bank][offset] = *ptr;
         return true;
     }
-};
 
-// 8801のページを取得
-VskByte *vsk_8801_get_page(int screen_mode, int iPage)
-{
-    switch (iPage)
+    // 8801のページを取得
+    VskByte *get_page(int screen_mode, int iPage)
     {
-    case 0: return &vsk_8801_vram_area[VSK_8801_VRAM_BANK_1][0];
-    case 1: return &vsk_8801_vram_area[VSK_8801_VRAM_BANK_2][0];
-    case 2: return &vsk_8801_vram_area[VSK_8801_VRAM_BANK_3][0];
+        switch (iPage)
+        {
+        case 0: return &m_8801_vram_area[VSK_8801_VRAM_BANK_1][0];
+        case 1: return &m_8801_vram_area[VSK_8801_VRAM_BANK_2][0];
+        case 2: return &m_8801_vram_area[VSK_8801_VRAM_BANK_3][0];
+        }
+        return nullptr;
     }
-    return nullptr;
-}
+};
 
 // 8801 フリーエリアのアドレスとサイズ
 #define VSK_8801_FREE_AREA_START      0xA000
@@ -178,7 +177,7 @@ struct Vsk8801Machine : VskMachine
         assert(0 <= y && y < m_state->m_text_height);
         auto offset = VSK_8801_TEXT_VRAM_OFFSET + y * VSK_8801_TEXT_VRAM_PITCH;
         assert(0 <= offset && offset < VSK_8801_VRAM_SIZE);
-        return &vsk_8801_vram_area[0][offset];
+        return &m_vram->m_8801_vram_area[0][offset];
     }
 
     // ANK文字か？（さもなければSJISの全角文字）
@@ -273,7 +272,7 @@ struct Vsk8801Machine : VskMachine
         assert(0 <= y && y < m_state->m_text_height);
         auto offset = VSK_8801_TEXT_VRAM_OFFSET + VSK_8801_TEXT_VRAM_TEXT_WIDTH + y * VSK_8801_TEXT_VRAM_PITCH;
         assert(0 <= offset && offset < VSK_8801_VRAM_SIZE);
-        return &vsk_8801_vram_area[0][offset];
+        return &m_vram->m_8801_vram_area[0][offset];
     }
 
     // 文字属性を展開する。文字属性は圧縮されているので展開が必要
@@ -361,7 +360,7 @@ struct Vsk8801Machine : VskMachine
             m_viewport = viewport ? viewport : &m_state->m_viewport;
             m_num_planes = m_state->get_graphics_num_planes();
             for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
-                m_planes[iPlane] = vsk_8801_get_page(m_state->m_screen_mode, iPlane);
+                m_planes[iPlane] = machine->m_vram->get_page(m_state->m_screen_mode, iPlane);
         }
 
         int operator()(int x, int y) override
@@ -403,11 +402,11 @@ struct Vsk8801Machine : VskMachine
             if (m_state->m_color_graphics)
             {
                 for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
-                    m_planes[iPlane] = vsk_8801_get_page(m_state->m_screen_mode, iPlane);
+                    m_planes[iPlane] = machine->m_vram->get_page(m_state->m_screen_mode, iPlane);
             }
             else
             {
-                m_planes[0] = vsk_8801_get_page(m_state->m_screen_mode, m_state->m_active_page);
+                m_planes[0] = machine->m_vram->get_page(m_state->m_screen_mode, m_state->m_active_page);
             }
             m_palette = VskByte(palette);
         }
@@ -468,11 +467,11 @@ struct Vsk8801Machine : VskMachine
             if (m_state->m_color_graphics)
             {
                 for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
-                    m_planes[iPlane] = vsk_8801_get_page(m_state->m_screen_mode, iPlane);
+                    m_planes[iPlane] = machine->m_vram->get_page(m_state->m_screen_mode, iPlane);
             }
             else
             {
-                m_planes[0] = vsk_8801_get_page(m_state->m_screen_mode, m_state->m_active_page);
+                m_planes[0] = machine->m_vram->get_page(m_state->m_screen_mode, m_state->m_active_page);
             }
             m_tile = tile;
             m_num_planes = m_state->get_graphics_num_planes();
@@ -975,7 +974,7 @@ void Vsk8801Machine::render_mono_graphics()
 
     if (m_state->m_screen_height == 400)
     {
-        VskByte *page = vsk_8801_get_page(m_state->m_screen_mode, 0);
+        VskByte *page = m_vram->get_page(m_state->m_screen_mode, 0);
         VskMonoGetter getter(m_state->m_screen_width, m_state->m_screen_height, page);
         for (int y = 0; y < m_state->m_screen_height; ++y)
         {
@@ -992,7 +991,7 @@ void Vsk8801Machine::render_mono_graphics()
         {
             if (!(display_flags & (1 << iPage)))
                 continue;
-            VskByte *page = vsk_8801_get_page(m_state->m_screen_mode, iPage);
+            VskByte *page = m_vram->get_page(m_state->m_screen_mode, iPage);
             VskMonoGetter getter(m_state->m_screen_width, m_state->m_screen_height, page);
             for (int y = 0; y < m_state->m_screen_height; ++y)
             {
@@ -1010,9 +1009,9 @@ void Vsk8801Machine::render_mono_graphics()
 void Vsk8801Machine::render_color_graphics()
 {
     int screen_mode = m_state->m_screen_mode;
-    VskByte *plane0 = vsk_8801_get_page(screen_mode, 0);
-    VskByte *plane1 = vsk_8801_get_page(screen_mode, 1);
-    VskByte *plane2 = vsk_8801_get_page(screen_mode, 2);
+    VskByte *plane0 = m_vram->get_page(screen_mode, 0);
+    VskByte *plane1 = m_vram->get_page(screen_mode, 1);
+    VskByte *plane2 = m_vram->get_page(screen_mode, 2);
     for (int y = 0; y < m_state->m_screen_height; ++y)
     {
         for (int x = 0; x < m_state->m_screen_width; x += CHAR_BIT)
@@ -1063,9 +1062,9 @@ int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
 void Vsk8801Machine::clear_planes(bool blue, bool red, bool green, bool intensity)
 {
     VskByte *planes[3] = {
-        vsk_8801_get_page(m_state->m_screen_mode, 0),
-        vsk_8801_get_page(m_state->m_screen_mode, 1),
-        vsk_8801_get_page(m_state->m_screen_mode, 2)
+        m_vram->get_page(m_state->m_screen_mode, 0),
+        m_vram->get_page(m_state->m_screen_mode, 1),
+        m_vram->get_page(m_state->m_screen_mode, 2)
     };
     if (blue)
         std::memset(planes[0], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
