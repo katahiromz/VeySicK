@@ -177,7 +177,7 @@ void VskTurtleEngine::pen_down(bool down)
     m_pen_down = down;
 }
 
-VskPointD VskTurtleEngine::get_pos() const
+VskPointD VskTurtleEngine::get_pos_in_screen() const
 {
     return vsk_machine->world_to_screen(m_last_ref);
 }
@@ -212,7 +212,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->value();
             auto radian = get_turtle_direction_in_radian();
-            VskPointD pt0 = get_pos();
+            VskPointD pt0 = get_pos_in_screen();
             VskPointD pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
                 pt1 = { pt0.m_x + d0 * std::cos(radian) * 2, pt0.m_y - d0 * std::sin(radian) };
@@ -229,7 +229,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->value();
             auto radian = get_turtle_direction_in_radian();
-            VskPointD pt0 = get_pos();
+            VskPointD pt0 = get_pos_in_screen();
             VskPointD pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
                 pt1 = { pt0.m_x - d0 * std::cos(radian) * 2, pt0.m_y + d0 * std::sin(radian) };
@@ -251,12 +251,12 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         }
     } else if (item.m_subcommand == "SX") { // X方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ ast0->value(), get_pos().m_x });
+            update_LP({ ast0->value(), get_pos_in_screen().m_x });
             return true;
         }
     } else if (item.m_subcommand == "SY") { // Y方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ get_pos().m_x, ast0->value() });
+            update_LP({ get_pos_in_screen().m_x, ast0->value() });
             return true;
         }
     } else if (item.m_subcommand == "HD") { // タートルの向きをセット（単位は度）

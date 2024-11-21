@@ -38,7 +38,7 @@ struct VskTurtleEngine
     void reset();
     void show(bool do_show);
     void pen_down(bool down);
-    VskPointD get_pos() const;
+    VskPointD get_pos_in_screen() const;
     VskDouble get_turtle_direction_in_radian() const;
 
 protected:
