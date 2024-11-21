@@ -1117,8 +1117,19 @@ void VskMachine::keyboard_ch(VskWord ch)
     }
 
     // 実行中は入力を受け付けない
-    if (VSK_STATE()->m_wait_for == VSK_NO_WAIT)
+    switch (VSK_STATE()->m_wait_for)
+    {
+    case VSK_WAIT_FOR_COMMAND:
+    case VSK_WAIT_FOR_INPUT:
+        break;
+    case VSK_NO_WAIT:
+    case VSK_WAIT_FOR_INPORT:
+    case VSK_WAIT_FOR_DRAW:
+    case VSK_WAIT_FOR_TURTLE:
+    case VSK_WAIT_FOR_PLAY:
+    case VSK_WAIT_FOR_SLEEP:
         return;
+    }
 
     // 挿入モードの場合は行テキストを使用
     if (m_state->m_insert_mode)

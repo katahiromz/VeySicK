@@ -10469,7 +10469,7 @@ static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
             if (loop_info.m_paths[1] == next_path)
             {
                 VSK_IMPL()->m_sleep_start = vsk_get_tick_count();
-                VSK_IMPL()->m_sleep_amount = VskLong(steps / 100);
+                VSK_IMPL()->m_sleep_amount = VskLong(steps / 2);
                 VSK_IMPL()->m_after_sleep_path = vsk_next_control_path(next_path);
                 VSK_STATE()->m_wait_for = VSK_WAIT_FOR_SLEEP;
                 return vsk_ast(INSN_DONT_GO_NEXT);
