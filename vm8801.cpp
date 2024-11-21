@@ -9,6 +9,7 @@
 // 8801 machine
 
 // NOTE: VeySicKの8801のVRAMはSJISに拡張している。SJISモードの場合はVeySicKの8801の場合でも漢字が表示できる
+// TODO: まだVRAMが8801と非互換じゃないか！ 直せよ！
 
 // VRAM基本情報
 #define VSK_8801_VRAM_START_ADDR        0xC000
@@ -26,6 +27,7 @@
 #define VSK_8801_VRAM_BANK_1            1 // Plane 1 (Blue)
 #define VSK_8801_VRAM_BANK_2            2 // Plane 2 (Red)
 #define VSK_8801_VRAM_BANK_3            3 // Plane 3 (Green)
+#define VSK_8801_VRAM_BANK_MAX          4
 
 // 文字属性
 #define VSK_8801_ATTR_SECRET            (VskByte)(1 << 0)
@@ -48,7 +50,7 @@ struct Vsk8801VRAM : VskMemoryBlockBase
     // マシン状態
     VskMachineState *m_state;
     // 8801 VRAM の実データ
-    VskByte m_8801_vram_area[4][VSK_8801_VRAM_SIZE];
+    VskByte m_8801_vram_area[VSK_8801_VRAM_BANK_MAX][VSK_8801_VRAM_SIZE];
 
     // コンストラクタ
     Vsk8801VRAM(VskMachineState *state) : m_state(state)
