@@ -181,32 +181,32 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
         }
         return nullptr;
     }
-};
 
-// カラーの表示ページのページを取得
-int vsk_9801_get_color_display_page(int screen_mode, int display_pages)
-{
-    switch (screen_mode)
+    // カラーの表示ページのページを取得
+    int get_color_display_page(int screen_mode, int display_pages)
     {
-    case 0:
-        switch (display_pages)
+        switch (screen_mode)
         {
-        case 1: return 0;
-        case 2: return 1;
-        case 17: return 2;
-        case 18: return 3;
+        case 0:
+            switch (display_pages)
+            {
+            case 1: return 0;
+            case 2: return 1;
+            case 17: return 2;
+            case 18: return 3;
+            }
+            break;
+        case 3:
+            switch (display_pages)
+            {
+            case 1: return 0;
+            case 17: return 1;
+            }
+            break;
         }
-        break;
-    case 3:
-        switch (display_pages)
-        {
-        case 1: return 0;
-        case 17: return 1;
-        }
-        break;
+        return -1;
     }
-    return -1;
-}
+};
 
 // 9801 フリーエリアのアドレスとサイズ
 #define VSK_9801_FREE_AREA_START      0x10C00
@@ -1091,7 +1091,7 @@ void Vsk9801Machine::render_text()
 void Vsk9801Machine::render_color_graphics()
 {
     int screen_mode = m_state->m_screen_mode;
-    int display_page = vsk_9801_get_color_display_page(screen_mode, m_state->m_display_pages);
+    int display_page = m_graph_vram->get_color_display_page(screen_mode, m_state->m_display_pages);
     if (display_page < 0)
         return;
     VskByte *plane0 = m_graph_vram->get_page(screen_mode, display_page, 0);
