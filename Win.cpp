@@ -184,6 +184,8 @@ public:
     VskError write_line(const std::string& data) override;
     void flush() override;
 
+    bool set_com_params(VskString params) override;
+
 protected:
     friend struct VskFileManager;
 };
@@ -247,6 +249,121 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
 
     file = std::make_shared<VskWin32File>(hFile, mode, type);
     return VSK_NO_ERROR;
+}
+
+VskError VskFileManager::open_com_file(VskFilePtr& file, VskString device, const VskString& params)
+{
+    vsk_upper(device);
+
+    if (device == "COM")
+        device = "COM1";
+
+    auto error = open_host_file(file, device.c_str(), VskFile::MODE_DEFAULT, VskFile::TYPE_COM);
+    if (error)
+        return error;
+
+    file->set_com_params(params);
+    return error;
+}
+
+bool VskWin32File::set_com_params(VskString params)
+{
+    // 空白を削除し、大文字にする
+    auto str = params;
+    mstr_replace_all(str, " ", "");
+    mstr_replace_all(str, "\t", "");
+    vsk_upper(str);
+
+    DCB config = { sizeof(config) };
+    if (!::GetCommState(m_hFile, &config))
+    {
+        mdbg_traceA("GetCommState failed: 0x%08lX\n", ::GetLastError());
+        return false;
+    }
+
+    // COMポートの設定
+    config.BaudRate = CBR_1200;      // ボーレート
+    config.ByteSize = 7;             // データビット
+    config.Parity   = ODDPARITY;     // パリティ
+    config.StopBits = ONESTOPBIT;    // ストップビット
+
+    size_t ich = 0;
+    for (auto ch : str)
+    {
+        switch (ich)
+        {
+        case 0:
+            switch (ch) // パリティチェック
+            {
+            case 'E': config.Parity = EVENPARITY; break; // 偶数パリティ
+            case 'O': config.Parity = ODDPARITY; break; // 奇数パリティ
+            case 'N': config.Parity = NOPARITY; break; // パリティなし
+            }
+            break;
+        case 1:
+            switch (ch) // データビット
+            {
+            case '7': config.ByteSize = 7; break; // データビット7
+            case '8': config.ByteSize = 8; break; // データビット8
+            }
+            break;
+        case 2:
+            switch (ch) // ストップビット
+            {
+            case '1': config.StopBits = ONESTOPBIT;     break; // 1ビット
+            case '2': config.StopBits = ONE5STOPBITS;   break; // 1.5ビット
+            case '3': config.StopBits = TWOSTOPBITS;    break; // 2ビット
+            }
+            break;
+        case 3:
+            switch (ch) // XON/XOFF制御
+            {
+            case 'X':
+                config.fInX = config.fOutX = TRUE;
+                config.XonChar = 0x11;  // XONキャラクタ
+                config.XoffChar = 0x13; // XOFFキャラクタ
+                break;
+            case 'N':
+                break;
+            }
+            break;
+        case 4:
+            switch (ch) // SI/SO制御
+            {
+            case 'S':
+                config.fInX = config.fOutX = TRUE;
+                config.XonChar = 0x0F;  // XONキャラクタ
+                config.XoffChar = 0x0E; // XOFFキャラクタ
+                break;
+            case 'N':
+                break;
+            }
+            break;
+        }
+        ++ich;
+    }
+
+    if (!::SetCommState(m_hFile, &config))
+    {
+        mdbg_traceA("SetCommState failed: 0x%08lX\n", ::GetLastError());
+        return false;
+    }
+
+    // タイムアウト設定
+    COMMTIMEOUTS timeouts = { 0 };
+    timeouts.ReadIntervalTimeout = 5000;
+    timeouts.ReadTotalTimeoutConstant = 5000;
+    timeouts.ReadTotalTimeoutMultiplier = 1000;
+    timeouts.WriteTotalTimeoutConstant = 5000;
+    timeouts.WriteTotalTimeoutMultiplier = 1000;
+
+    if (!::SetCommTimeouts(m_hFile, &timeouts))
+    {
+        mdbg_traceA("SetCommTimeouts failed: 0x%08lX\n", ::GetLastError());
+        return false;
+    }
+
+    return true;
 }
 
 void VskWin32File::close()
@@ -535,7 +652,10 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
         return true;
     }
 
-    if (device == "COM" || device == "COM1" || device == "COM2") // RS-232C
+    if (device == "COM")
+        device == "COM1";
+
+    if (device == "COM1" || device == "COM2" || device == "COM3") // RS-232C 通信ファイル
     {
         type = VskFile::TYPE_COM;
         return true;

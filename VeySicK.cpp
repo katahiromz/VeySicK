@@ -2415,8 +2415,10 @@ VskError VskFileManager::open(VskFilePtr& file, VskString descriptor, VskFile::M
         break;
     case VskFile::TYPE_KEYBOARD:
     case VskFile::TYPE_CASETTE:
-    case VskFile::TYPE_COM:
         return VSK_ERR_NO_FEATURE;
+    case VskFile::TYPE_COM:
+        error = open_com_file(file, device, raw_path);
+        break;
     case VskFile::TYPE_LINE_PRINTER:
         error = open_line_printer(file, mode);
         break;

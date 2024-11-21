@@ -291,6 +291,8 @@ public:
     virtual VskError write_line(const std::string& data)        { return VSK_ERR_BAD_CALL; }
     // flush
     virtual void flush() { }
+    // COM parameters
+    virtual bool set_com_params(VskString params) { return true; }
 };
 typedef std::shared_ptr<VskFile> VskFilePtr;
 
@@ -308,6 +310,7 @@ struct VskFileManager : VskObject
     VskError open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode = VskFile::MODE_DEFAULT, VskFile::TYPE type = VskFile::TYPE_HOST_FILE);
     VskError open_screen(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
     VskError open_line_printer(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
+    VskError open_com_file(VskFilePtr& file, VskString device, const VskString& params);
 
     // association - ファイル番号とファイルの関連付け
     VskFilePtr assoc(int file_no);
