@@ -68,7 +68,7 @@ struct VskTrapInfo
     {
         m_mode = VSK_TRAP_MODE_OFF;
         m_index_list.clear();
-        m_catching = false;
+        m_catching = m_trapping = false;
     }
 };
 
