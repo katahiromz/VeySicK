@@ -1,25 +1,23 @@
-' フラクタルを描画する {9801}
-SCREEN 3:CONSOLE 0,25,0,1:COLOR 7,0:WIDTH 80,25:CLS 3
-DEFSNG A-Z
-CMAX=7:XSIZE=100:YSIZE=100:SX=640:SY=400
-QX=0.75:QY=0:W=1.5
-FOR X=-XSIZE TO XSIZE
-    C.RE = X * W / XSIZE - QX
-    FOR Y=-YSIZE TO YSIZE
-        C.IM = Y * W / YSIZE - QY
-        Z.RE=0 : Z.IM=0
-        COUNT=0
-*RETRY
-        ZZ.RE = Z.RE * Z.RE - Z.IM * Z.IM
-        ZZ.IM = Z.RE * Z.IM + Z.IM * Z.RE
-        VALUE = Z.RE * Z.RE + Z.IM * Z.IM
-        Z.RE = ZZ.RE + C.RE
-        Z.IM = ZZ.IM + C.IM
-        COUNT=COUNT+1
-        IF COUNT>CMAX THEN COUNT=-1:GOTO *BREAK
-        IF VALUE<4 GOTO *RETRY
-*BREAK
-        PX=SX/2+X : PY=SY/2+Y
-        IF COUNT=-1 THEN PSET(PX,PY),1 ELSE PSET(PX,PY),COUNT
-    NEXT Y
-NEXT X
+100 '------------------------------------------------------------
+110 '  フラクタル図形 シダ
+120 '------------------------------------------------------------
+130 SCREEN 3: CLS 2
+140 X = 0:Y = 0
+150 FOR I = 1 TO 10000
+160   PSET(320+X*30,320-Y*30),4
+170   R = RND(1)
+180   IF        R < 0.01           THEN ELSE *ELSE1
+190     X1 = 0
+200     Y1 = Y * 0.16                  :GOTO *ENDIF
+210   *ELSE1:IF R < 0.01+0.07      THEN ELSE *ELSE2
+220     X1 = X * 0.20 - Y * 0.26
+230     Y1 = X * 0.23 + Y * 0.22 + 1.60:GOTO *ENDIF
+240   *ELSE2:IF R < 0.01+0.07+0.07 THEN ELSE *ELSE3
+250     X1 = Y * 0.28 - X * 0.15
+260     Y1 = X * 0.26 + Y * 0.24 + 0.44:GOTO *ENDIF
+270   *ELSE3
+280     X1 = X * 0.85 + Y * 0.04
+290     Y1 = Y * 0.85 - X * 0.04 + 1.60
+300   *ENDIF
+310   X = X1:Y = Y1
+320 NEXT

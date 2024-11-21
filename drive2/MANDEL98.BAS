@@ -1,0 +1,25 @@
+' マンデルブロ集合を描画する {9801}
+SCREEN 3:CONSOLE 0,25,0,1:COLOR 7,0:WIDTH 80,25:CLS 3
+DEFSNG A-Z
+CMAX=7:XSIZE=100:YSIZE=100:SX=640:SY=400
+QX=0.75:QY=0:W=1.5
+FOR X=-XSIZE TO XSIZE
+    C.RE = X * W / XSIZE - QX
+    FOR Y=-YSIZE TO YSIZE
+        C.IM = Y * W / YSIZE - QY
+        Z.RE=0 : Z.IM=0
+        COUNT=0
+*RETRY
+        ZZ.RE = Z.RE * Z.RE - Z.IM * Z.IM
+        ZZ.IM = Z.RE * Z.IM + Z.IM * Z.RE
+        VALUE = Z.RE * Z.RE + Z.IM * Z.IM
+        Z.RE = ZZ.RE + C.RE
+        Z.IM = ZZ.IM + C.IM
+        COUNT=COUNT+1
+        IF COUNT>CMAX THEN COUNT=-1:GOTO *BREAK
+        IF VALUE<4 GOTO *RETRY
+*BREAK
+        PX=SX/2+X : PY=SY/2+Y
+        IF COUNT=-1 THEN PSET(PX,PY),1 ELSE PSET(PX,PY),COUNT
+    NEXT Y
+NEXT X
