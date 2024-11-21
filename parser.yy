@@ -794,17 +794,13 @@ primary_statement
         vsk_targeting($1);
         $$ = vsk_ast(INSN_CHAIN_MERGE, { $3 });
     }
-    | TK_CHAIN expression TK_COMMA line_number TK_COMMA TK_IDENTIFIER TK_COMMA TK_DELETE line_range {
+    | TK_CHAIN expression TK_COMMA TK_IDENTIFIER {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_ALL_DELETE, { $2, $4, $9 });
+        $$ = vsk_ast(INSN_CHAIN, { $2, nullptr, $4 });
     }
     | TK_CHAIN expression TK_COMMA line_number TK_COMMA TK_IDENTIFIER {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_ALL, { $2, $4 });
-    }
-    | TK_CHAIN expression TK_COMMA line_number TK_COMMA TK_DELETE line_range {
-        vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_DELETE, { $2, $4 });
+        $$ = vsk_ast(INSN_CHAIN, { $2, $4, $6 });
     }
     | TK_CHAIN expression TK_COMMA line_number {
         vsk_targeting($1);

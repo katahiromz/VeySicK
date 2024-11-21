@@ -3095,7 +3095,7 @@ VskAstPtr vsk_arg(const VskAstList& args, size_t index)
 }
 
 // プログラムを実行する
-VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE })
+VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE }, bool clear_vars = true)
 {
     mdbg_traceA("vsk_run\n");
     // オプションベースを初期化
@@ -3106,12 +3106,15 @@ VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE })
     VSK_IMPL()->m_control_path = index_list;
     // DATAの読み込み位置を初期化
     VSK_IMPL()->m_data_pointer = { I_PROGRAM_CODE };
-    // 変数を全部消す
-    vsk_var_clear_all();
     // 乱数の初期化
     vsk_rand_init(0);
     // DEF FNのデータを消す
     VSK_IMPL()->m_fn_to_path.clear();
+    if (clear_vars)
+    {
+        // 変数を全部消す
+        vsk_var_clear_all();
+    }
     // プログラムリストをスキャン
     vsk_scan_program_list();
 
@@ -7245,31 +7248,46 @@ static VskAstPtr VSKAPI vsk_CALL(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CHAIN
+// INSN_CHAIN (CHAIN)
 static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
-    return nullptr;
-}
+    if (!vsk_arity_in_range(args, 1, 3))
+        return nullptr;
 
-// INSN_CHAIN_ALL
-static VskAstPtr VSKAPI vsk_CHAIN_ALL(VskAstPtr& self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
+    VskString v2;
+    auto arg2 = vsk_arg(args, 2);
+    if (arg2 && (!vsk_ident(v2, arg2) || v2 != "ALL"))
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+    bool all = !!arg2;
 
-// INSN_CHAIN_ALL_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_ALL_DELETE(VskAstPtr& self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
+    // 文字列を取得する
+    VskString v0;
+    if (!vsk_str(v0, args[0]))
+        return nullptr;
 
-// INSN_CHAIN_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_DELETE(VskAstPtr& self, const VskAstList& args)
-{
-    assert(0);
+    // ファイルを読み込む
+    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    if (auto error = vsk_scan_program_list())
+        VSK_ERROR_AND_RETURN(error, nullptr);
+
+    // 行番号を取得
+    VskLineNo number = 0;
+    auto arg1 = vsk_arg(args, 1);
+    VskIndexList index_list = { I_PROGRAM_CODE };
+    if (arg1)
+    {
+        index_list = vsk_label_to_index_list(arg1, VSK_IMPL()->m_label_map);
+        if (index_list.empty())
+            VSK_ERROR_AND_RETURN(VSK_ERR_UNDEFINED_LABEL, nullptr);
+    }
+
+    if (!all)
+        mdbg_traceA("CHAIN: TODO: COMMON を指定した変数だけをつなげてください。");
+
+    // 実行
+    vsk_run(index_list, false);
+
     return nullptr;
 }
 

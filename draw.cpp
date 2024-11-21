@@ -56,7 +56,7 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
 
             ch = expr[i];
 
-            if (ch == '=') { // 変数？
+            if (ch == '=' || ch == '&') { // 変数かn進数か
                 for (;;) {
                     ch = expr[++i];
                     if (ch == ';' || ch == 0) // 終端？
@@ -72,7 +72,7 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
                         param.push_back(ch);
                     }
                     ch = expr[++i];
-                } while (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
+                } while (vsk_isxdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
                 if (ch != ',') {
                     --i;
                 }
