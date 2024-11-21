@@ -1448,7 +1448,7 @@ bool vsk_dimension_from_lvalue(VskString& name, VskIndexList& dimension, const V
     if (lvalue->is_ident())
     {
         assert(lvalue->size() == 0);
-        name = vsk_var_get_typed_name(lvalue->m_str, false);
+        name = vsk_var_get_typed_name(lvalue->m_str, is_array);
         return true;
     }
 
@@ -6546,6 +6546,15 @@ static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
+// INSN_CMD_VOICE (CMD VOICE)
+static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr& self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 3))
+        return nullptr;
+
+    return nullptr;
+}
+
 // INSN_CMD_CUT (CMD CUT) @implemented
 static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
 {
@@ -6652,6 +6661,16 @@ static VskAstPtr VSKAPI vsk_CMD_IDENT(VskAstPtr& self, const VskAstList& args)
     {
         if (args.size() == 1)
             return vsk_CMD_UNLINK(self, { });
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+    }
+    else if (v0 == "VOICE") // CMD VOICE
+    {
+        if (args.size() == 2)
+            return vsk_CMD_VOICE(self, { args[1] });
+        if (args.size() == 3)
+            return vsk_CMD_VOICE(self, { args[1], args[2] });
+        if (args.size() == 4)
+            return vsk_CMD_VOICE(self, { args[1], args[2], args[3] });
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     }
 
@@ -7353,10 +7372,51 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
+// CMD VOICE COPY
+static bool vsk_CMD_VOICE_COPY(VskInt v1, VskAstPtr arg2)
+{
+    // 左辺値（lvalue）から名前と次元を取得
+    VskString name;
+    VskIndexList dimension;
+    if (!vsk_dimension_from_lvalue(name, dimension, arg2, -VSK_STATE()->m_option_base == 1, true))
+        return false;
+
+    if (!(dimension.size() == 2 && dimension[0] == 5 && dimension[1] == 10))
+        return false;
+
+    // 配列変数を探す
+    auto var_desc = vsk_var_find(name);
+    if (!var_desc || !vsk_var_is_array(name))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false); // 見つからない
+
+    auto type = vsk_var_get_type(name);
+    if (type != VSK_TYPE_INTEGER)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, false); // 型が違う
+
+    // 変数へのポインタを取得する
+    void *ptr = vsk_var_get_ptr(name, {});
+    if (!ptr)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false); // 見つからない
+
+    return vsk_sound_voice_copy(ptr, v1);
+}
+
 // INSN_CMD_IDENT_COPY
 static VskAstPtr VSKAPI vsk_CMD_IDENT_COPY(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 3, 3))
+        return nullptr;
+
+    VskString v0;
+    VskInt v1;
+    if (vsk_ident(v0, args[0]) && vsk_int(v1, args[1]))
+    {
+        if (v0 != "VOICE")
+            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+
+        if (!vsk_CMD_VOICE_COPY(v1, args[2]))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+    }
     return nullptr;
 }
 

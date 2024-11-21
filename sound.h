@@ -10,3 +10,4 @@ bool vsk_sound_sing(const VskString& str);
 bool vsk_sound_play_ssg(const std::vector<VskString>& strs);
 bool vsk_sound_play_fm(const std::vector<VskString>& strs);
 bool vsk_sound_play_fm_and_ssg(const std::vector<VskString>& strs);
+bool vsk_sound_voice_copy(void *ptr, VskInt tone);
