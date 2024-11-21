@@ -14,8 +14,10 @@ retry:;
         if (items[i].m_subcommand == "RP") { // REPEAT (繰り返し)
             if (auto ast = vsk_eval_text(items[i].m_params[0])) {
                 repeat = vsk_round(ast->value());
-                if (repeat < 0)
+                if (repeat < 0) {
+                    assert(0);
                     return false;
+                }
             }
         }
         if (items[i].m_subcommand == "[") { // 繰り返しの始まり
@@ -73,6 +75,7 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
             if (vsk_isupper(ch)) { // サブコマンドみたいか？
                 subcommand.push_back(ch);
                 if (subcommand.size() > 2) {
+                    assert(0);
                     return false;
                 }
             }
@@ -122,6 +125,7 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
                 if (ch != ',')
                     --i;
             } else {
+                assert(0);
                 return false;
             }
 
