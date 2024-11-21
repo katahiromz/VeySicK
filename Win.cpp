@@ -493,10 +493,22 @@ void VskWin32File::flush()
 // VeySicK.exeのあるフォルダを返す
 VskString vsk_get_root(void)
 {
+    // EXEファイルのパスと"README.txt"を使ってルートフォルダを探す
     char szPath[MAX_PATH];
     ::GetModuleFileNameA(nullptr, szPath, _countof(szPath));
-    PathRemoveFileSpecA(szPath);
-    PathAddBackslashA(szPath);
+    for (int i = 0; i < 2; ++i)
+    {
+        ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
+        ::PathAppendA(szPath, "README.txt");
+        if (::PathFileExistsA(szPath)) // ファイルが存在するか？
+        {
+            ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
+            ::PathAddBackslashA(szPath); // バックスラッシュを追加
+            return szPath;
+        }
+        ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
+    }
+    ::PathAddBackslashA(szPath); // バックスラッシュを追加
     return szPath;
 }
 
