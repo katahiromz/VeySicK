@@ -989,10 +989,10 @@ VeySicKでは、ドライブは仮想化されており、`drive1` ... `drive10`
 
 ### `CHAIN`文 {#chain}
 
-- 【機能】 プログラムを連結し、実行します。
+- 【機能】 プログラムを連結し、処理を引き渡します。
 - 【語源】 Chain
 - 【書式】 `CHAIN [MERGE]` *ファイル記述子* `[,` *行番号* `]` `[, ALL]` `[, DELETE` *範囲* `]`
-- 【説明】 *ファイル記述子* で指定されたプログラムファイルを読み込み、実行します。 *行番号* は実行開始行を指定します。 *行番号* が省略された場合は、プログラムの最初から実行します。 `ALL` が指定されたら、すべての変数を引き渡します。 `MERGE` オプションを指定すると、プログラムをメモリー上で結合し、結合結果のプログラムを指定された *行番号* から実行します。指定されたプログラムはアスキーセーブしたものでなければなりません。同一の行番号があった場合は、その行は上書きされます。`DELETE` オプションは、`MERGE` オプションが指定された場合のみ有効であり、結合する前に `DELETE` で指定された *範囲* を削除します。行番号の代わりにラベル名を使用できます。
+- 【説明】 *ファイル記述子* で指定されたプログラムファイルを読み込み、実行します。 *行番号* は実行開始行を指定します。 *行番号* が省略された場合は、プログラムの最初から実行します。 `ALL` が指定されたら、すべての変数を引き渡します。`ALL`を省略すると `COMMON`文で宣言された変数のみ引き渡されます。`MERGE` オプションを指定すると、プログラムをメモリー上で結合し、結合結果のプログラムを指定された *行番号* から実行します。指定されたプログラムはアスキーセーブしたものでなければなりません。同一の行番号があった場合は、その行は上書きされます。`DELETE` オプションは、`MERGE` オプションが指定された場合のみ有効であり、結合する前に `DELETE` で指定された *範囲* を削除します。行番号の代わりにラベル名を使用できます。
 - 【参照】 サンプルプログラム「`drive1/CHAIN.BAS`」
 - 【参照】 [`MERGE`](#merge)、[`SAVE`](#save)
 
@@ -3745,6 +3745,15 @@ CMD TURTLE "FD(dist)"
 
 ---
 
+### `SYSTEM`文 (MS-DOSのみ) {#system}
+
+- 【機能】 VeySicKの実行を終了します。
+- 【語源】 System
+- 【書式】 `SYSTEM`
+- 【説明】 `SYSTEM`文は、実機の場合、MS-DOSに処理を引継ぎます。VeySicKの場合、VeySicKのプロセスを終了します。
+
+---
+
 ### `TAB`関数 {#tab}
 
 - 【機能】 指定された桁位置まで空白を出力します。
@@ -4812,32 +4821,32 @@ JISコードの表やシフトJISの表などについては、インターネ�
 次に挙げる単語は、VeySicKの予約語(キーワード)です。これらの単語は変数名、ラベル名としては使用できません。
 
 ```txt
-ABS       CONT      EOF       INPUT     LLIST     OFF       RESUME    TAN
-AKCNV$    COPY      ERASE     INPUT$    LOAD      ON        RETURN    TERM
-ALLOC     COS       ERL       INSTR     LOAD?     OPEN      RIGHT$    THEN
-AND       CSNG      ERR       INT       LOC       OPTION    RND       TIME$
-ASC       CSRLIN    ERROR     IRESET    LOCATE    OR        ROLL      TIMEOUT
-ATN       CVD       EXP       ISET      LOF       OUT       RSET      TO
-ATTR$     CVI       FIELD     JIS$      LOG       PAINT     RUN       TROFF
-AUTO      CVS       FILES     KACNV$    LPOS      PEEK      SAVE      TRON
-BEEP      DATA      FIX       KANJI     LPRINT    PEN       SCREEN    USING
-BLOAD     DATE$     FN        KEXT$     LSET      PLAY      SEARCH    USR
-BSAVE     DEF       FOR       KEY       MAIL      POINT     SEG       VAL
-CALL      DEFDBL    FPOS      KILL      MAP       POKE      SET       VARPTR
-CDBL      DEFINT    FRE       KINPUT    MERGE     POLL      SGN       VIEW
-CHAIN     DEFSNG    GET       KINSTR    MID$      POS       SIN       WAIT
-CHR$      DEFSTR    GET@      KLEN      MKD$      PRESET    SPACE$    WBYTE
-CINT      DELETE    GO        KMID$     MKI$      PRINT     SPC       WEND
-CIRCLE    DELIM     GOSUB     KNJ$      MKS$      PSET      SQR       WHILE
-CLEAR     DIM       GOTO      KPLOAD    MOD       PUT       SRQ       WIDTH
-CLOSE     DRAW      HELP      KPOS      MON       PUT@      STATUS    WINDOW
-CLS       DSKF      HEX$      KTYPE     MOTOR     RANDOMIZE STEP      WRITE
-CMD       DSKI$     IEEE      LEFT$     MOUSE     RBYTE     STOP      XOR
-COLOR     DSKO$     IF        LEN       NAME      READ      STR$
+ABS       CONT      EOF       INPUT     LLIST     OFF       RESUME    TAB
+AKCNV$    COPY      ERASE     INPUT$    LOAD      ON        RETURN    TAN
+ALLOC     COS       ERL       INSTR     LOAD?     OPEN      RIGHT$    TERM
+AND       CSNG      ERR       INT       LOC       OPTION    RND       THEN
+ASC       CSRLIN    ERROR     IRESET    LOCATE    OR        ROLL      TIME$
+ATN       CVD       EXP       ISET      LOF       OUT       RSET      TIMEOUT
+ATTR$     CVI       FIELD     JIS$      LOG       PAINT     RUN       TO
+AUTO      CVS       FILES     KACNV$    LPOS      PEEK      SAVE      TROFF
+BEEP      DATA      FIX       KANJI     LPRINT    PEN       SCREEN    TRON
+BLOAD     DATE$     FN        KEXT$     LSET      PLAY      SEARCH    USING
+BSAVE     DEF       FOR       KEY       MAIL      POINT     SEG       USR
+CALL      DEFDBL    FPOS      KILL      MAP       POKE      SET       VAL
+CDBL      DEFINT    FRE       KINPUT    MERGE     POLL      SGN       VARPTR
+CHAIN     DEFSNG    GET       KINSTR    MID$      POS       SIN       VIEW
+CHR$      DEFSTR    GET@      KLEN      MKD$      PRESET    SPACE$    WAIT
+CINT      DELETE    GO        KMID$     MKI$      PRINT     SPC       WBYTE
+CIRCLE    DELIM     GOSUB     KNJ$      MKS$      PSET      SQR       WEND
+CLEAR     DIM       GOTO      KPLOAD    MOD       PUT       SRQ       WHILE
+CLOSE     DRAW      HELP      KPOS      MON       PUT@      STATUS    WIDTH
+CLS       DSKF      HEX$      KTYPE     MOTOR     RANDOMIZE STEP      WINDOW
+CMD       DSKI$     IEEE      LEFT$     MOUSE     RBYTE     STOP      WRITE
+COLOR     DSKO$     IF        LEN       NAME      READ      STR$      XOR
 COLOR@    EDIT      IFC       LET       NEW       REM       STRING$
 COM       ELSE      IMP       LFILES    NEXT      REN       SUB
 COMMON    END       INKEY$    LINE      NOT       RENUM     SWAP
-CONSOLE   EQV       INP       LIST      OCT$      RESTORE   TAB
+CONSOLE   EQV       INP       LIST      OCT$      RESTORE   SYSTEM
 ```
 
 これらの予約語に加えて、`FN`や`USR`で始まる単語は、特別扱いになります。

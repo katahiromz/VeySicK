@@ -1720,6 +1720,12 @@ VskWin32App *vsk_pMainWnd = nullptr;
 
 #define VSK_APP() vsk_pMainWnd
 
+// アプリを終了する
+void vsk_app_quit(void)
+{
+    ::PostMessage(VSK_APP()->m_hWnd, WM_DESTROY, 0, 0);
+}
+
 // コンストラクタ
 VskWin32App::VskWin32App()
 {
@@ -1803,7 +1809,7 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 // IMEをオンまたはオフにする(メインスレッドにゆだねる)
 void vsk_ime_on_off(bool on)
 {
-    HWND hwnd = vsk_pMainWnd->m_hWnd;
+    HWND hwnd = VSK_APP()->m_hWnd;
     ::PostMessage(hwnd, MYWM_IME_ON_OFF, (BOOL)on, 0);
 }
 
@@ -1911,7 +1917,7 @@ void vsk_reset_border_color(int border_color)
 {
     if (border_color == -1)
     {
-        vsk_pMainWnd->m_imageView.SetBorderColor(CLR_INVALID);
+        VSK_APP()->m_imageView.SetBorderColor(CLR_INVALID);
         return;
     }
 
@@ -1922,7 +1928,7 @@ void vsk_reset_border_color(int border_color)
     auto red = vsk_web_color_red(web_color);
     auto green = vsk_web_color_green(web_color);
     auto blue = vsk_web_color_blue(web_color);
-    vsk_pMainWnd->m_imageView.SetBorderColor(RGB(red, green, blue));
+    VSK_APP()->m_imageView.SetBorderColor(RGB(red, green, blue));
 }
 
 // キャレット位置を更新
@@ -1960,10 +1966,10 @@ void vsk_set_mouse_pos(int x0, int y0, bool visible)
 {
     POINT pt;
     ::GetCursorPos(&pt);
-    ::ScreenToClient(vsk_pMainWnd->m_hWnd, &pt);
+    ::ScreenToClient(VSK_APP()->m_hWnd, &pt);
 
     double cx0 = x0, cy0 = y0;
-    vsk_pMainWnd->m_imageView.image_to_client(cx0, cy0);
+    VSK_APP()->m_imageView.image_to_client(cx0, cy0);
 
     if (x0 != -1)
         pt.x = LONG(cx0);
@@ -1975,10 +1981,10 @@ void vsk_set_mouse_pos(int x0, int y0, bool visible)
             pt.y *= 2;
     }
 
-    ::ClientToScreen(vsk_pMainWnd->m_hWnd, &pt);
+    ::ClientToScreen(VSK_APP()->m_hWnd, &pt);
     ::SetCursorPos(pt.x, pt.y);
 
-    vsk_pMainWnd->m_bShowCursor = visible;
+    VSK_APP()->m_bShowCursor = visible;
     ::SetCursor(visible ? ::LoadCursor(nullptr, IDC_ARROW) : nullptr);
 }
 
@@ -1992,8 +1998,8 @@ void vsk_mouse_clip(int x0, int y0, int x1, int y1)
     }
 
     double cx0 = x0, cy0 = y0, cx1 = x1, cy1 = y1;
-    vsk_pMainWnd->m_imageView.image_to_client(cx0, cy0);
-    vsk_pMainWnd->m_imageView.image_to_client(cx1, cy1);
+    VSK_APP()->m_imageView.image_to_client(cx0, cy0);
+    VSK_APP()->m_imageView.image_to_client(cx1, cy1);
 
     if (VSK_STATE()->m_screen_height == 200)
     {
@@ -2004,8 +2010,8 @@ void vsk_mouse_clip(int x0, int y0, int x1, int y1)
     POINT pt0 = { LONG(cx0), LONG(cy0) };
     POINT pt1 = { LONG(cx1), LONG(cy1) };
 
-    ::MapWindowPoints(vsk_pMainWnd->m_hWnd, nullptr, &pt0, 1);
-    ::MapWindowPoints(vsk_pMainWnd->m_hWnd, nullptr, &pt1, 1);
+    ::MapWindowPoints(VSK_APP()->m_hWnd, nullptr, &pt0, 1);
+    ::MapWindowPoints(VSK_APP()->m_hWnd, nullptr, &pt1, 1);
     RECT rc = { pt0.x, pt0.y, pt1.x + 1, pt1.y + 1 };
     ::ClipCursor(&rc);
 }
@@ -2761,7 +2767,7 @@ bool vsk_save_screenshot(HBITMAP hbm)
     ::LoadStringW(nullptr, IDS_SAVESHOTTITLE, szTitle, _countof(szTitle));
 
     // ユーザーにファイルの場所を問い合わせる準備をする
-    OPENFILENAMEW ofn = { sizeof(ofn), vsk_pMainWnd->m_hWnd };
+    OPENFILENAMEW ofn = { sizeof(ofn), VSK_APP()->m_hWnd };
     ofn.lpstrFilter = szFilter;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = _countof(szFile);

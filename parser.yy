@@ -238,6 +238,7 @@
 %token TK_STR_dollar
 %token TK_SUB
 %token TK_SWAP
+%token TK_SYSTEM
 %token TK_TAB
 %token TK_TAN
 %token TK_TERM
@@ -1008,6 +1009,7 @@ lead_statement_0
     | TK_SCREEN                                         { vsk_targeting($1); $$ = vsk_ast(INSN_SCREEN); }
     | TK_SET                                            { vsk_targeting($1); $$ = vsk_ast(INSN_SET); }
     | TK_SET_SHARP                                      { vsk_targeting($1); $$ = vsk_ast(INSN_SET); }
+    | TK_SYSTEM                                         { vsk_targeting($1); $$ = vsk_ast(INSN_SYSTEM); }
     | TK_TERM                                           { vsk_targeting($1); $$ = vsk_ast(INSN_TERM); }
     | TK_WAIT                                           { vsk_targeting($1); $$ = vsk_ast(INSN_WAIT); }
     | TK_WEND                                           { vsk_targeting($1); $$ = vsk_ast(INSN_WEND); }

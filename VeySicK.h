@@ -816,3 +816,5 @@ bool vsk_turtle_shown(void);
 VskPointD vsk_turtle_pos_in_screen(void);
 // タートルの向きをラジアンで返す
 VskDouble vsk_turtle_direction_in_radian(void);
+// アプリを終了する
+void vsk_app_quit(void);

@@ -7248,6 +7248,13 @@ static VskAstPtr VSKAPI vsk_CALL(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
+// INSN_SYSTEM (SYSTEM) @implemented
+static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr& self, const VskAstList& args)
+{
+    vsk_app_quit();
+    return nullptr;
+}
+
 // INSN_CHAIN (CHAIN)
 static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr& self, const VskAstList& args)
 {
