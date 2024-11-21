@@ -1932,7 +1932,7 @@ bool vsk_sht(VskShort& value, VskAstPtr arg)
         break;
     case INSN_SNG_LITERAL:
         {
-            VskDouble v = std::round(ret->m_sng);
+            VskSingle v = ret->m_sng;
             if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
             value = static_cast<VskShort>(std::round(v));
@@ -1940,7 +1940,7 @@ bool vsk_sht(VskShort& value, VskAstPtr arg)
         break;
     case INSN_DBL_LITERAL:
         {
-            VskDouble v = std::round(ret->m_dbl);
+            VskDouble v = ret->m_dbl;
             if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
             value = static_cast<VskShort>(std::round(v));
