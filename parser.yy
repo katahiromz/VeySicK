@@ -1142,6 +1142,16 @@ matched_if_statement
         vsk_targeting($1);
         $$ = vsk_ast(INSN_IF, { $2, $4, go_to });
     }
+    | TK_IF expression TK_THEN                   TK_ELSE line_number       {
+        vsk_targeting($5);
+        auto go_to = vsk_ast_goto($5);
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, vsk_ast(INSN_MULTI), go_to });
+    }
+    | TK_IF expression TK_THEN                   TK_ELSE matched_statement {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, vsk_ast(INSN_MULTI), $5 });
+    }
     | TK_IF expression go_to   line_number       TK_ELSE matched_statement {
         vsk_targeting($4);
         auto go_to = vsk_ast_goto($4);
@@ -1170,6 +1180,10 @@ unmatched_if_statement
     | TK_IF expression TK_THEN matched_statement TK_ELSE unmatched_statement {
         vsk_targeting($1);
         $$ = vsk_ast(INSN_IF, { $2, $4, $6 });
+    }
+    | TK_IF expression TK_THEN                   TK_ELSE unmatched_statement {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, vsk_ast(INSN_MULTI), $5 });
     }
     | TK_IF expression TK_THEN line_number                                   {
         vsk_targeting($4);
