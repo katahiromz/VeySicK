@@ -8059,11 +8059,37 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
     return vsk_type_cast(ret, type);
 }
 
-// INSN_FPOS
+// INSN_FPOS (FPOS)
 static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
 {
-    assert(0);
-    return nullptr;
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskInt fileno;
+    if (!vsk_file_number(fileno, args[0]))
+        return nullptr;
+
+    auto file = vsk_get_file_manager()->assoc(fileno);
+    if (!file)
+        VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+    if (file->is_line_printer()) // ラインプリンタ？
+    {
+        VskInt ret = VskInt(VSK_STATE()->m_line_printer_pos);
+        assert(ret > 0);
+        return vsk_ast_int(ret);
+    }
+
+    if (file->is_sequential() || file->is_random()) // ディスクファイル？
+    {
+        VskDword offset;
+        if (!file->get_pos(&offset))
+            VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
+        mdbg_traceA("TODO:\n"); // ディスク上の位置がわからないんだからしょうがない。。。
+        return vsk_ast_dbl(offset / VSK_SECTOR_SIZE);
+    }
+
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 }
 
 // INSN_GOTO (GOTO) @implemented
@@ -8991,6 +9017,8 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
         if (!file->get_pos(&offset))
             VSK_ERROR_AND_RETURN(VSK_ERR_DISK_IO_ERROR, nullptr);
         VskInt record_len = vsk_field_get_len(fileno);
+        if (record_len == 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         return vsk_ast_dbl(offset / record_len + 1); // レコード番号
     }
 
@@ -9039,6 +9067,8 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
         if (!file->get_size(&size))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         VskInt record_len = vsk_field_get_len(fileno);
+        if (record_len == 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         return vsk_ast_dbl(size / record_len); // レコード番号
     }
 

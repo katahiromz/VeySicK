@@ -236,7 +236,8 @@ public:
     // ファイルの種類
     enum TYPE
     {
-        TYPE_HOST_FILE, TYPE_SCREEN, TYPE_KEYBOARD, TYPE_CASETTE, TYPE_COM, TYPE_LINE_PRINTER,
+        TYPE_HOST_FILE, TYPE_SCREEN, TYPE_KEYBOARD, TYPE_CASETTE, TYPE_COM,
+        TYPE_LINE_PRINTER
     };
 
     // ファイルのモード
