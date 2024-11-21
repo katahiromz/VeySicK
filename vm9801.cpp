@@ -34,16 +34,14 @@
 #define VSK_9801_LEAD_FIX               VskByte(0x20)
 #define VSK_9801_TRAIL_FIX              VskByte(0x80)
 
-// 9801 テキスト VRAM 実データ
-VskByte vsk_9801_text_vram_area[VSK_9801_TEXT_VRAM_TOTAL_SIZE];
-
 // 9801 VRAM クラス
 struct Vsk9801TextVRAM : VskSimpleMemoryBlock
 {
+    VskByte m_9801_text_vram_area[VSK_9801_TEXT_VRAM_TOTAL_SIZE];
     Vsk9801TextVRAM(VskMachineState *state)
         : VskSimpleMemoryBlock(VSK_9801_TEXT_VRAM_TEXT_ADDR,
                                VSK_9801_TEXT_VRAM_TOTAL_SIZE,
-                               vsk_9801_text_vram_area)
+                               m_9801_text_vram_area)
     {
     }
 };
@@ -64,15 +62,15 @@ struct Vsk9801TextVRAM : VskSimpleMemoryBlock
 #define VSK_9801_GRAPH_VRAM_BANK_0              0
 #define VSK_9801_GRAPH_VRAM_BANK_1              1
 
-// vsk_9801_graph_vram_planes[bank][plane][offset]
-// 9801 VRAM 実データ
-VskByte vsk_9801_graph_vram_planes[2][4][VSK_9801_GRAPH_VRAM_PLANE_SIZE];
-
 // 9801 グラフィック VRAM
 struct Vsk9801GraphVRAM : VskMemoryBlockBase
 {
     // マシン状態
     VskMachineState *m_state = nullptr;
+
+    // 9801 VRAM 実データ
+    // [bank][plane][offset]
+    VskByte m_9801_graph_vram_planes[2][4][VSK_9801_GRAPH_VRAM_PLANE_SIZE];
 
     // アドレス
     const VskAddr c_addrs[4] =
@@ -115,7 +113,7 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
         int iPlane = which(addr);
         if (iPlane < 0)
             return false;
-        *ptr = vsk_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]];
+        *ptr = m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]];
         return true;
     }
 
@@ -125,65 +123,65 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
         int iPlane = which(addr);
         if (iPlane < 0)
             return false;
-        vsk_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]] = *ptr;
+        m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]] = *ptr;
         return true;
     }
-};
 
-// VRAMからページを選ぶ
-VskByte *vsk_9801_get_page(int screen_mode, int iPage, int iPlane = 0)
-{
-    switch (screen_mode)
+    // VRAMからページを選ぶ
+    VskByte *get_page(int screen_mode, int iPage, int iPlane = 0)
     {
-    case 0:
-        switch (iPage)
+        switch (screen_mode)
         {
-        case 0: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][0];
-        case 1: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 2: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][0];
-        case 3: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+        case 0:
+            switch (iPage)
+            {
+            case 0: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][0];
+            case 1: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 2: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][0];
+            case 3: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            }
+            break;
+        case 1:
+            assert(iPlane == 0);
+            switch (iPage)
+            {
+            case 0: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][0];
+            case 1: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][0];
+            case 2: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][0];
+            case 3: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 4: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 5: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 6: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][0];
+            case 7: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][0];
+            case 8: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][0];
+            case 9: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 10: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            case 11: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
+            }
+            break;
+        case 2:
+            assert(iPlane == 0);
+            switch (iPage)
+            {
+            case 0: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][0];
+            case 1: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][0];
+            case 2: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][0];
+            case 3: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][0];
+            case 4: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][0];
+            case 5: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][0];
+            }
+            break;
+        case 3:
+            switch (iPage)
+            {
+            case 0: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][0];
+            case 1: return &m_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][0];
+            }
+            break;
         }
-        break;
-    case 1:
-        assert(iPlane == 0);
-        switch (iPage)
-        {
-        case 0: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][0];
-        case 1: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][0];
-        case 2: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][0];
-        case 3: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 4: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 5: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 6: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][0];
-        case 7: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][0];
-        case 8: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][0];
-        case 9: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 10: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        case 11: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][VSK_9801_GRAPH_VRAM_PLANE_MIDDLE];
-        }
-        break;
-    case 2:
-        assert(iPlane == 0);
-        switch (iPage)
-        {
-        case 0: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][0][0];
-        case 1: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][1][0];
-        case 2: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][2][0];
-        case 3: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][0][0];
-        case 4: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][1][0];
-        case 5: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][2][0];
-        }
-        break;
-    case 3:
-        switch (iPage)
-        {
-        case 0: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_0][iPlane][0];
-        case 1: return &vsk_9801_graph_vram_planes[VSK_9801_GRAPH_VRAM_BANK_1][iPlane][0];
-        }
-        break;
+        return nullptr;
     }
-    return nullptr;
-}
+};
 
 // カラーの表示ページのページを取得
 int vsk_9801_get_color_display_page(int screen_mode, int display_pages)
@@ -421,14 +419,14 @@ struct Vsk9801Machine : VskMachine
             m_viewport = viewport ? viewport : &m_state->m_viewport;
             if (m_state->m_color_graphics)
             {
-                m_planes[0] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 0);
-                m_planes[1] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 1);
-                m_planes[2] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 2);
-                m_planes[3] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 3);
+                m_planes[0] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 0);
+                m_planes[1] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 1);
+                m_planes[2] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 2);
+                m_planes[3] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 3);
             }
             else
             {
-                m_planes[0] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 0);
+                m_planes[0] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 0);
             }
         }
 
@@ -480,11 +478,11 @@ struct Vsk9801Machine : VskMachine
             if (m_state->m_color_graphics)
             {
                 for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
-                    m_planes[iPlane] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, iPlane);
+                    m_planes[iPlane] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, iPlane);
             }
             else
             {
-                m_planes[0] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, m_state->m_active_page);
+                m_planes[0] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, m_state->m_active_page);
             }
             m_palette = VskByte(palette);
         }
@@ -547,11 +545,11 @@ struct Vsk9801Machine : VskMachine
             if (m_state->m_color_graphics)
             {
                 for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
-                    m_planes[iPlane] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, iPlane);
+                    m_planes[iPlane] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, iPlane);
             }
             else
             {
-                m_planes[0] = vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, m_state->m_active_page);
+                m_planes[0] = machine->m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, m_state->m_active_page);
             }
             m_tile = tile;
             m_tile_height = int(m_tile.size() / m_num_planes);
@@ -1096,10 +1094,10 @@ void Vsk9801Machine::render_color_graphics()
     int display_page = vsk_9801_get_color_display_page(screen_mode, m_state->m_display_pages);
     if (display_page < 0)
         return;
-    VskByte *plane0 = vsk_9801_get_page(screen_mode, display_page, 0);
-    VskByte *plane1 = vsk_9801_get_page(screen_mode, display_page, 1);
-    VskByte *plane2 = vsk_9801_get_page(screen_mode, display_page, 2);
-    VskByte *plane3 = vsk_9801_get_page(screen_mode, display_page, 3);
+    VskByte *plane0 = m_graph_vram->get_page(screen_mode, display_page, 0);
+    VskByte *plane1 = m_graph_vram->get_page(screen_mode, display_page, 1);
+    VskByte *plane2 = m_graph_vram->get_page(screen_mode, display_page, 2);
+    VskByte *plane3 = m_graph_vram->get_page(screen_mode, display_page, 3);
     if (m_state->m_screen_height == 400)
     {
         for (int y = 0; y < m_state->m_screen_height; ++y)
@@ -1165,7 +1163,7 @@ void Vsk9801Machine::render_mono_graphics()
         {
             if (!(display_flags & (1 << iPage)))
                 continue;
-            VskByte *page = vsk_9801_get_page(m_state->m_screen_mode, iPage);
+            VskByte *page = m_graph_vram->get_page(m_state->m_screen_mode, iPage);
             VskMonoGetter getter(m_state->m_screen_width, m_state->m_screen_height, page);
             for (int y = 0; y < m_state->m_screen_height; ++y)
             {
@@ -1183,7 +1181,7 @@ void Vsk9801Machine::render_mono_graphics()
         {
             if (!(display_flags & (1 << iPage)))
                 continue;
-            VskByte *page = vsk_9801_get_page(m_state->m_screen_mode, iPage);
+            VskByte *page = m_graph_vram->get_page(m_state->m_screen_mode, iPage);
             VskMonoGetter getter(m_state->m_screen_width, m_state->m_screen_height, page);
             for (int y = 0; y < m_state->m_screen_height; ++y)
             {
@@ -1288,10 +1286,10 @@ int Vsk9801Machine::get_display_pages_flags(int screen_mode, int display_pages)
 void Vsk9801Machine::clear_planes(bool blue, bool red, bool green, bool intensity)
 {
     VskByte *planes[4] = {
-        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 0),
-        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 1),
-        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 2),
-        vsk_9801_get_page(m_state->m_screen_mode, m_state->m_active_page, 3)
+        m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 0),
+        m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 1),
+        m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 2),
+        m_graph_vram->get_page(m_state->m_screen_mode, m_state->m_active_page, 3)
     };
     if (blue)
     {
