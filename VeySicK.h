@@ -431,7 +431,7 @@ struct VskMachineState
     int m_screen_mode                       = 0;            // スクリーンモード
     int m_screen_width                      = 640;          // スクリーンの幅（ピクセル単位）
     int m_screen_height                     = 200;          // スクリーンの高さ（ピクセル単位）
-    int m_active_page                       = 0;            // アクティブページ（描画するページ）
+    int m_active_page                       = 0;            // 描画ページ
     int m_display_pages                     = 1;            // 表示ページ
     bool m_show_graphics                    = true;         // グラフィック画面を表示するか？
     bool m_odd_line                         = false;        // グラフィック画面の奇数ラインを描画するか？

@@ -31,7 +31,7 @@ bool vsk_in_data = false;           // DATA文の内部か？
 #endif
 
 // 命令を実行する関数の型
-typedef VskAstPtr (VSKAPI *VskFn)(VskAstPtr& self, const VskAstList& args);
+typedef VskAstPtr (VSKAPI *VskFn)(VskAstPtr self, const VskAstList& args);
 
 // トラップモード
 enum VskTrapMode
@@ -3126,7 +3126,7 @@ VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE }, bool clear_vars 
 // INSN_HEX_OR_OCTAL ("&H", "&O", ...) @implemented
 // 実機 BASIC は8進数や16進数の境界チェックを厳しくしているようだ。
 // 実機の8進数や16進数は16ビット整数と見なされる。
-static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr self, const VskAstList& args)
 {
     auto arg0 = vsk_eval_ast(args[0]);
 
@@ -3148,7 +3148,7 @@ static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_COLOR (COLOR) @implemented
-static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 5))
         return nullptr;
@@ -3257,7 +3257,7 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr& self, const VskAstList& args)
 VskError vsk_PRINT_USING_helper(VskFilePtr file, const VskString& format_text, const VskAstList& args, bool& is_sep);
 
 // INSN_PRINT_USING (PRINT USING / PRINT# USING) @implemented
-static VskAstPtr VSKAPI vsk_PRINT_USING(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PRINT_USING(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -3291,7 +3291,7 @@ static VskAstPtr VSKAPI vsk_PRINT_USING(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LPRINT_USING (LPRINT USING) @implemented
-static VskAstPtr VSKAPI vsk_LPRINT_USING(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LPRINT_USING(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3314,7 +3314,7 @@ static VskAstPtr VSKAPI vsk_LPRINT_USING(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_PRINT (PRINT / PRINT#) @implemented
-static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3367,7 +3367,7 @@ static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LPRINT (LPRINT) @implemented
-static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3404,7 +3404,7 @@ static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WRITE (WRITE) @implemented
-static VskAstPtr VSKAPI vsk_WRITE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WRITE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3442,14 +3442,14 @@ static VskAstPtr VSKAPI vsk_WRITE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_REM (コメント) @implemented
-static VskAstPtr VSKAPI vsk_REM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_REM(VskAstPtr self, const VskAstList& args)
 {
     vsk_process_comment(self->m_str);
     return nullptr;
 }
 
 // INSN_ERROR (ERROR) @implemented
-static VskAstPtr VSKAPI vsk_ERROR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ERROR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3467,7 +3467,7 @@ static VskAstPtr VSKAPI vsk_ERROR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KILL (KILL) @implemented
-static VskAstPtr VSKAPI vsk_KILL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3508,19 +3508,19 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DATE_dollar (DATE$) @implemented
-static VskAstPtr VSKAPI vsk_DATE_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DATE_dollar(VskAstPtr self, const VskAstList& args)
 {
     VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 }
 
 // INSN_TIME_dollar (TIME$) @implemented
-static VskAstPtr VSKAPI vsk_TIME_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TIME_dollar(VskAstPtr self, const VskAstList& args)
 {
     VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
 }
 
 // INSN_DATE_dollar_var (DATE$ 変数みたいな) @implemented
-static VskAstPtr VSKAPI vsk_DATE_dollar_var(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DATE_dollar_var(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -3546,7 +3546,7 @@ static VskAstPtr VSKAPI vsk_DATE_dollar_var(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_TIME_dollar_var (TIME$ 変数みたいな) @implemented
-static VskAstPtr VSKAPI vsk_TIME_dollar_var(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TIME_dollar_var(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -3555,7 +3555,7 @@ static VskAstPtr VSKAPI vsk_TIME_dollar_var(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_NAME (NAME) @implemented
-static VskAstPtr VSKAPI vsk_NAME(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NAME(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -3612,7 +3612,7 @@ static VskAstPtr VSKAPI vsk_NAME(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DEF_SEG (DEF SEG=) @implemented
-static VskAstPtr VSKAPI vsk_DEF_SEG(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEF_SEG(VskAstPtr self, const VskAstList& args)
 {
     if (vsk_machine->is_8801_mode())
         VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
@@ -3628,7 +3628,7 @@ static VskAstPtr VSKAPI vsk_DEF_SEG(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PEEK (PEEK) @implemented
-static VskAstPtr VSKAPI vsk_PEEK(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PEEK(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3646,7 +3646,7 @@ static VskAstPtr VSKAPI vsk_PEEK(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_POKE (POKE) @implemented
-static VskAstPtr VSKAPI vsk_POKE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_POKE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3666,7 +3666,7 @@ static VskAstPtr VSKAPI vsk_POKE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CINT (CINT) @implemented
-static VskAstPtr VSKAPI vsk_CINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CINT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3679,7 +3679,7 @@ static VskAstPtr VSKAPI vsk_CINT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CSNG (CSNG) @implemented
-static VskAstPtr VSKAPI vsk_CSNG(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CSNG(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3691,7 +3691,7 @@ static VskAstPtr VSKAPI vsk_CSNG(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CDBL (CDBL) @implemented
-static VskAstPtr VSKAPI vsk_CDBL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CDBL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3703,7 +3703,7 @@ static VskAstPtr VSKAPI vsk_CDBL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CHR_dollar (CHR$) @implemented
-static VskAstPtr VSKAPI vsk_CHR_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHR_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3733,7 +3733,7 @@ static VskAstPtr VSKAPI vsk_CHR_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_UMINUS (-; unary minus) @implemented
-static VskAstPtr VSKAPI vsk_UMINUS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_UMINUS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3775,7 +3775,7 @@ static VskAstPtr VSKAPI vsk_UMINUS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ABS (ABS) @implemented
-static VskAstPtr VSKAPI vsk_ABS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ABS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -3821,7 +3821,7 @@ static VskAstPtr VSKAPI vsk_ABS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LT (<) @implemented
-static VskAstPtr VSKAPI vsk_LT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3849,7 +3849,7 @@ static VskAstPtr VSKAPI vsk_LT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LE (<=, =<) @implemented
-static VskAstPtr VSKAPI vsk_LE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3877,7 +3877,7 @@ static VskAstPtr VSKAPI vsk_LE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_GT (>) @implemented
-static VskAstPtr VSKAPI vsk_GT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3905,7 +3905,7 @@ static VskAstPtr VSKAPI vsk_GT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_GE (>=, =>) @implemented
-static VskAstPtr VSKAPI vsk_GE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3933,7 +3933,7 @@ static VskAstPtr VSKAPI vsk_GE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_EQUAL (=) @implemented
-static VskAstPtr VSKAPI vsk_EQUAL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_EQUAL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -3961,7 +3961,7 @@ static VskAstPtr VSKAPI vsk_EQUAL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_NE (<>, ><) @implemented
-static VskAstPtr VSKAPI vsk_NE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NE(VskAstPtr self, const VskAstList& args)
 {
     VskAstPtr ret = vsk_EQUAL(self, args);
     if (!ret)
@@ -3970,7 +3970,7 @@ static VskAstPtr VSKAPI vsk_NE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ADD (+) @implemented
-static VskAstPtr VSKAPI vsk_ADD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ADD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4051,7 +4051,7 @@ static VskAstPtr VSKAPI vsk_ADD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SUB (-) @implemented
-static VskAstPtr VSKAPI vsk_SUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4121,7 +4121,7 @@ static VskAstPtr VSKAPI vsk_SUB(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MUL (*) @implemented
-static VskAstPtr VSKAPI vsk_MUL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MUL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4191,7 +4191,7 @@ static VskAstPtr VSKAPI vsk_MUL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DIV (/) @implemented
-static VskAstPtr VSKAPI vsk_DIV(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DIV(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4226,7 +4226,7 @@ static VskAstPtr VSKAPI vsk_DIV(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_IDIV (\) @implemented
-static VskAstPtr VSKAPI vsk_IDIV(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_IDIV(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4246,7 +4246,7 @@ static VskAstPtr VSKAPI vsk_IDIV(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MOD (MOD) @implemented
-static VskAstPtr VSKAPI vsk_MOD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4265,7 +4265,7 @@ static VskAstPtr VSKAPI vsk_MOD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_HAT (^) @implemented
-static VskAstPtr VSKAPI vsk_HAT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HAT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4299,7 +4299,7 @@ static VskAstPtr VSKAPI vsk_HAT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_AND (AND) @implemented
-static VskAstPtr VSKAPI vsk_AND(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_AND(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4314,7 +4314,7 @@ static VskAstPtr VSKAPI vsk_AND(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_OR (OR) @implemented
-static VskAstPtr VSKAPI vsk_OR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_OR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4329,7 +4329,7 @@ static VskAstPtr VSKAPI vsk_OR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_XOR (XOR) @implemented
-static VskAstPtr VSKAPI vsk_XOR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_XOR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4344,7 +4344,7 @@ static VskAstPtr VSKAPI vsk_XOR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_IMP (IMP) @implemented
-static VskAstPtr VSKAPI vsk_IMP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_IMP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4359,7 +4359,7 @@ static VskAstPtr VSKAPI vsk_IMP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_EQV (EQV) @implemented
-static VskAstPtr VSKAPI vsk_EQV(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_EQV(VskAstPtr self, const VskAstList& args)
 {
     auto ret = vsk_XOR(self, args);
     if (!ret)
@@ -4369,7 +4369,7 @@ static VskAstPtr VSKAPI vsk_EQV(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SIN (SIN) @implemented
-static VskAstPtr VSKAPI vsk_SIN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SIN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4391,7 +4391,7 @@ static VskAstPtr VSKAPI vsk_SIN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COS (COS) @implemented
-static VskAstPtr VSKAPI vsk_COS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4413,7 +4413,7 @@ static VskAstPtr VSKAPI vsk_COS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_TAN (TAN) @implemented
-static VskAstPtr VSKAPI vsk_TAN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TAN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4435,7 +4435,7 @@ static VskAstPtr VSKAPI vsk_TAN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_EXP (EXP) @implemented
-static VskAstPtr VSKAPI vsk_EXP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_EXP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4457,7 +4457,7 @@ static VskAstPtr VSKAPI vsk_EXP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LOG (LOG) @implemented
-static VskAstPtr VSKAPI vsk_LOG(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOG(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4479,7 +4479,7 @@ static VskAstPtr VSKAPI vsk_LOG(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SQR (SQR) @implemented
-static VskAstPtr VSKAPI vsk_SQR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SQR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4501,7 +4501,7 @@ static VskAstPtr VSKAPI vsk_SQR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ATN (ATN) @implemented
-static VskAstPtr VSKAPI vsk_ATN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ATN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4523,7 +4523,7 @@ static VskAstPtr VSKAPI vsk_ATN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SPACE_dollar (SPACE$) @implemented
-static VskAstPtr VSKAPI vsk_SPACE_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SPACE_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4541,7 +4541,7 @@ static VskAstPtr VSKAPI vsk_SPACE_dollar(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_SPC (SPC) @implemented
-static VskAstPtr VSKAPI vsk_SPC(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SPC(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4559,7 +4559,7 @@ static VskAstPtr VSKAPI vsk_SPC(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_TAB (TAB) @implemented
-static VskAstPtr VSKAPI vsk_TAB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TAB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4583,7 +4583,7 @@ static VskAstPtr VSKAPI vsk_TAB(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_POS (POS) @implemented
-static VskAstPtr VSKAPI vsk_POS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_POS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -4593,7 +4593,7 @@ static VskAstPtr VSKAPI vsk_POS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CSRLIN (CSRLIN) @implemented
-static VskAstPtr VSKAPI vsk_CSRLIN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CSRLIN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -4603,7 +4603,7 @@ static VskAstPtr VSKAPI vsk_CSRLIN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LOCATE (LOCATE) @implemented
-static VskAstPtr VSKAPI vsk_LOCATE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOCATE(VskAstPtr self, const VskAstList& args)
 {
     if (args.size() == 0)
         VSK_ERROR_AND_RETURN(VSK_ERR_MISSING_OPERAND, nullptr);
@@ -4639,7 +4639,7 @@ static VskAstPtr VSKAPI vsk_LOCATE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_POINT_func (POINT 関数)
-static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr self, const VskAstList& args)
 {
     if (args.size() == 1)
     {
@@ -4685,7 +4685,7 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_POINT (POINT文) @implemented
-static VskAstPtr VSKAPI vsk_POINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_POINT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4700,7 +4700,7 @@ static VskAstPtr VSKAPI vsk_POINT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_POINT_STEP (POINT STEP文) @implemented
-static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -4724,23 +4724,20 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args)
     VskInt v1 = (VSK_STATE()->m_show_graphics ? 1 : 3);
     VskInt v2 = VSK_STATE()->m_active_page;
     VskInt v3 = VSK_STATE()->m_display_pages;
-    auto arg0 = ((args.size() > 0) ? args[0] : nullptr);
-    auto arg1 = ((args.size() > 1) ? args[1] : nullptr);
-    auto arg2 = ((args.size() > 2) ? args[2] : nullptr);
-    auto arg3 = ((args.size() > 3) ? args[3] : nullptr);
-    if ((!arg0 || vsk_int(v0, arg0)) ||
-        (!arg1 || vsk_int(v1, arg1)) ||
-        (!arg2 || vsk_int(v2, arg2)) ||
-        (!arg3 || vsk_int(v3, arg3)))
+    auto arg0 = vsk_arg(args, 0), arg1 = vsk_arg(args, 1);
+    auto arg2 = vsk_arg(args, 2), arg3 = vsk_arg(args, 3);
+    if ((!arg0 || vsk_int(v0, arg0)) && (!arg1 || vsk_int(v1, arg1)) &&
+        (!arg2 || vsk_int(v2, arg2)) && (!arg3 || vsk_int(v3, arg3)))
     {
         if (!(0 <= v0 && v0 < 4) ||
             !(0 <= v1 && v1 < 4) ||
-            !(0 <= v2 && v2 < 64) ||
-            !(0 <= v3 && v3 < 12) ||
+            !(0 <= v2 && v2 < 12) ||
+            !(0 <= v3 && v3 < 32) ||
             vsk_machine->get_display_pages_flags(v0, v3) == -1)
         {
-            vsk_machine->bad_call();
-            return nullptr;
+            mdbg_traceA("%d, %d, %d, %d, 0x%X\n", v0, v1, v2, v3,
+                        vsk_machine->get_display_pages_flags(v0, v2));
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
         switch (v0)
@@ -4780,7 +4777,7 @@ static VskAstPtr vsk_SCREEN_9801(const VskAstList& args)
 #endif
 
 // INSN_SCREEN (SCREEN) @implemented
-static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr self, const VskAstList& args)
 {
     vsk_targeting(self);
 #ifdef ENABLE_PC8801
@@ -4796,7 +4793,7 @@ static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CLS (CLS) @implemented
-static VskAstPtr VSKAPI vsk_CLS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CLS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -4830,7 +4827,7 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_CLS (CMD CLS) @implemented
-static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -4879,7 +4876,7 @@ static VskAstPtr VSKAPI vsk_CMD_CLS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_BLOAD (BLOAD) @implemented
-static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
@@ -4930,7 +4927,7 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_BSAVE (BSAVE) @implemented
-static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -4947,7 +4944,7 @@ static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CONSOLE (CONSOLE) @implemented
-static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 4))
         return nullptr;
@@ -5000,7 +4997,7 @@ static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WIDTH (WIDTH) @implemented
-static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
@@ -5065,7 +5062,7 @@ static VskAstPtr VSKAPI vsk_WIDTH(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WIDTH_sharp (WIDTH#) @implemented
-static VskAstPtr VSKAPI vsk_WIDTH_sharp(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WIDTH_sharp(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -5100,7 +5097,7 @@ static VskAstPtr VSKAPI vsk_WIDTH_sharp(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WIDTH_LPRINT (WIDTH LPRINT) @implemented
-static VskAstPtr VSKAPI vsk_WIDTH_LPRINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WIDTH_LPRINT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5125,7 +5122,7 @@ static VskAstPtr VSKAPI vsk_WIDTH_LPRINT(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_LPOS (LPOS) @implemented
-static VskAstPtr VSKAPI vsk_LPOS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LPOS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5136,7 +5133,7 @@ static VskAstPtr VSKAPI vsk_LPOS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ASC (ASC) @implemented
-static VskAstPtr VSKAPI vsk_ASC(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ASC(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5155,7 +5152,7 @@ static VskAstPtr VSKAPI vsk_ASC(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LEN (LEN) @implemented
-static VskAstPtr VSKAPI vsk_LEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LEN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5167,7 +5164,7 @@ static VskAstPtr VSKAPI vsk_LEN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LEFT_dollar (LEFT$) @implemented
-static VskAstPtr VSKAPI vsk_LEFT_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LEFT_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -5189,7 +5186,7 @@ static VskAstPtr VSKAPI vsk_LEFT_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RIGHT_dollar (RIGHT$) @implemented
-static VskAstPtr VSKAPI vsk_RIGHT_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RIGHT_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -5213,7 +5210,7 @@ static VskAstPtr VSKAPI vsk_RIGHT_dollar(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_STR_dollar (SPC$) @implemented
-static VskAstPtr VSKAPI vsk_STR_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STR_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5231,7 +5228,7 @@ static VskAstPtr VSKAPI vsk_STR_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KEY_LIST (KEY LIST) @implemented
-static VskAstPtr VSKAPI vsk_KEY_LIST(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEY_LIST(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -5255,7 +5252,7 @@ static VskAstPtr VSKAPI vsk_KEY_LIST(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KEY (KEY) @implemented
-static VskAstPtr VSKAPI vsk_KEY(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEY(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -5277,7 +5274,7 @@ static VskAstPtr VSKAPI vsk_KEY(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_VAL (VAL) @implemented
-static VskAstPtr VSKAPI vsk_VAL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_VAL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5294,7 +5291,7 @@ static VskAstPtr VSKAPI vsk_VAL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_STRING_dollar (STRING$) @implemented
-static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -5349,7 +5346,7 @@ static VskAstPtr VSKAPI vsk_STRING_dollar(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_HEX_dollar (HEX$) @implemented
-static VskAstPtr VSKAPI vsk_HEX_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HEX_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5366,7 +5363,7 @@ static VskAstPtr VSKAPI vsk_HEX_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_OCT_dollar (OCT$) @implemented
-static VskAstPtr VSKAPI vsk_OCT_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_OCT_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5383,7 +5380,7 @@ static VskAstPtr VSKAPI vsk_OCT_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_INT (INT) @implemented
-static VskAstPtr VSKAPI vsk_INT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5418,7 +5415,7 @@ static VskAstPtr VSKAPI vsk_INT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FIX (FIX) @implemented
-static VskAstPtr VSKAPI vsk_FIX(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FIX(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5566,28 +5563,28 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
 
 // INSN_LINE0 @implemented
 // LINE(0,0)-(100,100) likely
-static VskAstPtr VSKAPI vsk_LINE0(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE0(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LINE_helper_2(args, false, false);
 }
 
 // INSN_LINE1 @implemented
 // LINE(0,0)-STEP(100,100) likely
-static VskAstPtr VSKAPI vsk_LINE1(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE1(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LINE_helper_2(args, false, true);
 }
 
 // INSN_LINE2 @implemented
 // LINE STEP(0,0)-(100,100) likely
-static VskAstPtr VSKAPI vsk_LINE2(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE2(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LINE_helper_2(args, true, false);
 }
 
 // INSN_LINE3 @implemented
 // LINE STEP(0,0)-STEP(100,100) likely
-static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LINE_helper_2(args, true, true);
 }
@@ -5751,13 +5748,13 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
 }
 
 // INSN_CIRCLE (CIRCLE) @implemented
-static VskAstPtr VSKAPI vsk_CIRCLE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CIRCLE(VskAstPtr self, const VskAstList& args)
 {
     return vsk_CIRCLE_helper(args, false);
 }
 
 // INSN_CIRCLE_STEP (CIRCLE STEP) @implemented
-static VskAstPtr VSKAPI vsk_CIRCLE_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CIRCLE_STEP(VskAstPtr self, const VskAstList& args)
 {
     return vsk_CIRCLE_helper(args, true);
 }
@@ -5797,28 +5794,28 @@ void vsk_do_PSET_PRESET_helper_2(VskAstPtr& self, const VskAstList& args, bool s
 }
 
 // INSN_PSET (PSET) @implemented
-static VskAstPtr VSKAPI vsk_PSET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PSET(VskAstPtr self, const VskAstList& args)
 {
     vsk_do_PSET_PRESET_helper_2(self, args, false, false);
     return nullptr;
 }
 
 // INSN_PSET_STEP (PSET STEP) @implemented
-static VskAstPtr VSKAPI vsk_PSET_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PSET_STEP(VskAstPtr self, const VskAstList& args)
 {
     vsk_do_PSET_PRESET_helper_2(self, args, true, false);
     return nullptr;
 }
 
 // INSN_PRESET (PRESET) @implemented
-static VskAstPtr VSKAPI vsk_PRESET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PRESET(VskAstPtr self, const VskAstList& args)
 {
     vsk_do_PSET_PRESET_helper_2(self, args, false, true);
     return nullptr;
 }
 
 // INSN_PRESET_STEP (PRESET STEP) @implemented
-static VskAstPtr VSKAPI vsk_PRESET_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PRESET_STEP(VskAstPtr self, const VskAstList& args)
 {
     vsk_do_PSET_PRESET_helper_2(self, args, true, true);
     return nullptr;
@@ -5881,19 +5878,19 @@ static VskAstPtr vsk_PAINT_helper(VskAstPtr& self, const VskAstList& args, bool 
 }
 
 // INSN_PAINT (PAINT) @implemented
-static VskAstPtr VSKAPI vsk_PAINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PAINT(VskAstPtr self, const VskAstList& args)
 {
     return vsk_PAINT_helper(self, args, false);
 }
 
 // INSN_PAINT_STEP (PAINT STEP) @implemented
-static VskAstPtr VSKAPI vsk_PAINT_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PAINT_STEP(VskAstPtr self, const VskAstList& args)
 {
     return vsk_PAINT_helper(self, args, true);
 }
 
 // INSN_VIEW_func (VIEW 関数) @implemented
-static VskAstPtr VSKAPI vsk_VIEW_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_VIEW_func(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5917,7 +5914,7 @@ static VskAstPtr VSKAPI vsk_VIEW_func(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WINDOW_func (WINDOW 関数) @implemented
-static VskAstPtr VSKAPI vsk_WINDOW_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WINDOW_func(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -5941,7 +5938,7 @@ static VskAstPtr VSKAPI vsk_WINDOW_func(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WINDOW_stmt @implemented
-static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 4))
         return nullptr;
@@ -5967,7 +5964,7 @@ static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_VIEW_stmt (VIEW文) @implemented
-static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 6))
         return nullptr;
@@ -6003,7 +6000,7 @@ static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SGN (SGN) @implemented
-static VskAstPtr VSKAPI vsk_SGN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SGN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6077,7 +6074,7 @@ bool vsk_load_file(const VskString& filename, VskString& text)
 }
 
 // INSN_LOAD (LOAD) @implemented
-static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -6104,7 +6101,7 @@ static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SAVE
-static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
@@ -6120,7 +6117,7 @@ static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MERGE (MERGE) @implemented
-static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6161,7 +6158,7 @@ static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RUN @implemented
-static VskAstPtr VSKAPI vsk_RUN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RUN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -6229,7 +6226,7 @@ static bool vsk_get_line_range(VskAstPtr& self, std::pair<VskLineNo, VskLineNo>&
 }
 
 // INSN_LIST (LIST) @implemented
-static VskAstPtr VSKAPI vsk_LIST(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LIST(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -6244,7 +6241,7 @@ static VskAstPtr VSKAPI vsk_LIST(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LLIST (LLIST) @implemented
-static VskAstPtr VSKAPI vsk_LLIST(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LLIST(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -6259,7 +6256,7 @@ static VskAstPtr VSKAPI vsk_LLIST(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PEN_OFF (PEN OFF) @implemented
-static VskAstPtr VSKAPI vsk_PEN_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PEN_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6269,7 +6266,7 @@ static VskAstPtr VSKAPI vsk_PEN_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PEN_ON (PEN ON) @implemented
-static VskAstPtr VSKAPI vsk_PEN_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PEN_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6279,7 +6276,7 @@ static VskAstPtr VSKAPI vsk_PEN_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PEN_STOP (PEN STOP) @implemented
-static VskAstPtr VSKAPI vsk_PEN_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PEN_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6289,7 +6286,7 @@ static VskAstPtr VSKAPI vsk_PEN_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PLAY_OFF (PLAY OFF) @implemented
-static VskAstPtr VSKAPI vsk_PLAY_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PLAY_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6299,7 +6296,7 @@ static VskAstPtr VSKAPI vsk_PLAY_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PLAY_ON (PLAY ON) @implemented
-static VskAstPtr VSKAPI vsk_PLAY_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PLAY_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6309,7 +6306,7 @@ static VskAstPtr VSKAPI vsk_PLAY_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PLAY_STOP (PLAY STOP) @implemented
-static VskAstPtr VSKAPI vsk_PLAY_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PLAY_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6319,7 +6316,7 @@ static VskAstPtr VSKAPI vsk_PLAY_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_EDIT (EDIT) @implemented
-static VskAstPtr VSKAPI vsk_EDIT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_EDIT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6355,7 +6352,7 @@ static VskAstPtr VSKAPI vsk_EDIT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_JIS_dollar (JIS$) @implemented
-static VskAstPtr VSKAPI vsk_JIS_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_JIS_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6376,14 +6373,14 @@ static VskAstPtr VSKAPI vsk_JIS_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LOAD_question
-static VskAstPtr VSKAPI vsk_LOAD_question(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOAD_question(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_CONT (CONT) @implemented
-static VskAstPtr VSKAPI vsk_CONT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CONT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6397,7 +6394,7 @@ static VskAstPtr VSKAPI vsk_CONT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_NEW_CMD (NEW CMD) @implemented
-static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6410,7 +6407,7 @@ static VskAstPtr VSKAPI vsk_NEW_CMD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FRE (FRE)
-static VskAstPtr VSKAPI vsk_FRE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FRE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6458,7 +6455,7 @@ static bool vsk_KEY_OFF_ON_STOP_helper(VskAstPtr arg0, VskTrapMode mode)
 }
 
 // INSN_KEY_OFF @implemented
-static VskAstPtr VSKAPI vsk_KEY_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEY_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -6469,7 +6466,7 @@ static VskAstPtr VSKAPI vsk_KEY_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KEY_ON @implemented
-static VskAstPtr VSKAPI vsk_KEY_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEY_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -6480,7 +6477,7 @@ static VskAstPtr VSKAPI vsk_KEY_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KEY_STOP @implemented
-static VskAstPtr VSKAPI vsk_KEY_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEY_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -6491,7 +6488,7 @@ static VskAstPtr VSKAPI vsk_KEY_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_SING (CMD SING) @implemented
-static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6520,7 +6517,7 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_TURTLE (CMD TURTLE) @implemented
-static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6545,7 +6542,7 @@ static VskAstPtr VSKAPI vsk_CMD_TURTLE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_BGM (CMD BGM) @implemented
-static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6568,7 +6565,7 @@ static VskAstPtr VSKAPI vsk_CMD_BGM(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_STOPM (CMD STOPM) @implemented
-static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6584,7 +6581,7 @@ static VskAstPtr VSKAPI vsk_CMD_STOPM(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_UNLINK (CMD UNLINK) @implemented
-static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6602,7 +6599,7 @@ static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_VOICE (CMD VOICE)
-static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
@@ -6612,7 +6609,7 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_CUT (CMD CUT) @implemented
-static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6628,7 +6625,7 @@ static VskAstPtr VSKAPI vsk_CMD_CUT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD_PAL (CMD PAL) @implemented
-static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 2))
         return nullptr;
@@ -6664,7 +6661,7 @@ static VskAstPtr VSKAPI vsk_CMD_PAL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_STOP_OFF (STOP OFF) @implemented
-static VskAstPtr VSKAPI vsk_STOP_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STOP_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6674,7 +6671,7 @@ static VskAstPtr VSKAPI vsk_STOP_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_STOP_ON (STOP ON) @implemented
-static VskAstPtr VSKAPI vsk_STOP_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STOP_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6684,7 +6681,7 @@ static VskAstPtr VSKAPI vsk_STOP_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_STOP_STOP (STOP STOP) @implemented
-static VskAstPtr VSKAPI vsk_STOP_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STOP_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -6694,7 +6691,7 @@ static VskAstPtr VSKAPI vsk_STOP_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_AKCNV_dollar (AKCNV$) @implemented
-static VskAstPtr VSKAPI vsk_AKCNV_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_AKCNV_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6714,7 +6711,7 @@ static VskAstPtr VSKAPI vsk_AKCNV_dollar(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_KACNV_dollar (KACNV$) @implemented
-static VskAstPtr VSKAPI vsk_KACNV_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KACNV_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -6766,28 +6763,28 @@ void vsk_def_vars(const VskAstList& args, VskType type)
 }
 
 // INSN_DEFINT (DEFINT) @implemented
-static VskAstPtr VSKAPI vsk_DEFINT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEFINT(VskAstPtr self, const VskAstList& args)
 {
     vsk_def_vars(args, VSK_TYPE_INTEGER);
     return nullptr;
 }
 
 // INSN_DEFSNG (DEFSNG) @implemented
-static VskAstPtr VSKAPI vsk_DEFSNG(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEFSNG(VskAstPtr self, const VskAstList& args)
 {
     vsk_def_vars(args, VSK_TYPE_SINGLE);
     return nullptr;
 }
 
 // INSN_DEFDBL (DEFDBL) @implemented
-static VskAstPtr VSKAPI vsk_DEFDBL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEFDBL(VskAstPtr self, const VskAstList& args)
 {
     vsk_def_vars(args, VSK_TYPE_DOUBLE);
     return nullptr;
 }
 
 // INSN_DEFSTR (DEFSTR) @implemented
-static VskAstPtr VSKAPI vsk_DEFSTR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEFSTR(VskAstPtr self, const VskAstList& args)
 {
     vsk_def_vars(args, VSK_TYPE_STRING);
     return nullptr;
@@ -6867,19 +6864,19 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
 }
 
 // INSN_GET_at (GET@)
-static VskAstPtr VSKAPI vsk_GET_at(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GET_at(VskAstPtr self, const VskAstList& args)
 {
     return vsk_GET_at_helper(args, false);
 }
 
 // INSN_GET_at_STEP (GET@ STEP)
-static VskAstPtr VSKAPI vsk_GET_at_STEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GET_at_STEP(VskAstPtr self, const VskAstList& args)
 {
     return vsk_GET_at_helper(args, true);
 }
 
 // INSN_PUT_at
-static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 4))
         return nullptr;
@@ -6942,7 +6939,7 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PUT_at_KANJI
-static VskAstPtr VSKAPI vsk_PUT_at_KANJI(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PUT_at_KANJI(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 6))
         return nullptr;
@@ -6989,7 +6986,7 @@ static bool vsk_DIM_helper(VskAstPtr& lvalue)
 }
 
 // INSN_DIM (DIM) @implemented
-static VskAstPtr VSKAPI vsk_DIM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DIM(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7006,7 +7003,7 @@ static VskAstPtr VSKAPI vsk_DIM(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_VARPTR
-static VskAstPtr VSKAPI vsk_VARPTR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_VARPTR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
@@ -7036,7 +7033,7 @@ static VskAstPtr VSKAPI vsk_VARPTR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ERASE (ERASE) @implemented
-static VskAstPtr VSKAPI vsk_ERASE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ERASE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7051,7 +7048,7 @@ static VskAstPtr VSKAPI vsk_ERASE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CLEAR (CLEAR) @implemented
-static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 3))
         return nullptr;
@@ -7077,7 +7074,7 @@ static VskAstPtr VSKAPI vsk_CLEAR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SWAP (SWAP) @implemented
-static VskAstPtr VSKAPI vsk_SWAP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SWAP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -7162,7 +7159,7 @@ static VskAstPtr VSKAPI vsk_SWAP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_EOF (EOF) @implemented
-static VskAstPtr VSKAPI vsk_EOF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_EOF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7179,7 +7176,7 @@ static VskAstPtr VSKAPI vsk_EOF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ATTR_dollar (ATTR$)
-static VskAstPtr VSKAPI vsk_ATTR_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ATTR_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7218,7 +7215,7 @@ static VskAstPtr VSKAPI vsk_ATTR_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_AUTO (AUTO) @implemented
-static VskAstPtr VSKAPI vsk_AUTO(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_AUTO(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -7253,7 +7250,7 @@ static VskAstPtr VSKAPI vsk_AUTO(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_BEEP @implemented
-static VskAstPtr VSKAPI vsk_BEEP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_BEEP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -7268,21 +7265,21 @@ static VskAstPtr VSKAPI vsk_BEEP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CALL
-static VskAstPtr VSKAPI vsk_CALL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CALL(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_SYSTEM (SYSTEM) @implemented
-static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr self, const VskAstList& args)
 {
     vsk_app_quit();
     return nullptr;
 }
 
 // INSN_CHAIN (CHAIN)
-static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
@@ -7325,35 +7322,35 @@ static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CHAIN_MERGE
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHAIN_MERGE(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_CHAIN_MERGE_ALL
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_CHAIN_MERGE_ALL_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL_DELETE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL_DELETE(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_CHAIN_MERGE_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_DELETE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CHAIN_MERGE_DELETE(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_CLOSE (CLOSE) @implemented
-static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7409,7 +7406,7 @@ static bool vsk_CMD_VOICE_COPY(VskInt v1, VskAstPtr arg2)
 }
 
 // INSN_CMD_TEXT_ON_OFF (CMD TEXT ON/OFF) @implemented
-static VskAstPtr VSKAPI vsk_CMD_TEXT_ON_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_TEXT_ON_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7440,7 +7437,7 @@ static VskAstPtr VSKAPI vsk_CMD_TEXT_ON_OFF(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_CMD_PLAY (CMD PLAY) @implemented
-static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 7))
         return nullptr;
@@ -7510,7 +7507,7 @@ static VskAstPtr VSKAPI vsk_CMD_PLAY(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CMD (CMD ...)
-static VskAstPtr VSKAPI vsk_CMD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CMD(VskAstPtr self, const VskAstList& args)
 {
     auto params = args;
     auto cmd_name = params[0]->m_str;
@@ -7543,7 +7540,7 @@ static VskAstPtr VSKAPI vsk_CMD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COLOR_equal (COLOR=)
-static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -7582,7 +7579,7 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COLOR_at (COLOR@) @implemented
-static VskAstPtr VSKAPI vsk_COLOR_at(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COLOR_at(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 5))
         return nullptr;
@@ -7615,14 +7612,14 @@ static VskAstPtr VSKAPI vsk_COLOR_at(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COMMON
-static VskAstPtr VSKAPI vsk_COMMON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COMMON(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_COM_OFF (COM OFF) @implemented
-static VskAstPtr VSKAPI vsk_COM_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COM_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7632,7 +7629,7 @@ static VskAstPtr VSKAPI vsk_COM_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COM_ON (COM ON) @implemented
-static VskAstPtr VSKAPI vsk_COM_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COM_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7642,7 +7639,7 @@ static VskAstPtr VSKAPI vsk_COM_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COM_STOP (COM STOP) @implemented
-static VskAstPtr VSKAPI vsk_COM_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COM_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7652,7 +7649,7 @@ static VskAstPtr VSKAPI vsk_COM_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_COPY (COPY) @implemented
-static VskAstPtr VSKAPI vsk_COPY(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_COPY(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -7703,14 +7700,14 @@ static VskAstPtr VSKAPI vsk_COPY(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DEF_USR
-static VskAstPtr VSKAPI vsk_DEF_USR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEF_USR(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_DELETE (DELETE) @implemented
-static VskAstPtr VSKAPI vsk_DELETE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DELETE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -7726,7 +7723,7 @@ static VskAstPtr VSKAPI vsk_DELETE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DRAW
-static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -7749,35 +7746,35 @@ static VskAstPtr VSKAPI vsk_DRAW(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_DSKF
-static VskAstPtr VSKAPI vsk_DSKF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DSKF(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_DSKI_dollar (DSKI$)
-static VskAstPtr VSKAPI vsk_DSKI_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DSKI_dollar(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_DSKO_dollar (DSKO$)
-static VskAstPtr VSKAPI vsk_DSKO_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DSKO_dollar(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_DSKO_dollar_func (DDSKO$ 関数)
-static VskAstPtr VSKAPI vsk_DSKO_dollar_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DSKO_dollar_func(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_END @implemented
-static VskAstPtr VSKAPI vsk_END(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_END(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7794,7 +7791,7 @@ static VskAstPtr VSKAPI vsk_END(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ERL (ERL) @implemented
-static VskAstPtr VSKAPI vsk_ERL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ERL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7802,7 +7799,7 @@ static VskAstPtr VSKAPI vsk_ERL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ERR (ERR) @implemented
-static VskAstPtr VSKAPI vsk_ERR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ERR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -7810,7 +7807,7 @@ static VskAstPtr VSKAPI vsk_ERR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FIELD (FIELD) @implemented
-static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FIELD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -7901,19 +7898,19 @@ static VskAstPtr VSKAPI vsk_LSET_RSET(VskAstPtr& self, const VskAstList& args, b
 }
 
 // INSN_LSET (LSET) @implemented
-static VskAstPtr VSKAPI vsk_LSET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LSET(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LSET_RSET(self, args, false);
 }
 
 // INSN_RSET (RSET) @implemented
-static VskAstPtr VSKAPI vsk_RSET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RSET(VskAstPtr self, const VskAstList& args)
 {
     return vsk_LSET_RSET(self, args, true);
 }
 
 // INSN_PUT_sharp (PUT#) @implemented
-static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -7981,7 +7978,7 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_GET_sharp (GET#)
-static VskAstPtr VSKAPI vsk_GET_sharp(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GET_sharp(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8102,19 +8099,19 @@ static VskAstPtr vsk_FILES_LFILES_helper(const VskAstList& args, bool is_line_pr
 }
 
 // INSN_FILES (FILES) @implemented
-static VskAstPtr VSKAPI vsk_FILES(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FILES(VskAstPtr self, const VskAstList& args)
 {
     return vsk_FILES_LFILES_helper(args, false);
 }
 
 // INSN_LFILES (LFILES) @implemented
-static VskAstPtr VSKAPI vsk_LFILES(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LFILES(VskAstPtr self, const VskAstList& args)
 {
     return vsk_FILES_LFILES_helper(args, true);
 }
 
 // INSN_DEF_FN (DEF FN)
-static VskAstPtr VSKAPI vsk_DEF_FN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_DEF_FN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -8133,7 +8130,7 @@ static VskAstPtr VSKAPI vsk_DEF_FN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FN (ユーザー定義関数)
-static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FN(VskAstPtr self, const VskAstList& args)
 {
     // m_fn_to_pathからDEF FNのあるコントロールパスを取得する
     auto name = self->to_str();
@@ -8188,7 +8185,7 @@ static VskAstPtr VSKAPI vsk_FN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FPOS (FPOS) @implemented
-static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -8219,7 +8216,7 @@ static VskAstPtr VSKAPI vsk_FPOS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_GOTO (GOTO) @implemented
-static VskAstPtr VSKAPI vsk_GOTO(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GOTO(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -8233,7 +8230,7 @@ static VskAstPtr VSKAPI vsk_GOTO(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ON_EXPR_GOTO (ON ... GOTO) @implemented
-static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8266,7 +8263,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOTO(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_GOSUB (GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -8283,7 +8280,7 @@ static VskAstPtr VSKAPI vsk_GOSUB(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ON_EXPR_GOSUB (ON ... GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8319,7 +8316,7 @@ static VskAstPtr VSKAPI vsk_ON_EXPR_GOSUB(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_RETURN (RETURN) @implemented
-static VskAstPtr VSKAPI vsk_RETURN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RETURN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -8358,7 +8355,7 @@ static VskAstPtr VSKAPI vsk_RETURN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_HELP_OFF (HELP OFF) @implemented
-static VskAstPtr VSKAPI vsk_HELP_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HELP_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -8368,7 +8365,7 @@ static VskAstPtr VSKAPI vsk_HELP_OFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_HELP_ON (HELP ON) @implemented
-static VskAstPtr VSKAPI vsk_HELP_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HELP_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -8378,7 +8375,7 @@ static VskAstPtr VSKAPI vsk_HELP_ON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_HELP_STOP (HELP STOP) @implemented
-static VskAstPtr VSKAPI vsk_HELP_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_HELP_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -8420,21 +8417,21 @@ static void vsk_MOUSE_ON_OFF_STOP_helper(const VskAstList& args, VskTrapMode mod
 }
 
 // INSN_MOUSE_OFF (MOUSE OFF) @implemented
-static VskAstPtr VSKAPI vsk_MOUSE_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOUSE_OFF(VskAstPtr self, const VskAstList& args)
 {
     vsk_MOUSE_ON_OFF_STOP_helper(args, VSK_TRAP_MODE_OFF);
     return nullptr;
 }
 
 // INSN_MOUSE_ON (MOUSE ON) @implemented
-static VskAstPtr VSKAPI vsk_MOUSE_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOUSE_ON(VskAstPtr self, const VskAstList& args)
 {
     vsk_MOUSE_ON_OFF_STOP_helper(args, VSK_TRAP_MODE_ON);
     return nullptr;
 }
 
 // INSN_MOUSE_STOP (MOUSE STOP) @implemented
-static VskAstPtr VSKAPI vsk_MOUSE_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOUSE_STOP(VskAstPtr self, const VskAstList& args)
 {
     vsk_MOUSE_ON_OFF_STOP_helper(args, VSK_TRAP_MODE_STOP);
     return nullptr;
@@ -8486,7 +8483,7 @@ static VskAstPtr vsk_LVALUE_helper(const VskString& name, VskIndexList index_lis
 }
 
 // INSN_IDENTIFIER (識別子) @implemented
-static VskAstPtr VSKAPI vsk_IDENTIFIER(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_IDENTIFIER(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
@@ -8495,7 +8492,7 @@ static VskAstPtr VSKAPI vsk_IDENTIFIER(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LVALUE (左辺値; lvalue) @implemented
-static VskAstPtr VSKAPI vsk_LVALUE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LVALUE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
@@ -8520,7 +8517,7 @@ static VskAstPtr VSKAPI vsk_LVALUE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_IF (IF-THEN-ELSE) @implemented
-static VskAstPtr VSKAPI vsk_IF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_IF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -8544,7 +8541,7 @@ static VskAstPtr VSKAPI vsk_IF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_INKEY_dollar (INKEY$) @implemented
-static VskAstPtr VSKAPI vsk_INKEY_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INKEY_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -8557,7 +8554,7 @@ static VskAstPtr VSKAPI vsk_INKEY_dollar(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_INP (INP) @implemented
-static VskAstPtr VSKAPI vsk_INP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -8580,14 +8577,14 @@ static VskAstPtr VSKAPI vsk_INP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_INPUT_dollar (INPUT$)
-static VskAstPtr VSKAPI vsk_INPUT_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT_dollar(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_INSTR (INSTR) @implemented
-static VskAstPtr VSKAPI vsk_INSTR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INSTR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
@@ -8619,7 +8616,7 @@ static VskAstPtr VSKAPI vsk_INSTR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KEXT_dollar (KEXT$) @implemented
-static VskAstPtr VSKAPI vsk_KEXT_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KEXT_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8652,7 +8649,7 @@ static VskAstPtr VSKAPI vsk_KEXT_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KINSTR (KINSTR) @implemented
-static VskAstPtr VSKAPI vsk_KINSTR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KINSTR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
@@ -8689,7 +8686,7 @@ static VskAstPtr VSKAPI vsk_KINSTR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KLEN (KLEN) @implemented
-static VskAstPtr VSKAPI vsk_KLEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KLEN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
@@ -8715,7 +8712,7 @@ static VskAstPtr VSKAPI vsk_KLEN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KMID_dollar (KMID$) @implemented
-static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
@@ -8768,7 +8765,7 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KNJ_dollar (KNJ$) @implemented
-static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -8796,14 +8793,14 @@ static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KPLOAD
-static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_KPOS (KPOS) @implemented
-static VskAstPtr VSKAPI vsk_KPOS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KPOS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8842,7 +8839,7 @@ static VskAstPtr VSKAPI vsk_KPOS(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_KTYPE (KTYPE) @implemented
-static VskAstPtr VSKAPI vsk_KTYPE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KTYPE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8886,7 +8883,7 @@ static VskAstPtr VSKAPI vsk_KTYPE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LET (LET) @implemented
-static VskAstPtr VSKAPI vsk_LET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LET(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8896,7 +8893,7 @@ static VskAstPtr VSKAPI vsk_LET(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LINE_INPUT (LINE INPUT) @implemented
-static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -8924,7 +8921,7 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LINE_INPUT_WAIT (LINE INPUT WAIT) @implemented
-static VskAstPtr VSKAPI vsk_LINE_INPUT_WAIT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LINE_INPUT_WAIT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 3))
         return nullptr;
@@ -8961,7 +8958,7 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT_WAIT(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_KINPUT (KINPUT) @implemented
-static VskAstPtr VSKAPI vsk_KINPUT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_KINPUT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9035,13 +9032,13 @@ static VskAstPtr vsk_INPUT_WAIT_helper(const VskAstList& args, bool semicolon)
 }
 
 // INSN_INPUT_WAIT (INPUT WAIT) @implemented
-static VskAstPtr VSKAPI vsk_INPUT_WAIT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT_WAIT(VskAstPtr self, const VskAstList& args)
 {
     return vsk_INPUT_WAIT_helper(args, false);
 }
 
 // INSN_INPUT_WAIT_semicolon (INPUT WAIT;) @implemented
-static VskAstPtr VSKAPI vsk_INPUT_WAIT_semicolon(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT_WAIT_semicolon(VskAstPtr self, const VskAstList& args)
 {
     return vsk_INPUT_WAIT_helper(args, true);
 }
@@ -9085,19 +9082,19 @@ static VskAstPtr vsk_INPUT_helper(const VskAstList& args, bool semicolon)
 }
 
 // INSN_INPUT (INPUT) @implemented
-static VskAstPtr VSKAPI vsk_INPUT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT(VskAstPtr self, const VskAstList& args)
 {
     return vsk_INPUT_helper(args, false);
 }
 
 // INSN_INPUT_semicolon (INPUT;) @implemented
-static VskAstPtr VSKAPI vsk_INPUT_semicolon(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT_semicolon(VskAstPtr self, const VskAstList& args)
 {
     return vsk_INPUT_helper(args, true);
 }
 
 // INSN_INPUT_sharp (INPUT#) @implemented
-static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 64))
         return nullptr;
@@ -9126,7 +9123,7 @@ static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LOC (LOC) @implemented
-static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOC(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9168,7 +9165,7 @@ static VskAstPtr VSKAPI vsk_LOC(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_LOF (LOF) @implemented
-static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_LOF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9210,7 +9207,7 @@ static VskAstPtr VSKAPI vsk_LOF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MAP (MAP) @implemented
-static VskAstPtr VSKAPI vsk_MAP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MAP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -9254,7 +9251,7 @@ static VskAstPtr VSKAPI vsk_MAP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MID_dollar_func (MID$ 関数) @implemented
-static VskAstPtr VSKAPI vsk_MID_dollar_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MID_dollar_func(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
@@ -9286,7 +9283,7 @@ static VskAstPtr VSKAPI vsk_MID_dollar_func(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_MID_dollar_stmt (MID$ 文) @implemented
-static VskAstPtr VSKAPI vsk_MID_dollar_stmt(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MID_dollar_stmt(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 4))
         return nullptr;
@@ -9313,7 +9310,7 @@ static VskAstPtr VSKAPI vsk_MID_dollar_stmt(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_MKI_dollar (MKI$) @implemented
-static VskAstPtr VSKAPI vsk_MKI_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MKI_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9334,7 +9331,7 @@ static VskAstPtr VSKAPI vsk_MKI_dollar(VskAstPtr& self, const VskAstList& args)
 
 // INSN_MKS_dollar (MKS$) @implemented
 // NOTE: 浮動小数点数の形式が実機とは異なっている
-static VskAstPtr VSKAPI vsk_MKS_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MKS_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9355,7 +9352,7 @@ static VskAstPtr VSKAPI vsk_MKS_dollar(VskAstPtr& self, const VskAstList& args)
 
 // INSN_MKD_dollar (MKD$) @implemented
 // NOTE: 浮動小数点数の形式が実機とは異なっている
-static VskAstPtr VSKAPI vsk_MKD_dollar(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MKD_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9375,7 +9372,7 @@ static VskAstPtr VSKAPI vsk_MKD_dollar(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_CVI (CVI) @implemented
-static VskAstPtr VSKAPI vsk_CVI(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CVI(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9397,7 +9394,7 @@ static VskAstPtr VSKAPI vsk_CVI(VskAstPtr& self, const VskAstList& args)
 
 // INSN_CVS (CVS) @implemented
 // NOTE: 浮動小数点数の形式が実機とは異なっている
-static VskAstPtr VSKAPI vsk_CVS(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CVS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9419,7 +9416,7 @@ static VskAstPtr VSKAPI vsk_CVS(VskAstPtr& self, const VskAstList& args)
 
 // INSN_CVD (CVD) @implemented
 // NOTE: 浮動小数点数の形式が実機とは異なっている
-static VskAstPtr VSKAPI vsk_CVD(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_CVD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9440,21 +9437,21 @@ static VskAstPtr VSKAPI vsk_CVD(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MON (MON)
-static VskAstPtr VSKAPI vsk_MON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MON(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_MOTOR (MOTOR)
-static VskAstPtr VSKAPI vsk_MOTOR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOTOR(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_NEW (NEW) @implemented
-static VskAstPtr VSKAPI vsk_NEW(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NEW(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -9490,14 +9487,14 @@ static VskAstPtr VSKAPI vsk_NEW(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_NEW_ON
-static VskAstPtr VSKAPI vsk_NEW_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NEW_ON(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_NOT (NOT) @implemented
-static VskAstPtr VSKAPI vsk_NOT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NOT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9510,7 +9507,7 @@ static VskAstPtr VSKAPI vsk_NOT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_ON_ERROR_GOTO (ON ERROR GOTO)
-static VskAstPtr VSKAPI vsk_ON_ERROR_GOTO(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_ERROR_GOTO(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9535,7 +9532,7 @@ static VskAstPtr VSKAPI vsk_ON_ERROR_GOTO(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_ON_KEY_GOSUB (ON KEY GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_KEY_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_KEY_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9561,7 +9558,7 @@ static VskAstPtr VSKAPI vsk_ON_KEY_GOSUB(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_ON_MOUSE_GOSUB (ON MOUSE GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_MOUSE_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_MOUSE_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -9585,7 +9582,7 @@ static VskAstPtr VSKAPI vsk_ON_MOUSE_GOSUB(VskAstPtr& self, const VskAstList& ar
 }
 
 // INSN_ON_PEN_GOSUB (ON PEN GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_PEN_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_PEN_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9599,7 +9596,7 @@ static VskAstPtr VSKAPI vsk_ON_PEN_GOSUB(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_ON_STOP_GOSUB (ON STOP GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_STOP_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_STOP_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9613,7 +9610,7 @@ static VskAstPtr VSKAPI vsk_ON_STOP_GOSUB(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_ON_TIME_dollar_GOSUB (ON TIME$ GOSUB) @implemented
-static VskAstPtr VSKAPI vsk_ON_TIME_dollar_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_TIME_dollar_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -9645,7 +9642,7 @@ static VskAstPtr VSKAPI vsk_ON_TIME_dollar_GOSUB(VskAstPtr& self, const VskAstLi
 }
 
 // INSN_ON_COM_GOSUB
-static VskAstPtr VSKAPI vsk_ON_COM_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_COM_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9659,7 +9656,7 @@ static VskAstPtr VSKAPI vsk_ON_COM_GOSUB(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_ON_PLAY_GOSUB
-static VskAstPtr VSKAPI vsk_ON_PLAY_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_PLAY_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9673,7 +9670,7 @@ static VskAstPtr VSKAPI vsk_ON_PLAY_GOSUB(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_ON_HELP_GOSUB
-static VskAstPtr VSKAPI vsk_ON_HELP_GOSUB(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ON_HELP_GOSUB(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9687,7 +9684,7 @@ static VskAstPtr VSKAPI vsk_ON_HELP_GOSUB(VskAstPtr& self, const VskAstList& arg
 }
 
 // INSN_OPEN (OPEN) @implemented
-static VskAstPtr VSKAPI vsk_OPEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_OPEN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 4))
         return nullptr;
@@ -9735,7 +9732,7 @@ static VskAstPtr VSKAPI vsk_OPEN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_OPTION_IDENT (OPTION ...) @implemented
-static VskAstPtr VSKAPI vsk_OPTION_IDENT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_OPTION_IDENT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -9769,7 +9766,7 @@ static VskAstPtr VSKAPI vsk_OPTION_IDENT(VskAstPtr& self, const VskAstList& args
 }
 
 // INSN_OUT (OUT)
-static VskAstPtr VSKAPI vsk_OUT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_OUT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -9858,7 +9855,7 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PEN (PEN) @implemented
-static VskAstPtr VSKAPI vsk_PEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PEN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -9885,7 +9882,7 @@ static VskAstPtr VSKAPI vsk_PEN(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_MOUSE_func (MOUSE関数) @implemented
-static VskAstPtr VSKAPI vsk_MOUSE_func(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOUSE_func(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 2))
         return nullptr;
@@ -9972,7 +9969,7 @@ static VskAstPtr VSKAPI vsk_MOUSE_func(VskAstPtr& self, const VskAstList& args)
 }
 
 // vsk_MOUSE_stmt (MOUSE文) @implemented
-static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 5))
         return nullptr;
@@ -10060,7 +10057,7 @@ static VskAstPtr VSKAPI vsk_MOUSE_stmt(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PLAY (PLAY) @implemented
-static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
@@ -10116,13 +10113,13 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_PLAY_ALLOC
-static VskAstPtr VSKAPI vsk_PLAY_ALLOC(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_PLAY_ALLOC(VskAstPtr self, const VskAstList& args)
 {
     return nullptr;
 }
 
 // INSN_RND (RND) @implemented
-static VskAstPtr VSKAPI vsk_RND(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RND(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -10135,7 +10132,7 @@ static VskAstPtr VSKAPI vsk_RND(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RANDOMIZE (RANDOMIZE) @implemented
-static VskAstPtr VSKAPI vsk_RANDOMIZE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RANDOMIZE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -10160,7 +10157,7 @@ static VskAstPtr VSKAPI vsk_RANDOMIZE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_READ (READ) @implemented
-static VskAstPtr VSKAPI vsk_READ(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_READ(VskAstPtr self, const VskAstList& args)
 {
     auto& data_pointer = VSK_IMPL()->m_data_pointer;
 
@@ -10213,7 +10210,7 @@ static VskAstPtr VSKAPI vsk_READ(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RESTORE (RESTORE) @implemented
-static VskAstPtr VSKAPI vsk_RESTORE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RESTORE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 1))
         return nullptr;
@@ -10231,7 +10228,7 @@ static VskAstPtr VSKAPI vsk_RESTORE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RENUM (RENUM) @implemented
-static VskAstPtr VSKAPI vsk_RENUM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RENUM(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
@@ -10258,14 +10255,14 @@ static VskAstPtr VSKAPI vsk_RENUM(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_RESUME
-static VskAstPtr VSKAPI vsk_RESUME(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_RESUME(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_ROLL (ROLL) @implemented
-static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
         return nullptr;
@@ -10327,7 +10324,7 @@ static VskAstPtr VSKAPI vsk_ROLL(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SEARCH (SEARCH) @implemented
-static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 4))
         return nullptr;
@@ -10363,14 +10360,14 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_SET
-static VskAstPtr VSKAPI vsk_SET(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_SET(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_STOP (STOP) @implemented
-static VskAstPtr VSKAPI vsk_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10380,14 +10377,14 @@ static VskAstPtr VSKAPI vsk_STOP(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_TERM
-static VskAstPtr VSKAPI vsk_TERM(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TERM(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_TIME_dollar_OFF (TIME$ OFF) @implemented
-static VskAstPtr VSKAPI vsk_TIME_dollar_OFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TIME_dollar_OFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10397,7 +10394,7 @@ static VskAstPtr VSKAPI vsk_TIME_dollar_OFF(VskAstPtr& self, const VskAstList& a
 }
 
 // INSN_TIME_dollar_ON (TIME$ ON) @implemented
-static VskAstPtr VSKAPI vsk_TIME_dollar_ON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TIME_dollar_ON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10407,7 +10404,7 @@ static VskAstPtr VSKAPI vsk_TIME_dollar_ON(VskAstPtr& self, const VskAstList& ar
 }
 
 // INSN_TIME_dollar_STOP (TIME$ STOP) @implemented
-static VskAstPtr VSKAPI vsk_TIME_dollar_STOP(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TIME_dollar_STOP(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10417,7 +10414,7 @@ static VskAstPtr VSKAPI vsk_TIME_dollar_STOP(VskAstPtr& self, const VskAstList& 
 }
 
 // INSN_TROFF (TROFF) @implemented
-static VskAstPtr VSKAPI vsk_TROFF(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TROFF(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10427,7 +10424,7 @@ static VskAstPtr VSKAPI vsk_TROFF(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_TRON (TRON) @implemented
-static VskAstPtr VSKAPI vsk_TRON(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_TRON(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10437,14 +10434,14 @@ static VskAstPtr VSKAPI vsk_TRON(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_USR
-static VskAstPtr VSKAPI vsk_USR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_USR(VskAstPtr self, const VskAstList& args)
 {
     assert(0);
     return nullptr;
 }
 
 // INSN_WAIT (WAIT) @implemented
-static VskAstPtr VSKAPI vsk_WAIT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WAIT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
@@ -10466,7 +10463,7 @@ static VskAstPtr VSKAPI vsk_WAIT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_FOR (FOR) @implemented
-static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_FOR(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 4))
         return nullptr;
@@ -10534,7 +10531,7 @@ static VskAstPtr VSKAPI vsk_FOR(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_NEXT (NEXT) @implemented
-static VskAstPtr VSKAPI vsk_NEXT(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_NEXT(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 64))
         return nullptr;
@@ -10586,7 +10583,7 @@ static VskAstPtr VSKAPI vsk_NEXT(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WHILE (WHILE) @implemented
-static VskAstPtr VSKAPI vsk_WHILE(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WHILE(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
@@ -10612,7 +10609,7 @@ static VskAstPtr VSKAPI vsk_WHILE(VskAstPtr& self, const VskAstList& args)
 }
 
 // INSN_WEND (WEND) @implemented
-static VskAstPtr VSKAPI vsk_WEND(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr VSKAPI vsk_WEND(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
@@ -10668,63 +10665,58 @@ std::shared_ptr<VskMachineImpl> vsk_create_machine_impl(void)
 
 //////////////////////////////////////////////////////////////////////////////
 
+// SCREENのテスト
+void vsk_screen_tests(void)
+{
+#ifndef NDEBUG
+    // SCREENのテスト
+    if (VSK_STATE()->m_color_mode == VSK_COLOR_MODE_8_COLORS)
+    {
+        int screen_mode;
+
+        screen_mode = 0; // カラーモード
+
+        // 描画ページのテスト
+        for (int i = 0; i < 12; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+            assert(VSK_STATE()->m_active_page == i);
+            assert(VSK_STATE()->m_display_pages_flags == 1);
+        }
+        // 表示ページのテスト
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == 0);
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(1) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 0));
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(2) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 1));
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 2));
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(18) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
+
+        screen_mode = 1; // モノクロモード
+        for (int i = 0; i < 12; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+            assert(VSK_STATE()->m_active_page == i);
+        }
+    }
+
+    vsk_SCREEN(nullptr, { vsk_ast_int(0), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(1) });
+#endif
+}
+
 // 単体テスト
 void vsk_coreapi_tests(void)
 {
 #ifndef NDEBUG
-    VskParseResult data;
-    VskError error = vsk_parse_program("100 ? 3\n110 goto 100", data);
-
-    mdbg_traceA("program: %s\n", data->to_debug_str().c_str());
-
-    VskLabelMap label_map;
-    error = vsk_scan_label_info(data, label_map);
-    assert(!error);
-
-    VskLoopMap loop_map;
-    error = vsk_scan_loop_info_1(data, { I_PROGRAM_CODE }, loop_map);
-    assert(!error);
-
-    mdbg_traceA("## label_map:\n");
-    for (auto& pair : label_map)
-    {
-        mdbg_traceA("%s --> %s\n", pair.first.c_str(), vsk_to_string(pair.second).c_str());
-    }
-
-    mdbg_traceA("## loop_map:\n");
-    for (auto& pair : loop_map)
-    {
-        mdbg_traceA("%s --> %d\n", vsk_to_string(pair.first).c_str(), vsk_to_string(pair.second.m_type).c_str());
-    }
-
-    VskIndexList indices = { 0 };
-    mdbg_traceA("%s\n", vsk_to_string(indices).c_str());
-    auto next = vsk_next_control_path_0(data, indices);
-    auto resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    next = vsk_next_control_path_0(data, next);
-    resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    next = vsk_next_control_path_0(data, next);
-    resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    next = vsk_next_control_path_0(data, next);
-    resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    next = vsk_next_control_path_0(data, next);
-    resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    next = vsk_next_control_path_0(data, next);
-    resolved = vsk_resolve_index_list_0(data, next);
-    mdbg_traceA("%s, %s\n", vsk_to_string(next).c_str(), resolved->to_debug_str().c_str());
-
-    indices = vsk_label_to_index_list(vsk_ast(INSN_LABEL, { vsk_ast_dbl(110) }), label_map);
-    mdbg_traceA("indices: %s\n", vsk_to_string(indices).c_str());
+    vsk_screen_tests();
 #endif
 }
 
