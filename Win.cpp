@@ -496,7 +496,7 @@ VskString vsk_get_root(void)
     // EXEファイルのパスと"README.txt"を使ってルートフォルダを探す
     char szPath[MAX_PATH];
     ::GetModuleFileNameA(nullptr, szPath, _countof(szPath));
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
         ::PathAppendA(szPath, "README.txt");
@@ -508,7 +508,9 @@ VskString vsk_get_root(void)
         }
         ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
     }
-    ::PathAddBackslashA(szPath); // バックスラッシュを追加
+    // "README.txt"が見つからなかった。ユーザーが消したのなら本番環境のはず
+    ::GetModuleFileNameA(nullptr, szPath, _countof(szPath));
+    ::PathRemoveFileSpecA(szPath); // ファイル名の部分を削除
     return szPath;
 }
 
