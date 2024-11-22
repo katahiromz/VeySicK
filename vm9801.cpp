@@ -113,7 +113,15 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
         int iPlane = which(addr);
         if (iPlane < 0)
             return false;
-        *ptr = m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]];
+
+        auto offset = addr - c_addrs[iPlane];
+
+        // 区間チェック
+        assert(0 <= m_state->m_vram_bank && m_state->m_vram_bank < 2);
+        assert(0 <= iPlane && iPlane < 4);
+        assert(0 <= offset && offset < VSK_9801_GRAPH_VRAM_PLANE_SIZE);
+
+        *ptr = m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][offset];
         return true;
     }
 
@@ -123,7 +131,15 @@ struct Vsk9801GraphVRAM : VskMemoryBlockBase
         int iPlane = which(addr);
         if (iPlane < 0)
             return false;
-        m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][addr - c_addrs[iPlane]] = *ptr;
+
+        auto offset = addr - c_addrs[iPlane];
+
+        // 区間チェック
+        assert(0 <= m_state->m_vram_bank && m_state->m_vram_bank < 2);
+        assert(0 <= iPlane && iPlane < 4);
+        assert(0 <= offset && offset < VSK_9801_GRAPH_VRAM_PLANE_SIZE);
+
+        m_9801_graph_vram_planes[m_state->m_vram_bank][iPlane][offset] = *ptr;
         return true;
     }
 
