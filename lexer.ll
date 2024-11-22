@@ -150,7 +150,7 @@ REM([ \t]|:).* {
     return token;
 }
 
-[ \t] {
+([ \t]|\x81\x40) { // 全角空白も考慮する
     vsk_target_column += yyleng;
 }
 
