@@ -1,0 +1,25 @@
+100 REM  ÅÝÀ² ÄÞ°ÌÞÂ ¼Ð­Ú°À Ver 2.00 at 88.01.04 by Kem Oger
+110 DEFINT A-Z
+120 A=10 : BMAX=4
+130 DIM  X(BMAX,A) , Y(BMAX,A)
+140  B=0
+150 CLS 3
+160 FOR I=0 TO B
+170   X(I,0)=320:Y(I,0)=100
+180 NEXT I
+190 '
+200 FOR J=0 TO B
+210   FOR I=A TO 1 STEP -1
+220      X(J,I) = X(J,(I-1)) : Y(J,I) = Y(J,(I-1))
+230   NEXT I
+240   PRESET (X(J,A),Y(J,A))
+250   PSET   (X(J,0),Y(J,0)),6-J
+260   DX = RND(1)*4-2
+270   DY = RND(1)*3-1.5
+280   X(J,0) = X(J,0) + DX
+290   Y(J,0) = Y(J,0) + DY
+300   IF  X(J,0)<0 OR X(J,0)>640 OR Y(J,0)<0 OR Y(J,0)>400 THEN GOTO 150
+310 NEXT J
+320 IF RND(1)<.001 AND B < BMAX THEN B = B + 1: X(B,0)=320:Y(B,0)=100
+330 GOTO 200
+340 END

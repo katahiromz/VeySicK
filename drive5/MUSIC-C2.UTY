@@ -1,0 +1,9 @@
+10 '======== save "MUSIC-C2.UTY ===========
+20 CLS:SCREEN 4:PRINT"ƒf[ƒ^ƒtƒ@ƒCƒ‹‚ðì‚è‚Ü‚·"
+30 PASS$="8801":P=1
+40 OPEN"C-DATA" FOR OUTPUT AS #1
+50 PRINT #1,PASS$
+60 PRINT #1,P
+70 CLOSE #1
+80 PRINT"‚l‚t‚r‚h‚b|‚b‚QD‚a‚`‚r‚ð‚q‚t‚m‚µ‚Ä‚­‚¾‚³‚¢"
+
