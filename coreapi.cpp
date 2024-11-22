@@ -4715,8 +4715,7 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr& self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_SCREEN (SCREEN) @implemented
-static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
+static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 4))
         return nullptr;
@@ -4734,8 +4733,6 @@ static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
         (!arg2 || vsk_int(v2, arg2)) ||
         (!arg3 || vsk_int(v3, arg3)))
     {
-        vsk_targeting(self);
-
         if (!(0 <= v0 && v0 < 4) ||
             !(0 <= v1 && v1 < 4) ||
             !(0 <= v2 && v2 < 64) ||
@@ -4765,6 +4762,36 @@ static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
         VSK_IMPL()->m_turtle_engine.reset();
     }
 
+    return nullptr;
+}
+
+#ifdef ENABLE_PC8801
+static VskAstPtr vsk_SCREEN_8801(const VskAstList& args)
+{
+    return vsk_SCREEN_GENERIC(args);
+}
+#endif
+
+#ifdef ENABLE_PC9801
+static VskAstPtr vsk_SCREEN_9801(const VskAstList& args)
+{
+    return vsk_SCREEN_GENERIC(args);
+}
+#endif
+
+// INSN_SCREEN (SCREEN) @implemented
+static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr& self, const VskAstList& args)
+{
+    vsk_targeting(self);
+#ifdef ENABLE_PC8801
+    if (vsk_machine->is_8801_mode())
+        return vsk_SCREEN_8801(args);
+#endif
+#ifdef ENABLE_PC9801
+    if (vsk_machine->is_9801_mode())
+        return vsk_SCREEN_9801(args);
+#endif
+    assert(0);
     return nullptr;
 }
 
@@ -5568,14 +5595,8 @@ static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr& self, const VskAstList& args)
 // 円の弧または楕円の弧を描くヘルパー関数
 void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int palette, VskDouble start_angle, VskDouble end_angle, VskDouble aspect)
 {
+    // 真の楕円か？
     const bool full_moon_likely = (start_angle == 0) && (end_angle == 2 * M_PI);
-    if (full_moon_likely && aspect == 1) // 真の円か？
-    {
-        // 円を描画する
-        vsk_machine->draw_circle(vsk_round(x0), vsk_round(y0), vsk_round(radius), palette);
-        VSK_STATE()->m_last_point_in_world = { x0, y0 };
-        return;
-    }
 
     // このaspectはただの縦横比ではない
     VskDouble r0 = radius, r1 = radius;
