@@ -150,17 +150,22 @@ REM([ \t]|:).* {
     return token;
 }
 
-([ \t]|\x81\x40) { // 全角空白も考慮する
+[ \t] { // 空白
     vsk_target_column += yyleng;
 }
 
-[\x80-\xFF]+ {
+"\x81\x40" { // 全角空白も無視する
+    mdbg_traceA("Warning: fullwidth space\n");
+    vsk_target_column += yyleng;
+}
+
+[\x80-\xFF]+ { // 半角カナなど
     yylval = vsk_ast(INSN_DIRTY_8BIT, yytext);
     vsk_target_column += yyleng;
     return TK_DIRTY_8BIT;
 }
 
-"\x01\x02" {
+"\x01\x02" { // HACK: 式を取得するための特別なコード
     return TK_EVAL;
 }
 
