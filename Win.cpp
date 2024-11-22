@@ -659,7 +659,7 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
         return true;
     }
 
-    if ((device.size() == 1 && "1" <= device && device <= "9") || device == "10") // これはドライブ番号
+    if ((device.size() == 1 && "0" <= device && device <= "9") || device == "10") // これはドライブ番号
     {
         // raw_pathの先頭にスラッシュ群があれば取り除く
         while (raw_path.size() && (raw_path[0] == '\\' || raw_path[0] == '/'))
@@ -667,6 +667,11 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
 
         // ドライブパスを先頭に追加
         raw_path = vsk_get_drive_path(std::atoi(device.c_str())) + raw_path;
+
+        // バックスラッシュを取り除く
+        if (raw_path.size() && raw_path[raw_path.size() - 1] == '\\')
+            raw_path.resize(raw_path.size() - 1);
+
         return true;
     }
 
@@ -700,6 +705,49 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
     }
 
     return false; // その他は無効とする
+}
+
+// 現在のディレクトリを取得する
+VskError vsk_getcwd(char *buf, size_t buflen)
+{
+    GetCurrentDirectoryA(buflen, buf);
+    return VSK_NO_ERROR;
+}
+
+// ディレクトリを変更する
+VskError vsk_chdir(const char *dirname)
+{
+    if (!::SetCurrentDirectoryA(dirname))
+    {
+        auto error = ::GetLastError();
+        mdbg_traceA("%s: %d\n", dirname, error);
+        return VSK_ERR_BAD_OPERATION;
+    }
+    return VSK_NO_ERROR;
+}
+
+// ディレクトリを作成する
+VskError vsk_mkdir(const char *dirname)
+{
+    if (!::CreateDirectoryA(dirname, nullptr))
+    {
+        auto error = ::GetLastError();
+        mdbg_traceA("%s: %d\n", dirname, error);
+        return VSK_ERR_BAD_OPERATION;
+    }
+    return VSK_NO_ERROR;
+}
+
+// 空のディレクトリを削除する
+VskError vsk_rmdir(const char *dirname)
+{
+    if (!::RemoveDirectoryA(dirname))
+    {
+        auto error = ::GetLastError();
+        mdbg_traceA("%s: %d\n", dirname, error);
+        return VSK_ERR_BAD_OPERATION;
+    }
+    return VSK_NO_ERROR;
 }
 
 // 安全地帯のパスファイル名か？

@@ -31,6 +31,7 @@
 %token TK_CALL
 %token TK_CDBL
 %token TK_CHAIN
+%token TK_CHDIR
 %token TK_CHR_dollar
 %token TK_CINT
 %token TK_CIRCLE
@@ -112,8 +113,8 @@
 %token TK_INKEY_dollar
 %token TK_INP
 %token TK_INPUT
-%token TK_INPUT_sharp
 %token TK_INPUT_dollar
+%token TK_INPUT_sharp
 %token TK_INSTR
 %token TK_INT
 %token TK_INVALID_CHARS
@@ -158,6 +159,7 @@
 %token TK_MERGE
 %token TK_MID_dollar
 %token TK_MINUS
+%token TK_MKDIR
 %token TK_MKD_dollar
 %token TK_MKI_dollar
 %token TK_MKS_dollar
@@ -208,6 +210,7 @@
 %token TK_RESUME
 %token TK_RETURN
 %token TK_RIGHT_dollar
+%token TK_RMDIR
 %token TK_RND
 %token TK_ROLL
 %token TK_RSET
@@ -1015,6 +1018,9 @@ lead_statement_0
     | TK_WEND                                           { vsk_targeting($1); $$ = vsk_ast(INSN_WEND); }
     | TK_WHILE                                          { vsk_targeting($1); $$ = vsk_ast(INSN_WHILE); }
     | TK_WIDTH                                          { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH); }
+    | TK_CHDIR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_CHDIR); }
+    | TK_MKDIR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_MKDIR); }
+    | TK_RMDIR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_RMDIR); }
     | TK_WIDTH TK_LPRINT                                { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_LPRINT); }
     | TK_MID_dollar TK_L_PAREN lvalue TK_COMMA expression TK_COMMA expression TK_R_PAREN TK_EQUAL expression {
         vsk_targeting($1);

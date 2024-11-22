@@ -4715,6 +4715,109 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
+enum DIR_OP
+{
+    DIR_OP_CHDIR, DIR_OP_MKDIR, DIR_OP_RMDIR,
+};
+
+VskError vsk_getcwd(char *buf, size_t buflen);
+VskError vsk_chdir(const char *dirname);
+VskError vsk_mkdir(const char *dirname);
+VskError vsk_rmdir(const char *dirname);
+
+static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, DIR_OP op)
+{
+    if (!vsk_arity_in_range(args, 0, 1))
+        return nullptr;
+
+    auto arg0 = vsk_arg(args, 0);
+    if (!arg0) // 引数がない？
+    {
+        switch (op)
+        {
+        case DIR_OP_CHDIR:
+            {
+                char buf[260];
+                if (auto error = vsk_getcwd(buf, 260))
+                {
+                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DRIVE_NO, nullptr);
+                }
+                vsk_print(VskString(buf) + "\n");
+                return nullptr;
+            }
+            break;
+        case DIR_OP_MKDIR:
+        case DIR_OP_RMDIR:
+            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+        }
+    }
+
+    // 引数を評価する
+    arg0 = vsk_eval_ast(arg0);
+
+    // 数字だったらドライブのパス名に変更
+    if (arg0->is_number())
+        arg0 = vsk_ast_str(vsk_to_string(vsk_round(arg0->value())) + ":");
+
+    // 文字列だったらそれをファイル記述子と見なす
+    if (arg0->is_str())
+    {
+        // ファイル記述子を解析する
+        VskFile::TYPE type;
+        VskString device, raw_path;
+        if (!vsk_parse_file_descriptor(arg0->m_str, type, device, raw_path))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NAME, nullptr);
+
+        mdbg_traceA("%s -> %s\n", arg0->m_str.c_str(), raw_path.c_str());
+
+        // ホストファイルでなければ失敗
+        if (type != VskFile::TYPE_HOST_FILE)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_FILE_NAME, nullptr);
+
+        switch (op)
+        {
+        case DIR_OP_CHDIR:
+            // 現在のディレクトリを変更する
+            if (auto error = vsk_chdir(raw_path.c_str()))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+            vsk_print("Moved to: " + raw_path + "\n");
+            return nullptr;
+        case DIR_OP_MKDIR:
+            // ディレクトリを作成する
+            if (auto error = vsk_mkdir(raw_path.c_str()))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+            vsk_print("Created: " + raw_path + "\n");
+            return nullptr;
+        case DIR_OP_RMDIR:
+            // ディレクトリを削除する
+            if (auto error = vsk_rmdir(raw_path.c_str()))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+            vsk_print("Deleted: " + raw_path + "\n");
+            return nullptr;
+        }
+    }
+
+    return nullptr;
+}
+
+// INSN_CHDIR (CHDIR) @implemented
+static VskAstPtr VSKAPI vsk_CHDIR(VskAstPtr self, const VskAstList& args)
+{
+    return vsk_CHDIR_MKDIR_RMDIR(self, args, DIR_OP_CHDIR);
+}
+
+// INSN_MKDIR (MKDIR) @implemented
+static VskAstPtr VSKAPI vsk_MKDIR(VskAstPtr self, const VskAstList& args)
+{
+    return vsk_CHDIR_MKDIR_RMDIR(self, args, DIR_OP_MKDIR);
+}
+
+// INSN_RMDIR (RMDIR) @implemented
+static VskAstPtr VSKAPI vsk_RMDIR(VskAstPtr self, const VskAstList& args)
+{
+    return vsk_CHDIR_MKDIR_RMDIR(self, args, DIR_OP_RMDIR);
+}
+
 static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
 {
     if (!vsk_arity_in_range(args, 0, 4))
@@ -4756,7 +4859,6 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
             !vsk_machine->is_valid_active_page(v0, v2, high_color) ||
             vsk_machine->get_display_pages_flags(v0, v3) == -1)
         {
-            mdbg_traceA("%d, %d, %d, %d\n", v0, v1, v2, v3);
             assert(0);
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }

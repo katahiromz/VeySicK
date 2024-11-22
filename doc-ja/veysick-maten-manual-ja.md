@@ -4848,34 +4848,213 @@ JISコードの表やシフトJISの表などについては、インターネ�
 
 次に挙げる単語は、VeySicKの予約語(キーワード)です。これらの単語は変数名、ラベル名としては使用できません。
 
-```txt
-ABS       CONT      EOF       INPUT     LLIST     OFF       RESUME    TAB
-AKCNV$    COPY      ERASE     INPUT$    LOAD      ON        RETURN    TAN
-ALLOC     COS       ERL       INSTR     LOAD?     OPEN      RIGHT$    TERM
-AND       CSNG      ERR       INT       LOC       OPTION    RND       THEN
-ASC       CSRLIN    ERROR     IRESET    LOCATE    OR        ROLL      TIME$
-ATN       CVD       EXP       ISET      LOF       OUT       RSET      TIMEOUT
-ATTR$     CVI       FIELD     JIS$      LOG       PAINT     RUN       TO
-AUTO      CVS       FILES     KACNV$    LPOS      PEEK      SAVE      TROFF
-BEEP      DATA      FIX       KANJI     LPRINT    PEN       SCREEN    TRON
-BLOAD     DATE$     FN        KEXT$     LSET      PLAY      SEARCH    USING
-BSAVE     DEF       FOR       KEY       MAIL      POINT     SEG       USR
-CALL      DEFDBL    FPOS      KILL      MAP       POKE      SET       VAL
-CDBL      DEFINT    FRE       KINPUT    MERGE     POLL      SGN       VARPTR
-CHAIN     DEFSNG    GET       KINSTR    MID$      POS       SIN       VIEW
-CHR$      DEFSTR    GET@      KLEN      MKD$      PRESET    SPACE$    WAIT
-CINT      DELETE    GO        KMID$     MKI$      PRINT     SPC       WBYTE
-CIRCLE    DELIM     GOSUB     KNJ$      MKS$      PSET      SQR       WEND
-CLEAR     DIM       GOTO      KPLOAD    MOD       PUT       SRQ       WHILE
-CLOSE     DRAW      HELP      KPOS      MON       PUT@      STATUS    WIDTH
-CLS       DSKF      HEX$      KTYPE     MOTOR     RANDOMIZE STEP      WINDOW
-CMD       DSKI$     IEEE      LEFT$     MOUSE     RBYTE     STOP      WRITE
-COLOR     DSKO$     IF        LEN       NAME      READ      STR$      XOR
-COLOR@    EDIT      IFC       LET       NEW       REM       STRING$
-COM       ELSE      IMP       LFILES    NEXT      REN       SUB
-COMMON    END       INKEY$    LINE      NOT       RENUM     SWAP
-CONSOLE   EQV       INP       LIST      OCT$      RESTORE   SYSTEM
-```
+- `ABS`
+- `AKCNV$`
+- `ALLOC`
+- `AND`
+- `ASC`
+- `ATN`
+- `ATTR$`
+- `AUTO`
+- `BEEP`
+- `BLOAD`
+- `BSAVE`
+- `CALL`
+- `CDBL`
+- `CHAIN`
+- `CHDIR`
+- `CHR$`
+- `CINT`
+- `CIRCLE`
+- `CLEAR`
+- `CLOSE`
+- `CLS`
+- `CMD`
+- `COLOR`
+- `COLOR@`
+- `COM`
+- `COMMON`
+- `CONSOLE`
+- `CONT`
+- `COPY`
+- `COS`
+- `CSNG`
+- `CSRLIN`
+- `CVD`
+- `CVI`
+- `CVS`
+- `DATA`
+- `DATE$`
+- `DEF`
+- `DEFDBL`
+- `DEFINT`
+- `DEFSNG`
+- `DEFSTR`
+- `DELETE`
+- `DELIM`
+- `DIM`
+- `DRAW`
+- `DSKF`
+- `DSKI$`
+- `DSKO$`
+- `EDIT`
+- `ELSE`
+- `END`
+- `EOF`
+- `EQV`
+- `ERASE`
+- `ERL`
+- `ERR`
+- `ERROR`
+- `EXP`
+- `FIELD`
+- `FILES`
+- `FIX`
+- `FN`
+- `FOR`
+- `FPOS`
+- `FRE`
+- `GET`
+- `GET@`
+- `GO`
+- `GOSUB`
+- `GOTO`
+- `HELP`
+- `HEX$`
+- `IEEE`
+- `IF`
+- `IFC`
+- `IMP`
+- `INKEY$`
+- `INP`
+- `INPUT`
+- `INPUT$`
+- `INSTR`
+- `INT`
+- `IRESET`
+- `ISET`
+- `JIS$`
+- `KACNV$`
+- `KANJI`
+- `KEXT$`
+- `KEY`
+- `KILL`
+- `KINPUT`
+- `KINSTR`
+- `KLEN`
+- `KMID$`
+- `KNJ$`
+- `KPLOAD`
+- `KPOS`
+- `KTYPE`
+- `LEFT$`
+- `LEN`
+- `LET`
+- `LFILES`
+- `LINE`
+- `LIST`
+- `LLIST`
+- `LOAD`
+- `LOAD?`
+- `LOC`
+- `LOCATE`
+- `LOF`
+- `LOG`
+- `LPOS`
+- `LPRINT`
+- `LSET`
+- `MAIL`
+- `MAP`
+- `MERGE`
+- `MID$`
+- `MKD$`
+- `MKDIR`
+- `MKI$`
+- `MKS$`
+- `MOD`
+- `MON`
+- `MOTOR`
+- `MOUSE`
+- `NAME`
+- `NEW`
+- `NEXT`
+- `NOT`
+- `OCT$`
+- `OFF`
+- `ON`
+- `OPEN`
+- `OPTION`
+- `OR`
+- `OUT`
+- `PAINT`
+- `PEEK`
+- `PEN`
+- `PLAY`
+- `POINT`
+- `POKE`
+- `POLL`
+- `POS`
+- `PRESET`
+- `PRINT`
+- `PSET`
+- `PUT`
+- `PUT@`
+- `RANDOMIZE`
+- `RBYTE`
+- `READ`
+- `REM`
+- `REN`
+- `RENUM`
+- `RESTORE`
+- `RESUME`
+- `RETURN`
+- `RIGHT$`
+- `RMDIR$`
+- `RND`
+- `ROLL`
+- `RSET`
+- `RUN`
+- `SAVE`
+- `SCREEN`
+- `SEARCH`
+- `SEG`
+- `SET`
+- `SGN`
+- `SIN`
+- `SPACE$`
+- `SPC`
+- `SQR`
+- `SRQ`
+- `STATUS`
+- `STEP`
+- `STOP`
+- `STR$`
+- `STRING$`
+- `SUB`
+- `SWAP`
+- `SYSTEM`
+- `TAB`
+- `TAN`
+- `TERM`
+- `THEN`
+- `TIME$`
+- `TIMEOUT`
+- `TO`
+- `TROFF`
+- `TRON`
+- `USING`
+- `USR`
+- `VAL`
+- `VARPTR`
+- `VIEW`
+- `WAIT`
+- `WBYTE`
+- `WEND`
+- `WHILE`
+- `WIDTH`
+- `WINDOW`
+- `WRITE`
+- `XOR`
 
 これらの予約語に加えて、`FN`や`USR`で始まる単語は、特別扱いになります。
 
