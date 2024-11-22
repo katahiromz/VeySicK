@@ -1232,6 +1232,7 @@ unmatched_statement
 statement
     : matched_statement    { $$ = $1; }
     | unmatched_statement  { $$ = $1; }
+    | TK_COLON             { vsk_targeting($1); $$ = vsk_ast(INSN_MULTI); }
     ;
 
 line_number_or_dot
