@@ -400,7 +400,7 @@ struct Vsk9801Machine : VskMachine
             return;
         }
 
-        VskByte attr = VSK_9801_ATTR_SHOW;
+        VskByte attr;
         switch (palette)
         {
         case 0: attr = VSK_9801_ATTR_SHOW;                                               break;
@@ -411,7 +411,7 @@ struct Vsk9801Machine : VskMachine
         case 5: attr =                      VSK_9801_ATTR_REVERSE;                       break;
         case 6: attr = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
         case 7: attr =                      VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
-        default: assert(0);
+        default: attr = 0; assert(0);
         }
         m_state->m_text_attr = attr | VSK_9801_ATTR_SET_COLOR(m_state->m_green_console ? 4 : 7);
     }
