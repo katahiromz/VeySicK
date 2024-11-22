@@ -10730,12 +10730,21 @@ void vsk_screen_tests_mono(void)
         assert(VSK_STATE()->m_display_pages_flags == 1);
     }
 
+    // 表示ページのテスト
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == 0);
+    if (vsk_machine->is_8801_mode())
+    {
+        for (int i = 1; i <= 7; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });
+            assert(VSK_STATE()->m_active_page == 0);
+            assert(VSK_STATE()->m_display_pages_flags == i);
+        }
+    }
     if (vsk_machine->is_9801_mode())
     {
-        // 表示ページのテスト
-        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
-        assert(VSK_STATE()->m_active_page == 0);
-        assert(VSK_STATE()->m_display_pages_flags == 0);
         for (int i = 1; i <= 7; ++i)
         {
             vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });

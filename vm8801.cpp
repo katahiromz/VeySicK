@@ -1033,6 +1033,13 @@ void Vsk8801Machine::render_color_graphics()
 // スクリーンモードが正しいか？
 bool Vsk8801Machine::is_valid_screen_mode(int screen_mode) const
 {
+    if (screen_mode == 4)
+    {
+        // TODO: 日本語8801の専用ディスプレイモード(日本語)をサポートしてちょうだい
+        mdbg_traceA("TODO: Please support Japanese 8801 special display mode\n");
+        return false;
+    }
+
     return 0 <= screen_mode && screen_mode <= 4;
 }
 
@@ -1062,8 +1069,12 @@ int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
         case 0:
             return 0;
         case 1: return (1 << 0);
-        case 2: return (1 << 1);
-        case 3: return (1 << 1) | (1 << 0);
+        case 2: return            (1 << 1);
+        case 3: return (1 << 0) | (1 << 1);
+        case 4: return                       (1 << 2);
+        case 5: return (1 << 0) |            (1 << 2);
+        case 6: return            (1 << 1) | (1 << 2);
+        case 7: return (1 << 0) | (1 << 1) | (1 << 2);
         default:
             return -1;
         }
