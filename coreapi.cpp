@@ -10672,9 +10672,7 @@ void vsk_screen_tests(void)
     // SCREENのテスト
     if (VSK_STATE()->m_color_mode == VSK_COLOR_MODE_8_COLORS)
     {
-        int screen_mode;
-
-        screen_mode = 0; // カラーモード
+        int screen_mode = 0; // カラーモード
 
         // 描画ページのテスト
         for (int i = 0; i < 12; ++i)
@@ -10701,10 +10699,52 @@ void vsk_screen_tests(void)
         assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
 
         screen_mode = 1; // モノクロモード
+
+        // 描画ページのテスト
         for (int i = 0; i < 12; ++i)
         {
             vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
             assert(VSK_STATE()->m_active_page == i);
+            assert(VSK_STATE()->m_display_pages_flags == 1);
+        }
+
+        // 表示ページのテスト
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == 0);
+        for (int i = 1; i <= 7; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });
+            assert(VSK_STATE()->m_active_page == 0);
+            assert(VSK_STATE()->m_display_pages_flags == i);
+        }
+        for (int i = 9; i <= 15; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });
+            assert(VSK_STATE()->m_active_page == 0);
+            assert(VSK_STATE()->m_display_pages_flags == (i - 8) << 3);
+        }
+        for (int i = 17; i <= 23; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });
+            assert(VSK_STATE()->m_active_page == 0);
+            assert(VSK_STATE()->m_display_pages_flags == (i - 16) << 6);
+        }
+        for (int i = 25; i <= 31; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(i) });
+            assert(VSK_STATE()->m_active_page == 0);
+            assert(VSK_STATE()->m_display_pages_flags == (i - 24) << 9);
+        }
+
+        screen_mode = 2; // 高解像モノクロモード
+
+        // 描画ページのテスト
+        for (int i = 0; i < 6; ++i)
+        {
+            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+            assert(VSK_STATE()->m_active_page == i);
+            assert(VSK_STATE()->m_display_pages_flags == 1);
         }
     }
 
