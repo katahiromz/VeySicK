@@ -397,7 +397,7 @@ struct Vsk9801Machine : VskMachine
         case 7: attr =                      VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
         default: assert(0);
         }
-        m_state->m_text_attr = attr;
+        m_state->m_text_attr = attr | VSK_9801_ATTR_SET_COLOR(m_state->m_green_console ? 4 : 7);
     }
 
     // ANK文字を描画
@@ -791,7 +791,7 @@ void Vsk9801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
     // 文字位置
     int x0 = x * char_width, y0 = y * char_height;
     // 文字パレット
-    VskByte palette = (m_state->m_color_text ? VSK_9801_ATTR_GET_COLOR(attr) : (m_state->m_green_console ? 4 : 7));
+    VskByte palette = VSK_9801_ATTR_GET_COLOR(attr);
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 何も描画しないオブジェクト
@@ -878,7 +878,7 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     int x0 = x * char_width, y0 = y * char_height;
     int x1 = next_x * char_width, y1 = next_y * char_height;
     // テキストの色
-    VskByte palette = (m_state->m_color_text ? VSK_9801_ATTR_GET_COLOR(attr) : (m_state->m_green_console ? 4 : 7));
+    VskByte palette = VSK_9801_ATTR_GET_COLOR(attr);
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 漢字のイメージを取得するオブジェクト
@@ -926,11 +926,7 @@ void Vsk9801Machine::render_function_keys()
 
     // ファンクションキーの行の文字属性をリセット
     auto attr_area = get_attr_area(y);
-    VskByte attr;
-    if (m_state->m_color_text)
-        attr = m_state->m_text_attr;
-    else
-        attr = VSK_9801_ATTR_SHOW;
+    VskByte attr = m_state->m_text_attr;
     for (int x = 0; x < m_state->m_text_width; ++x)
         set_attr(x, y, attr);
 
@@ -983,8 +979,8 @@ void Vsk9801Machine::reset_text()
     m_state->m_text_attr = VSK_9801_ATTR_SHOW;
     if (m_state->m_color_text)
         m_state->m_text_attr |= VSK_9801_ATTR_SET_COLOR(7);
-    else if (m_state->m_green_console)
-        m_state->m_text_attr |= VSK_9801_ATTR_SET_COLOR(4);
+    else
+        m_state->m_text_attr |= VSK_9801_ATTR_SET_COLOR(m_state->m_green_console ? 4 : 7);
 
     if (m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
         m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
