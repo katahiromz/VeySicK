@@ -1,0 +1,8 @@
+10 CLS
+20 FOR I=1 TO 9
+30   PRINT "I=";I;"/ ";
+40   FOR J=1 TO 9
+50     PRINT USING "###";I*J;
+60   NEXT J:PRINT
+70 NEXT I
+80 END
