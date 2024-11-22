@@ -12,7 +12,10 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
     VskString param;
 
     for (size_t i = 0; i < expr.size(); ++i) {
+        mdbg_traceA("vsk_get_draw_items_from_string: '%s'\n", expr.substr(0, i).c_str());
         char ch = vsk_toupper(expr[i]);
+        if (ch == ';') // セミコロン
+            continue;
         switch (status) {
         case 0: // 初期状態
             switch (ch) { // 文字に応じて状態とサブコマンドを設定
@@ -43,6 +46,7 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
                 break;
 
             default:
+                assert(0);
                 return false; // 失敗
             }
             break;
@@ -53,18 +57,20 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
             // 空白をスキップ
             while (i + 1 < expr.size() && vsk_isblank(expr[i]))
                 ++i;
+            // カンマをスキップ
+            if (i + 1 < expr.size() && expr[i] == ',')
+                ++i;
 
             ch = expr[i];
-
-            if (ch == '=' || ch == '&') { // 変数かn進数か
+            if (ch == '=' || ch == '&') { // 変数か？n進数か？
                 for (;;) {
                     ch = expr[++i];
-                    if (ch == ';' || ch == 0) // 終端？
+                    if (ch == ';' || ch == ',' || ch == 0) // 終端？
                         break; 
                     if (!vsk_isblank(ch))
                         param += ch;
                 }
-                if (ch != ';')
+                if (ch != 0)
                     --i;
             } else if (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.') { // 数値？
                 do {
@@ -72,33 +78,41 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
                         param.push_back(ch);
                     }
                     ch = expr[++i];
-                } while (vsk_isxdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
+                } while (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
                 if (ch != ',') {
                     --i;
                 }
             } else {
+                mdbg_traceA("vsk_get_draw_items_from_string: '%c'\n", ch);
+                assert(0);
                 return false; // 失敗
             }
 
             // Xサブコマンド
             if (item.m_subcommand == 'X') {
+                mdbg_traceA("vsk_eval_text: '%s'\n", param.c_str());
                 auto ast = vsk_eval_text(param);
                 if (!ast || !ast->is_str()) {
+                    assert(0);
                     return false;
                 }
                 std::vector<VskDrawItem> children;
-                if (!vsk_get_draw_items_from_string(children, ast->to_str()))
+                if (!vsk_get_draw_items_from_string(children, ast->m_str)) {
+                    assert(0);
                     return false;
+                }
                 items.insert(items.end(), children.begin(), children.end());
                 status = 0;
                 continue;
             }
 
             // パラメータを追加
+            mdbg_traceA("vsk_get_draw_items_from_string: '%s'\n", param.c_str());
             item.m_params.emplace_back(param);
 
             // 初期状態になったら項目を追加
             if (--status == 0) {
+                mdbg_traceA("vsk_get_draw_items_from_string: %c: new item\n", item.m_subcommand);
                 items.push_back(item);
                 item.reset();
             }
@@ -126,7 +140,7 @@ void VskDrawEngine::reset()
     m_draw_scale            = 1;
     m_draw_line_style       = 0xFFFF;
     m_draw_tile             = "";
-    m_last_point            = { 0, 0 };
+    m_last_point_in_screen  = { 0, 0 };
 }
 
 // 描画位置を移動する
@@ -166,7 +180,7 @@ VskAstPtr vsk_get_draw_param(const VskDrawItem& item, size_t index)
 bool VskDrawEngine::draw_item(const VskDrawItem& item)
 {
     if (item.m_B && item.m_N) {
-        m_last_point = { 0, 0 };
+        m_last_point_in_screen = { 0, 0 };
         return true;
     }
 
@@ -196,7 +210,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'D': // 下へ (Down)
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { 0, d0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -208,7 +222,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'E': // 右上へ
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { d0, -d0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -220,7 +234,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'F': // 左上へ
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { -d0, -d0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -232,7 +246,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'G': // 左下へ
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { -d0, d0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -244,7 +258,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'H': // 右下へ
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { d0, d0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -256,7 +270,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'L': // 左へ (Left)
         if (auto ast = vsk_get_draw_param(item, 0)) {
             auto d0 = ast->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { -d0, 0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -268,7 +282,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'M': // ワールド座標(x, y)まで直線を描画 (Move)
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             if (auto ast1 = vsk_get_draw_param(item, 1)) {
-                VskPointD pt0 = m_last_point;
+                VskPointD pt0 = m_last_point_in_screen;
                 VskPointD pt1 = { ast0->value(), ast1->value() };
                 pt1 = vsk_machine->world_to_screen(pt1);
                 if (!item.m_B) {
@@ -286,7 +300,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
                 i0 = vsk_round(ast->value());
             }
             if (vsk_machine->is_valid_color(i0)) {
-                VskPointD pt0 = m_last_point;
+                VskPointD pt0 = m_last_point_in_screen;
                 vsk_machine->flood_fill(PT2INTS(pt0), color, i0, m_draw_tile);
                 return true;
             }
@@ -296,7 +310,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             if (auto ast1 = vsk_get_draw_param(item, 1)) {
                 auto d0 = ast0->value(), d1 = ast1->value();
-                VskPointD pt0 = m_last_point;
+                VskPointD pt0 = m_last_point_in_screen;
                 VskPointD pt1 = map_draw_delta(pt0, { ast0->value(), ast1->value() });
                 if (!item.m_B) {
                     vsk_machine->draw_box(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -309,7 +323,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'R': // 右へ(Right)
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             auto d0 = ast0->value();
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { d0, 0 });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -321,7 +335,10 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'S': // スケール(Scale)
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             auto d0 = ast0->value();
-            if (d0 < 0) return false; // 負の時はエラー
+            if (d0 < 0) {
+                assert(0);
+                return false; // 負の時はエラー
+            }
             m_draw_scale = d0;
             return true;
         }
@@ -329,7 +346,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'T': // 塗りつぶした長方形
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             if (auto ast1 = vsk_get_draw_param(item, 1)) {
-                VskPointD pt0 = m_last_point;
+                VskPointD pt0 = m_last_point_in_screen;
                 VskPointD pt1 = map_draw_delta(pt0, { ast0->value(), ast1->value() });
                 if (!item.m_B) {
                     vsk_machine->fill_box(PT2INTS(pt0), PT2INTS(pt1), fill_color, m_draw_tile);
@@ -341,7 +358,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
         break;
     case 'U': // 上へ(UP)
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
-            VskPointD pt0 = m_last_point;
+            VskPointD pt0 = m_last_point_in_screen;
             VskPointD pt1 = map_draw_delta(pt0, { 0, -ast0->value() });
             if (!item.m_B) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -353,7 +370,7 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
     case 'W': // (x * scale, y * scale) まで直線を描画
         if (auto ast0 = vsk_get_draw_param(item, 0)) {
             if (auto ast1 = vsk_get_draw_param(item, 1)) {
-                VskPointD pt0 = m_last_point;
+                VskPointD pt0 = m_last_point_in_screen;
                 VskPointD pt1 = map_draw_delta(pt0, { ast0->value(), ast1->value() });
                 if (!item.m_B) {
                     vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
@@ -395,13 +412,15 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
         break;
     }
 
+    mdbg_traceA("item.m_subcommand: %c\n", item.m_subcommand);
+    assert(0);
     return false;
 } // VskDrawEngine::draw_item
 
 void VskDrawEngine::update_LP(const VskDrawItem& item, VskPointD pt1)
 {
     if (item.m_N)
-        m_last_point = { 0, 0 };
+        m_last_point_in_screen = { 0, 0 };
     else
-        m_last_point = pt1;
+        m_last_point_in_screen = pt1;
 }

@@ -36,7 +36,7 @@ struct VskDrawEngine
     VskDouble       m_draw_scale;
     VskWord         m_draw_line_style;
     VskString       m_draw_tile;
-    VskPointD       m_last_point;
+    VskPointD       m_last_point_in_screen;
 
     VskDrawEngine() { reset(); }
     bool draw_item(const VskDrawItem& item);
