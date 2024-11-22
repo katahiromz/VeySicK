@@ -1202,7 +1202,13 @@ unmatched_if_statement
     ;
 
 matched_statement
-    : matched_statement TK_COLON matched_statement { vsk_targeting($1); $$ = vsk_ast_multi($1, $3); }
+    : matched_statement TK_COLON matched_statement {
+        vsk_targeting($1);
+        $$ = vsk_ast_multi($1, $3);
+    }
+    | TK_COLON matched_statement {
+        vsk_targeting($1); $$ = $2;
+    }
     | matched_if_statement {
         $$ = $1;
     }
@@ -1214,6 +1220,9 @@ matched_statement
 unmatched_statement
     : matched_statement TK_COLON unmatched_statement {
         $$ = vsk_ast_multi($1, $3);
+    }
+    | TK_COLON unmatched_statement {
+        vsk_targeting($1); $$ = $2;
     }
     | unmatched_if_statement {
         $$ = $1;
