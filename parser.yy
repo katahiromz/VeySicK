@@ -32,6 +32,7 @@
 %token TK_CDBL
 %token TK_CHAIN
 %token TK_CHDIR
+%token TK_CHILD
 %token TK_CHR_dollar
 %token TK_CINT
 %token TK_CIRCLE
@@ -962,6 +963,7 @@ lead_statement_0
     | TK_BLOAD                                          { vsk_targeting($1); $$ = vsk_ast(INSN_BLOAD); }
     | TK_BSAVE                                          { vsk_targeting($1); $$ = vsk_ast(INSN_BSAVE); }
     | TK_CALL                                           { vsk_targeting($1); $$ = vsk_ast(INSN_CALL); }
+    | TK_CHILD                                          { vsk_targeting($1); $$ = vsk_ast(INSN_CHILD); }
     | TK_CLEAR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_CLEAR); }
     | TK_CLS                                            { vsk_targeting($1); $$ = vsk_ast(INSN_CLS); }
     | TK_COLOR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_COLOR); }

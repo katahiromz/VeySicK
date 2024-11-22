@@ -599,6 +599,32 @@ VskError vsk_rmdir(const char *dirname)
     return VSK_NO_ERROR;
 }
 
+// ファイルを削除する
+VskError vsk_delete_file(const char *filename)
+{
+    if (!::DeleteFileA(filename))
+    {
+        auto error = ::GetLastError();
+        mdbg_traceA("%s: %d\n", filename, error);
+        return VSK_ERR_BAD_OPERATION;
+    }
+    return VSK_NO_ERROR;
+}
+
+// 子プロセスを作成する
+bool vsk_child(const char *str)
+{
+    char szComSpec[MAX_PATH];
+    if (!::GetEnvironmentVariableA("COMSPEC", szComSpec, _countof(szComSpec)))
+        lstrcpynA(szComSpec, "cmd.exe", _countof(szComSpec));
+
+    auto cwd = vsk_getcwd();
+
+    VskString cmdline = "/K " + VskString(str);
+    auto ret = ::ShellExecuteA(nullptr, nullptr, szComSpec, cmdline.c_str(), cwd.c_str(), SW_SHOWNORMAL);
+    return (INT_PTR)ret > 32;
+}
+
 // ファイル名群を取得する
 VskError vsk_files_helper(std::vector<VskString>& files, VskString& device, VskString path)
 {

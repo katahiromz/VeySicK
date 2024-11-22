@@ -3466,6 +3466,9 @@ static VskAstPtr VSKAPI vsk_ERROR(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
+// ファイルを削除する
+VskError vsk_delete_file(const char *filename);
+
 // INSN_KILL (KILL) @implemented
 static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
 {
@@ -3490,18 +3493,8 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
-        if (unlink(raw_path.c_str()) == 0)
-            return nullptr;
-
-        switch (errno)
-        {
-        case ENOENT:
-            vsk_machine->do_error(VSK_ERR_FILE_NOT_FOUND);
-            break;
-        default:
-            vsk_machine->do_error(VSK_ERR_DISK_IO_ERROR);
-            break;
-        }
+        if (auto error = vsk_delete_file(raw_path.c_str()))
+            VSK_ERROR_AND_RETURN(error, nullptr);
     }
 
     return nullptr;
@@ -10715,6 +10708,24 @@ static VskAstPtr VSKAPI vsk_WHILE(VskAstPtr self, const VskAstList& args)
         {
             VSK_IMPL()->m_control_path = loop_info.m_paths[1];
         }
+    }
+
+    return nullptr;
+}
+
+bool vsk_child(const char *str);
+
+// INSN_CHILD (CHILD)
+static VskAstPtr VSKAPI vsk_CHILD(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 1))
+        return nullptr;
+
+    VskString v0;
+    if (!vsk_arg(args, 0) || vsk_str(v0, args[0]))
+    {
+        if (!vsk_child(v0.c_str()))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
     }
 
     return nullptr;
