@@ -826,6 +826,7 @@ VeySicKでは、ドライブは仮想化されており、`drive1` ... `drive10`
 - 「無制限モードのみ」と書かれた項目は、無制限モードのみに該当します。
 - 「VeySicKのみ」と書かれた項目は、VeySicKのみに該当します。
 - 「DISKのみ」と書かれた項目は、DISKモードのみに該当します。
+- 「DOS/Winのみ」と書かれた項目は、MS-DOSとWindowsに該当します。
 - 「N-BASIC」は、8001ごろ使われていたN88-BASICよりも古いバージョンのBASICです。
 
 ---
@@ -998,7 +999,7 @@ VeySicKでは、ドライブは仮想化されており、`drive1` ... `drive10`
 
 ---
 
-### `CHDIR`文 (MS-DOSのみ) {#chdir}
+### `CHDIR`文 (DOS/Winのみ) {#chdir}
 
 - 【機能】 現在のディレクトリと現在のドライブを移動します。
 - 【語源】 Change directory
@@ -1010,7 +1011,7 @@ VeySicKでは、ドライブは仮想化されており、`drive1` ... `drive10`
 
 ---
 
-### `CHILD`文 (MS-DOSのみ) {#child}
+### `CHILD`文 (DOS/Winのみ) {#child}
 
 - 【機能】 子プロセスを作成します。
 - 【語源】 Child process
@@ -2670,7 +2671,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `MKDIR`文 (MS-DOSのみ) {#mkdir}
+### `MKDIR`文 (DOS/Winのみ) {#mkdir}
 
 - 【機能】 ディレクトリを作成します
 - 【語源】 Make directory
@@ -2715,7 +2716,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `MOUSE`関数 (MS-DOSのみ) (一部未対応) {#mouse_func}
+### `MOUSE`関数 (DOS/Winのみ) (一部未対応) {#mouse_func}
 
 - 【機能】 マウスの状態を取得します。
 - 【語源】 Mouse
@@ -2737,7 +2738,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `MOUSE`文 (MS-DOSのみ) (一部未対応) {#mouse}
+### `MOUSE`文 (DOS/Winのみ) (一部未対応) {#mouse}
 
 - 【機能】 マウスの処理を行います。
 - 【語源】 Mouse
@@ -2757,7 +2758,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `MOUSE ON/OFF/STOP`文 (MS-DOSのみ) (一部未対応) {#mouse_on_off_stop}
+### `MOUSE ON/OFF/STOP`文 (DOS/Winのみ) (一部未対応) {#mouse_on_off_stop}
 
 - 【機能】 マウス入力による割り込みを許可・禁止・停止する。
 - 【語源】 Mouse on/off/stop
@@ -2923,7 +2924,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `ON MOUSE GOSUB`文 (MS-DOSのみ) (一部未対応) {#on_mouse_gosub}
+### `ON MOUSE GOSUB`文 (DOS/Winのみ) (一部未対応) {#on_mouse_gosub}
 
 - 【機能】 マウスによる割り込みルーチンの開始行を定義します。
 - 【語源】 On mouse go subroutine
@@ -3454,7 +3455,7 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `RMDIR`文 (MS-DOSのみ) {#rmdir}
+### `RMDIR`文 (DOS/Winのみ) {#rmdir}
 
 - 【機能】 空のディレクトリを削除します
 - 【語源】 Remove directory
@@ -3816,7 +3817,7 @@ VeySick の8801モードでは、*画面モード* に `3` か `4` を指定し�
 
 ---
 
-### `SYSTEM`文 (MS-DOSのみ) {#system}
+### `SYSTEM`文 (DOS/Winのみ) {#system}
 
 - 【機能】 VeySicKの実行を終了します。
 - 【語源】 System
