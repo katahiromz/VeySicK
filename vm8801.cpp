@@ -926,7 +926,7 @@ void Vsk8801Machine::render_text()
             }
             VskByte ch = get_ank(x, y);
 #ifdef JAPAN
-            if (m_state->m_text_mode != VSK_TEXT_MODE_GRPH && vsk_is_sjis_lead(ch))
+            if (VSK_SETTINGS()->m_text_mode != VSK_TEXT_MODE_GRPH && vsk_is_sjis_lead(ch))
             {
                 if ((attr_line[x] & VSK_8801_ATTR_COLOR) ?
                     !(attr_line[x] & VSK_8801_ATTR_COLOR_SEMIGRA) :

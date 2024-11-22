@@ -4850,13 +4850,13 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
                     assert(0);
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
                 }
-                VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
+                VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
                 v2 = 0;
                 v3 = 1;
             }
             else
             {
-                VSK_STATE()->m_text_mode = VSK_TEXT_MODE_GRPH;
+                VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_GRPH;
             }
         }
 
@@ -9089,7 +9089,7 @@ static VskAstPtr VSKAPI vsk_KINPUT(VskAstPtr self, const VskAstList& args)
     auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
     mstr_trim_right(prompt, " \t\r\n");
     prompt.resize(vsk_machine->get_line_column(), ' ');
-    VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
+    VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
     VSK_STATE()->m_input_prompt = prompt + "\x81\x48 "; // 全角の疑問符を付ける
     VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT;
     vsk_show_input_prompt();
@@ -10905,10 +10905,12 @@ void vsk_screen_tests(void)
     auto screen_mode = VSK_STATE()->m_screen_mode;
     auto active_page = VSK_STATE()->m_active_page;
     auto display_page = VSK_STATE()->m_display_pages;
+    auto text_mode = VSK_SETTINGS()->m_text_mode;
     vsk_screen_tests_color();
     vsk_screen_tests_mono();
     // 元に戻す
     vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(active_page), vsk_ast_int(display_page) });
+    VSK_SETTINGS()->m_text_mode = text_mode;
 #endif
 }
 

@@ -92,6 +92,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("Unlimited"), NULL, NULL, (BYTE*)&m_unlimited_mode, &cbValue);
         cbValue = sizeof(m_machine_mode);
         ::RegQueryValueEx(hKey, TEXT("MachineMode"), NULL, NULL, (BYTE*)&m_machine_mode, &cbValue);
+        cbValue = sizeof(m_text_mode);
+        ::RegQueryValueEx(hKey, TEXT("TextMode"), NULL, NULL, (BYTE*)&m_text_mode, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -131,6 +133,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("Unlimited"), 0, REG_DWORD, (BYTE*)&m_unlimited_mode, cbValue);
         cbValue = sizeof(m_machine_mode);
         ::RegSetValueEx(hKey, TEXT("MachineMode"), 0, REG_DWORD, (BYTE*)&m_machine_mode, cbValue);
+        cbValue = sizeof(m_text_mode);
+        ::RegSetValueEx(hKey, TEXT("TextMode"), 0, REG_DWORD, (BYTE*)&m_text_mode, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -2669,13 +2673,13 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         OnCopy(hwnd);
         break;
     case ID_GRPH_MODE:
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_GRPH;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_GRPH;
         break;
     case ID_SJIS_MODE:
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
         break;
     case ID_JIS_MODE:
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_JIS;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_JIS;
         break;
     }
 }

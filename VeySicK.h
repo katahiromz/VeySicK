@@ -360,14 +360,14 @@ extern std::shared_ptr<VskStrMemoryBlock> vsk_str_block;
 #define VSK_SCREEN_HEIGHT 400
 
 // マシンモード
-enum VskMachineMode
+enum VskMachineMode : VskDword
 {
     VSK_MACHINE_MODE_8801,  // 8801モード
     VSK_MACHINE_MODE_9801,  // 9801モード
 };
 
 // テキストモード
-enum VskTextMode
+enum VskTextMode : VskDword
 {
     VSK_TEXT_MODE_SJIS,     // SJISモード
     VSK_TEXT_MODE_GRPH,     // GRPHモード
@@ -410,7 +410,6 @@ struct VskMachineState
     std::shared_ptr<VskMachineImpl> m_pimpl;                            // 実装詳細
 
     // text console
-    VskTextMode m_text_mode                 = VSK_TEXT_MODE_GRPH;       // テキストモード
     int m_text_width                        = 80;                       // テキスト画面の幅（文字単位）
     int m_text_height                       = 25;                       // テキスト画面の高さ（文字単位）
     bool m_text_wider                       = false;                    // テキスト画面の文字の幅が2倍か？

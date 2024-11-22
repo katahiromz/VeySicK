@@ -157,25 +157,25 @@ bool VskMachineState::is_caret_blinking() const
     return false;
 }
 
-bool VskMachine::is_8801_mode() const { 
-    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801; 
+bool VskMachine::is_8801_mode() const {
+    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801;
 }
-bool VskMachine::is_9801_mode() const { 
-    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_9801; 
+bool VskMachine::is_9801_mode() const {
+    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_9801;
 }
-bool VskMachine::is_grph_mode() const { 
-    return m_state && m_state->m_text_mode == VSK_TEXT_MODE_GRPH;
+bool VskMachine::is_grph_mode() const {
+    return VSK_SETTINGS()->m_text_mode == VSK_TEXT_MODE_GRPH;
 }
-bool VskMachine::is_jis_mode() const { 
-    return m_state && m_state->m_text_mode == VSK_TEXT_MODE_JIS && VSK_SETTINGS()->m_machine_mode != VSK_MACHINE_MODE_8801;
+bool VskMachine::is_jis_mode() const {
+    return VSK_SETTINGS()->m_text_mode == VSK_TEXT_MODE_JIS;
 }
-bool VskMachine::is_sjis_mode() const { 
-    return !is_grph_mode() && !is_jis_mode();
+bool VskMachine::is_sjis_mode() const {
+    return VSK_SETTINGS()->m_text_mode == VSK_TEXT_MODE_SJIS;
 }
-bool VskMachine::has_turtle() const { 
-    return m_state && m_state->m_has_turtle; 
+bool VskMachine::has_turtle() const {
+    return m_state && m_state->m_has_turtle;
 }
-bool VskMachine::has_cmd_extension() const { 
+bool VskMachine::has_cmd_extension() const {
     return m_state && m_state->m_has_cmd_extension;
 }
 
@@ -2058,7 +2058,7 @@ void VskMachine::test_pattern(int type)
     {
     case -1:
         // 日本語の混ざったテキストを出力する
-        m_state->m_text_mode = VSK_TEXT_MODE_SJIS;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
         for (int y = 0, i = 0; y < 20; ++y)
         {
             for (int x = 0; x < m_state->m_text_width; ++x)
@@ -2576,11 +2576,11 @@ void vsk_process_comment(VskString text)
 
     // (VeySicK拡張)
     if (text.find("{GRPH}") != text.npos)
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_GRPH;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_GRPH;
     if (text.find("{SJIS}") != text.npos)
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
     if (text.find("{JIS}") != text.npos)
-        VSK_STATE()->m_text_mode = VSK_TEXT_MODE_JIS;
+        VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_JIS;
     if (text.find("{8801}") != text.npos)
         new_machine_mode = VSK_MACHINE_MODE_8801;
     if (text.find("{9801}") != text.npos)
