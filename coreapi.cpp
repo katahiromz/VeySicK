@@ -6033,6 +6033,11 @@ bool vsk_load_file(const VskString& filename, VskString& text)
     if (!vsk_machine->load(filename, text))
         return false;
 
+    // '\x1A' 以降を削除する
+    auto i0 = text.find('\x1A');
+    if (i0 != text.npos)
+        text.erase(i0);
+
     // 後ろの空白を取り除く
     mstr_trim_right(text, " \t\r\n");
 
