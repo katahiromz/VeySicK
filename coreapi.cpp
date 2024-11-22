@@ -10683,12 +10683,15 @@ void vsk_screen_tests_color(void)
     vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(2) });
     assert(VSK_STATE()->m_active_page == 0);
     assert(VSK_STATE()->m_display_pages_flags == (1 << 1));
-    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
-    assert(VSK_STATE()->m_active_page == 0);
-    assert(VSK_STATE()->m_display_pages_flags == (1 << 2));
-    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(18) });
-    assert(VSK_STATE()->m_active_page == 0);
-    assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
+    if (vsk_machine->is_9801_mode() && VSK_STATE()->m_color_mode == VSK_COLOR_MODE_16_COLORS)
+    {
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 2));
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(18) });
+        assert(VSK_STATE()->m_active_page == 0);
+        assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
+    }
 
     if (vsk_machine->is_9801_mode())
     {

@@ -408,7 +408,6 @@ enum VskWaitFor
 struct VskMachineState
 {
     std::shared_ptr<VskMachineImpl> m_pimpl;                            // 実装詳細
-    VskMachineMode m_machine_mode           = VSK_MACHINE_MODE_9801;    // マシンモード
 
     // text console
     VskTextMode m_text_mode                 = VSK_TEXT_MODE_GRPH;       // テキストモード
@@ -513,7 +512,6 @@ struct VskMachineState
     bool is_caret_blinking() const;
 
     VskMachineState();
-    VskMachineState(VskMachineMode mode);
     ~VskMachineState();
 };
 
@@ -541,13 +539,13 @@ struct VskMachine : VskObject
     VskMachine(VskMachineState *state, VskSettings *settings);
     ~VskMachine();
 
-    bool is_8801_mode() const { return m_state && m_state->m_machine_mode == VSK_MACHINE_MODE_8801; }
-    bool is_9801_mode() const { return m_state && m_state->m_machine_mode == VSK_MACHINE_MODE_9801; }
-    bool is_grph_mode() const { return m_state && m_state->m_text_mode == VSK_TEXT_MODE_GRPH; }
-    bool is_jis_mode() const { return m_state && m_state->m_text_mode == VSK_TEXT_MODE_JIS && m_state->m_machine_mode != VSK_MACHINE_MODE_8801; }
-    bool is_sjis_mode() const { return !is_grph_mode() && !is_jis_mode(); }
-    bool has_turtle() const { return m_state && m_state->m_has_turtle; }
-    bool has_cmd_extension() const { return m_state && m_state->m_has_cmd_extension; }
+    bool is_8801_mode() const;
+    bool is_9801_mode() const;
+    bool is_grph_mode() const;
+    bool is_jis_mode() const;
+    bool is_sjis_mode() const;
+    bool has_turtle() const;
+    bool has_cmd_extension() const;
 
     // アドレスの解決
     VskAddr resolve_addr(VskAddr segment, VskAddr offset) const

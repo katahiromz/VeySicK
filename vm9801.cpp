@@ -666,8 +666,6 @@ Vsk9801Machine::Vsk9801Machine(VskMachineState *state, VskSettings *settings)
     : VskMachine(state, settings)
     , m_screen_image(VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT)
 {
-    state->m_machine_mode = VSK_MACHINE_MODE_9801;
-
     reset_palette();
     reset_text();
     reset_graphics();

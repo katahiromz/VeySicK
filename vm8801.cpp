@@ -524,8 +524,6 @@ Vsk8801Machine::Vsk8801Machine(VskMachineState *state, VskSettings *settings)
     : VskMachine(state, settings)
     , m_screen_image(VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT)
 {
-    state->m_machine_mode = VSK_MACHINE_MODE_8801;
-
     reset_palette();
     reset_text();
     reset_graphics();
@@ -1058,29 +1056,18 @@ int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
 {
     switch (screen_mode)
     {
-    case 0:
-        return (1 << 0);
-    case 1:
+    case 0: case 1: case 2: case 3: case 4:
         switch (display_pages)
         {
-        case 0: return 0;
+        case 0:
+            return 0;
         case 1: return (1 << 0);
         case 2: return (1 << 1);
-        case 3: return (1 << 0) | (1 << 1);
-        case 4: return (1 << 2);
-        case 5: return (1 << 0) | (1 << 2);
-        case 6: return (1 << 1) | (1 << 2);
-        case 7: return (1 << 0) | (1 << 1) | (1 << 2);
+        case 3: return (1 << 1) | (1 << 0);
+        default:
+            return -1;
         }
         break;
-    case 2:
-    case 3:
-    case 4:
-        switch (display_pages)
-        {
-        case 0: return 0;
-        case 1: return (1 << 0);
-        }
     }
     return -1;
 }

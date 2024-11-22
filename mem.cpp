@@ -115,7 +115,7 @@ std::shared_ptr<VskVarMemoryBlock> vsk_vars_block;
 // ベースアドレスを返す
 VskAddr VskVarMemoryBlock::base_addr() const
 {
-    return (m_state->m_machine_mode == VSK_MACHINE_MODE_8801) ? VSK_8801_VAR_AREA_ADDR : VSK_9801_VAR_AREA_ADDR;
+    return (VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801) ? VSK_8801_VAR_AREA_ADDR : VSK_9801_VAR_AREA_ADDR;
 }
 
 VskVarMemoryBlock::VskVarMemoryBlock(VskMachineState *state) : m_state(state)

@@ -90,6 +90,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("WinZoomed"), NULL, NULL, (BYTE*)&m_zoomed, &cbValue);
         cbValue = sizeof(m_unlimited_mode);
         ::RegQueryValueEx(hKey, TEXT("Unlimited"), NULL, NULL, (BYTE*)&m_unlimited_mode, &cbValue);
+        cbValue = sizeof(m_machine_mode);
+        ::RegQueryValueEx(hKey, TEXT("MachineMode"), NULL, NULL, (BYTE*)&m_machine_mode, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -127,6 +129,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("WinZoomed"), 0, REG_DWORD, (BYTE*)&m_zoomed, cbValue);
         cbValue = sizeof(m_unlimited_mode);
         ::RegSetValueEx(hKey, TEXT("Unlimited"), 0, REG_DWORD, (BYTE*)&m_unlimited_mode, cbValue);
+        cbValue = sizeof(m_machine_mode);
+        ::RegSetValueEx(hKey, TEXT("MachineMode"), 0, REG_DWORD, (BYTE*)&m_machine_mode, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -1744,7 +1748,10 @@ void VskWin32App::reset_settings()
 // 設定を読み込む
 bool VskWin32App::load_settings()
 {
-    return m_settings.load();
+    if (!m_settings.load())
+        return false;
+
+    return true;
 }
 
 // 設定を保存する
@@ -2175,8 +2182,8 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
 
     // 必要ならば、メニュー項目ID_MACHINE_8801, ID_MACHINE_9801のいずれかにチェックを付ける
     {
-        BOOL bCheck8801 = (m_state.m_machine_mode == VSK_MACHINE_MODE_8801);
-        BOOL bCheck9801 = (m_state.m_machine_mode == VSK_MACHINE_MODE_9801);
+        bool bCheck8801 = vsk_machine->is_8801_mode();
+        bool bCheck9801 = vsk_machine->is_9801_mode();
         ::CheckMenuItem(hMenu, ID_MACHINE_8801, (bCheck8801 ? MF_CHECKED : MF_UNCHECKED));
         ::CheckMenuItem(hMenu, ID_MACHINE_9801, (bCheck9801 ? MF_CHECKED : MF_UNCHECKED));
     }
@@ -2479,13 +2486,13 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_MACHINE_8801: // 8801モード
         vsk_connect_machine(&m_state, &m_settings, false);
-        m_state.m_machine_mode = VSK_MACHINE_MODE_8801;
+        m_settings.m_machine_mode = VSK_MACHINE_MODE_8801;
         vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;
     case ID_MACHINE_9801: // 9801モード
         vsk_connect_machine(&m_state, &m_settings, false);
-        m_state.m_machine_mode = VSK_MACHINE_MODE_9801;
+        m_settings.m_machine_mode = VSK_MACHINE_MODE_9801;
         vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;

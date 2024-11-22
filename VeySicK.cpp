@@ -157,6 +157,28 @@ bool VskMachineState::is_caret_blinking() const
     return false;
 }
 
+bool VskMachine::is_8801_mode() const { 
+    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801; 
+}
+bool VskMachine::is_9801_mode() const { 
+    return VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_9801; 
+}
+bool VskMachine::is_grph_mode() const { 
+    return m_state && m_state->m_text_mode == VSK_TEXT_MODE_GRPH;
+}
+bool VskMachine::is_jis_mode() const { 
+    return m_state && m_state->m_text_mode == VSK_TEXT_MODE_JIS && VSK_SETTINGS()->m_machine_mode != VSK_MACHINE_MODE_8801;
+}
+bool VskMachine::is_sjis_mode() const { 
+    return !is_grph_mode() && !is_jis_mode();
+}
+bool VskMachine::has_turtle() const { 
+    return m_state && m_state->m_has_turtle; 
+}
+bool VskMachine::has_cmd_extension() const { 
+    return m_state && m_state->m_has_cmd_extension;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // basic types
 
@@ -360,14 +382,6 @@ VskMachineState::VskMachineState()
     m_pimpl = vsk_create_machine_impl();
 }
 
-VskMachineState::VskMachineState(VskMachineMode mode)
-    : m_memory(std::make_shared<VskMemoryModel>())
-{
-    vsk_vars_map = std::make_shared<VskVarMap>();
-    m_pimpl = vsk_create_machine_impl();
-    m_machine_mode = mode;
-}
-
 VskMachineState::~VskMachineState()
 {
     m_pimpl = nullptr;
@@ -388,22 +402,15 @@ VskMachine::~VskMachine()
 VskMachinePtr VskMachine::create_machine(VskMachineState *state, VskSettings *settings)
 {
 #ifdef ENABLE_PC8801
-    if (state->m_machine_mode == VSK_MACHINE_MODE_8801)
+    if (settings->m_machine_mode == VSK_MACHINE_MODE_8801)
         return vsk_create_8801_machine(state, settings);
 #endif
 #ifdef ENABLE_PC9801
-    if (state->m_machine_mode == VSK_MACHINE_MODE_9801)
+    if (settings->m_machine_mode == VSK_MACHINE_MODE_9801)
         return vsk_create_9801_machine(state, settings);
 #endif
-#ifdef ENABLE_PC8801
-    state->m_machine_mode = VSK_MACHINE_MODE_9801;
-    return vsk_create_9801_machine(state, settings);
-#elif defined(ENABLE_PC9801)
-    state->m_machine_mode = VSK_MACHINE_MODE_8801;
-    return vsk_create_8801_machine(state, settings);
-#else
+    assert(0);
     return nullptr;
-#endif
 }
 
 // マシンの接続または接続の切断
@@ -2075,7 +2082,7 @@ void VskMachine::test_pattern(int type)
         // BASIC起動風のテキストを表示する
         print(VEYSICK_TITLE "\n");
         print(VEYSICK_COPYRIGHT "\n");
-        switch (m_state->m_machine_mode)
+        switch (VSK_SETTINGS()->m_machine_mode)
         {
         case VSK_MACHINE_MODE_8801:
             print("Started in 8801 mode\n");
@@ -2540,7 +2547,7 @@ bool VskMachine::connect(bool do_connect)
 {
     if (do_connect) // 接続する
     {
-        if (m_state->m_machine_mode == VSK_MACHINE_MODE_8801)
+        if (VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801)
             m_state->m_segment = 0;
 
         vsk_vars_block = std::make_shared<VskVarMemoryBlock>(m_state);
@@ -2564,7 +2571,7 @@ void vsk_process_comment(VskString text)
 {
     vsk_upper(text);
 
-    VskMachineMode old_machine_mode = VSK_STATE()->m_machine_mode;
+    VskMachineMode old_machine_mode = VSK_SETTINGS()->m_machine_mode;
     VskMachineMode new_machine_mode = old_machine_mode;
 
     // (VeySicK拡張)
@@ -2584,7 +2591,7 @@ void vsk_process_comment(VskString text)
         auto* state = VSK_STATE();
         auto* settings = VSK_SETTINGS();
         vsk_connect_machine(state, settings, false);
-        state->m_machine_mode = new_machine_mode;
+        VSK_SETTINGS()->m_machine_mode = new_machine_mode;
         vsk_connect_machine(state, settings, true);
     }
 
