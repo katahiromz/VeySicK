@@ -4718,8 +4718,10 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr self, const VskAstList& args)
 enum DIR_OP
 {
     DIR_OP_CHDIR, DIR_OP_MKDIR, DIR_OP_RMDIR,
+    DIR_OP_CHDIR_PARENT,
 };
 
+VskString vsk_path_remove_filename(const VskString& pathname);
 VskError vsk_getcwd(char *buf, size_t buflen);
 VskError vsk_chdir(const char *dirname);
 VskError vsk_mkdir(const char *dirname);
@@ -4748,6 +4750,7 @@ static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, D
             break;
         case DIR_OP_MKDIR:
         case DIR_OP_RMDIR:
+        case DIR_OP_CHDIR_PARENT:
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
         }
     }
@@ -4776,11 +4779,15 @@ static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, D
 
         switch (op)
         {
+        case DIR_OP_CHDIR_PARENT:
+            raw_path = vsk_path_remove_filename(raw_path);
+            // FALL THROUGH...
         case DIR_OP_CHDIR:
             // 現在のディレクトリを変更する
             if (auto error = vsk_chdir(raw_path.c_str()))
                 VSK_ERROR_AND_RETURN(error, nullptr);
-            vsk_print("Moved to: " + raw_path + "\n");
+            if (op != DIR_OP_CHDIR_PARENT)
+                vsk_print("Moved to: " + raw_path + "\n");
             return nullptr;
         case DIR_OP_MKDIR:
             // ディレクトリを作成する
@@ -6144,11 +6151,17 @@ void vsk_add_line_numbers(VskString& text, VskLineNo start = 100, VskLineNo step
 }
 
 // ファイルを読み込む
-bool vsk_load_file(const VskString& filename, VskString& text)
+bool vsk_load_file(const VskString& filename, VskString& text, bool change_dir)
 {
     // ファイルから読み込む
     if (!vsk_machine->load(filename, text))
         return false;
+
+    // 必要ならディレクトリを変更する
+    if (change_dir)
+    {
+        vsk_CHDIR_MKDIR_RMDIR(nullptr, { vsk_ast_str(filename) }, DIR_OP_CHDIR_PARENT);
+    }
 
     // '\x1A' 以降を削除する
     auto i0 = text.find('\x1A');
@@ -6188,7 +6201,7 @@ static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr self, const VskAstList& args)
     if (!vsk_str(v0, args[0]))
         return nullptr;
 
-    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text))
+    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text, true))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
     // Rが付いていたら実行する。Rが付いてなければファイルをすべて閉じる
@@ -6226,7 +6239,7 @@ static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr self, const VskAstList& args)
     {
         // 読み込む
         VskString text;
-        if (!vsk_load_file(v0, text))
+        if (!vsk_load_file(v0, text, false))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         // 行に分ける
@@ -6286,7 +6299,7 @@ static VskAstPtr VSKAPI vsk_RUN(VskAstPtr self, const VskAstList& args)
     if (arg2)
         v2 = arg2->m_str;
 
-    if (!vsk_load_file(v1, VSK_IMPL()->m_program_text))
+    if (!vsk_load_file(v1, VSK_IMPL()->m_program_text, true))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
     return vsk_run();
@@ -7395,7 +7408,7 @@ static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
         return nullptr;
 
     // ファイルを読み込む
-    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text))
+    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text, true))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
     if (auto error = vsk_scan_program_list())
         VSK_ERROR_AND_RETURN(error, nullptr);
