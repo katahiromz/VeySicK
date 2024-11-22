@@ -298,7 +298,7 @@ struct VskMachineImpl
     std::vector<VskFieldEntry> m_field_table;
     // Sleepが終わるまで待つための変数
     VskDword m_sleep_start = 0;
-    VskLong m_sleep_amount = 0;
+    VskDword m_sleep_amount = 0;
     VskIndexList m_after_sleep_path;
     // 初期化
     void init();
@@ -4715,7 +4715,7 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args)
+static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
 {
     if (!vsk_arity_in_range(args, 0, 4))
         return nullptr;
@@ -4726,28 +4726,39 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args)
     VskInt v3 = VSK_STATE()->m_display_pages;
     auto arg0 = vsk_arg(args, 0), arg1 = vsk_arg(args, 1);
     auto arg2 = vsk_arg(args, 2), arg3 = vsk_arg(args, 3);
-    if ((!arg0 || vsk_int(v0, arg0)) && (!arg1 || vsk_int(v1, arg1)) &&
-        (!arg2 || vsk_int(v2, arg2)) && (!arg3 || vsk_int(v3, arg3)))
+    if ((!arg0 || vsk_int(v0, arg0)) &&
+        (!arg1 || vsk_int(v1, arg1)) &&
+        (!arg2 || vsk_int(v2, arg2)) &&
+        (!arg3 || vsk_int(v3, arg3)))
     {
-        if (!(0 <= v0 && v0 < 4) ||
-            !(0 <= v1 && v1 < 4) ||
-            !(0 <= v2 && v2 < 12) ||
-            !(0 <= v3 && v3 < 32) ||
-            vsk_machine->get_display_pages_flags(v0, v3) == -1)
+        if (!is_9801) // 8801？
         {
-            mdbg_traceA("%d, %d, %d, %d, 0x%X\n", v0, v1, v2, v3,
-                        vsk_machine->get_display_pages_flags(v0, v2));
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+            if (v0 == 3 || v0 == 4) // 8801の日本語サポート？
+            {
+                if (arg1 || arg2 || arg3)
+                {
+                    assert(0);
+                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+                }
+                VSK_STATE()->m_text_mode = VSK_TEXT_MODE_SJIS;
+                v2 = 0;
+                v3 = 1;
+            }
+            else
+            {
+                VSK_STATE()->m_text_mode = VSK_TEXT_MODE_GRPH;
+            }
         }
 
-        switch (v0)
+        bool high_color = (VSK_STATE()->m_color_mode == VSK_COLOR_MODE_16_COLORS);
+        if (!vsk_machine->is_valid_screen_mode(v0) ||
+            !(0 <= v1 && v1 < 4) ||
+            !vsk_machine->is_valid_active_page(v0, v2, high_color) ||
+            vsk_machine->get_display_pages_flags(v0, v3) == -1)
         {
-        case 0: case 3:
-            VSK_STATE()->m_color_graphics = true;
-            break;
-        case 1: case 2:
-            VSK_STATE()->m_color_graphics = false;
-            break;
+            mdbg_traceA("%d, %d, %d, %d\n", v0, v1, v2, v3);
+            assert(0);
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
         VSK_STATE()->m_screen_mode = v0;
@@ -4762,31 +4773,17 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args)
     return nullptr;
 }
 
-#ifdef ENABLE_PC8801
-static VskAstPtr vsk_SCREEN_8801(const VskAstList& args)
-{
-    return vsk_SCREEN_GENERIC(args);
-}
-#endif
-
-#ifdef ENABLE_PC9801
-static VskAstPtr vsk_SCREEN_9801(const VskAstList& args)
-{
-    return vsk_SCREEN_GENERIC(args);
-}
-#endif
-
 // INSN_SCREEN (SCREEN) @implemented
 static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr self, const VskAstList& args)
 {
     vsk_targeting(self);
 #ifdef ENABLE_PC8801
     if (vsk_machine->is_8801_mode())
-        return vsk_SCREEN_8801(args);
+        return vsk_SCREEN_GENERIC(args, false);
 #endif
 #ifdef ENABLE_PC9801
     if (vsk_machine->is_9801_mode())
-        return vsk_SCREEN_9801(args);
+        return vsk_SCREEN_GENERIC(args, true);
 #endif
     assert(0);
     return nullptr;
@@ -10665,49 +10662,73 @@ std::shared_ptr<VskMachineImpl> vsk_create_machine_impl(void)
 
 //////////////////////////////////////////////////////////////////////////////
 
-// SCREENのテスト
-void vsk_screen_tests(void)
+void vsk_screen_tests_color(void)
 {
-#ifndef NDEBUG
-    // SCREENのテスト
-    if (VSK_STATE()->m_color_mode == VSK_COLOR_MODE_8_COLORS)
+    int screen_mode = 0; // カラーモード
+
+    // 描画ページのテスト
+    for (int i = 0; i <= 3; ++i)
     {
-        int screen_mode = 0; // カラーモード
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+        assert(VSK_STATE()->m_active_page == i);
+    }
+
+    // 表示ページのテスト
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == 0);
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(1) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == (1 << 0));
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(2) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == (1 << 1));
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == (1 << 2));
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(18) });
+    assert(VSK_STATE()->m_active_page == 0);
+    assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
+
+    if (vsk_machine->is_9801_mode())
+    {
+        screen_mode = 3; // 高解像カラーモード
 
         // 描画ページのテスト
-        for (int i = 0; i < 12; ++i)
+        for (int i = 0; i <= 1; ++i)
         {
             vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
             assert(VSK_STATE()->m_active_page == i);
             assert(VSK_STATE()->m_display_pages_flags == 1);
         }
+
         // 表示ページのテスト
         vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
         assert(VSK_STATE()->m_active_page == 0);
         assert(VSK_STATE()->m_display_pages_flags == 0);
         vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(1) });
         assert(VSK_STATE()->m_active_page == 0);
-        assert(VSK_STATE()->m_display_pages_flags == (1 << 0));
-        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(2) });
-        assert(VSK_STATE()->m_active_page == 0);
-        assert(VSK_STATE()->m_display_pages_flags == (1 << 1));
+        assert(VSK_STATE()->m_display_pages_flags == 1);
         vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
         assert(VSK_STATE()->m_active_page == 0);
-        assert(VSK_STATE()->m_display_pages_flags == (1 << 2));
-        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(18) });
-        assert(VSK_STATE()->m_active_page == 0);
-        assert(VSK_STATE()->m_display_pages_flags == (1 << 3));
+        assert(VSK_STATE()->m_display_pages_flags == 2);
+    }
+}
 
-        screen_mode = 1; // モノクロモード
+void vsk_screen_tests_mono(void)
+{
+    int screen_mode = 1; // 白黒モード
 
-        // 描画ページのテスト
-        for (int i = 0; i < 12; ++i)
-        {
-            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
-            assert(VSK_STATE()->m_active_page == i);
-            assert(VSK_STATE()->m_display_pages_flags == 1);
-        }
+    // 描画ページのテスト
+    for (int i = 0; i <= 11; ++i)
+    {
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+        assert(VSK_STATE()->m_active_page == i);
+        assert(VSK_STATE()->m_display_pages_flags == 1);
+    }
 
+    if (vsk_machine->is_9801_mode())
+    {
         // 表示ページのテスト
         vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(0) });
         assert(VSK_STATE()->m_active_page == 0);
@@ -10736,19 +10757,31 @@ void vsk_screen_tests(void)
             assert(VSK_STATE()->m_active_page == 0);
             assert(VSK_STATE()->m_display_pages_flags == (i - 24) << 9);
         }
-
-        screen_mode = 2; // 高解像モノクロモード
-
-        // 描画ページのテスト
-        for (int i = 0; i < 6; ++i)
-        {
-            vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
-            assert(VSK_STATE()->m_active_page == i);
-            assert(VSK_STATE()->m_display_pages_flags == 1);
-        }
     }
 
-    vsk_SCREEN(nullptr, { vsk_ast_int(0), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(1) });
+    screen_mode = 2; // 高解像白黒モード
+
+    // 描画ページのテスト
+    for (int i = 0; i < 6; ++i)
+    {
+        vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(i), vsk_ast_int(1) });
+        assert(VSK_STATE()->m_active_page == i);
+        assert(VSK_STATE()->m_display_pages_flags == 1);
+    }
+}
+
+// SCREENのテスト
+void vsk_screen_tests(void)
+{
+#ifndef NDEBUG
+    // SCREENのテスト
+    auto screen_mode = VSK_STATE()->m_screen_mode;
+    auto active_page = VSK_STATE()->m_active_page;
+    auto display_page = VSK_STATE()->m_display_pages;
+    vsk_screen_tests_color();
+    vsk_screen_tests_mono();
+    // 元に戻す
+    vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(active_page), vsk_ast_int(display_page) });
 #endif
 }
 

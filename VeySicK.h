@@ -680,6 +680,8 @@ struct VskMachine : VskObject
     VskPointD world_to_client(const VskPointD& pt) const;
     VskSizeI world_to_client(const VskSizeD& siz) const;
     VskPointD client_to_world(const VskPointI& pt) const;
+    virtual bool is_valid_screen_mode(int screen_mode) const { return true; }
+    virtual bool is_valid_active_page(int screen_mode, int active_page, bool high_color) const { return true; }
     virtual int get_display_pages_flags(int screen_mode, int display_pages) { return -1; }
 
     bool is_valid_tile(const VskString& tile) const;

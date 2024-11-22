@@ -510,6 +510,9 @@ struct Vsk8801Machine : VskMachine
     // ディスプレイページから表示すべきページのフラグ群を取得
     int get_display_pages_flags(int screen_mode, int display_pages) override;
 
+    bool is_valid_screen_mode(int screen_mode) const override;
+    bool is_valid_active_page(int screen_mode, int active_page, bool high_color) const override;
+
     // 指定したプレーンのグラフィックをクリアする
     void clear_planes(bool blue, bool red, bool green, bool intensity) override;
 };
@@ -546,32 +549,25 @@ void Vsk8801Machine::reset_text()
         m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
 }
 
+static void vsk_reset_graphics_8801(VskMachineState *state, int width, int height, bool color)
+{
+    state->m_screen_width = width;
+    state->m_screen_height = height;
+    state->m_color_graphics = color;
+    state->m_viewport = { 0, 0, VskInt(width - 1), VskInt(height - 1) };
+    state->m_window = { 0, 0, VskDouble(width - 1), VskDouble(height - 1) };
+}
+
 // グラフィック画面のリセット
 void Vsk8801Machine::reset_graphics()
 {
     switch (m_state->m_screen_mode)
     {
-    case 0:
-        m_state->m_screen_width = 640;
-        m_state->m_screen_height = 200;
-        m_state->m_color_graphics = true;
-        m_state->m_viewport = { 0, 0, 640 - 1, 200 - 1 };
-        m_state->m_window = { 0, 0, 640 - 1, 200 - 1 };
-        break;
-    case 1:
-        m_state->m_screen_width = 640;
-        m_state->m_screen_height = 200;
-        m_state->m_color_graphics = false;
-        m_state->m_viewport = { 0, 0, 640 - 1, 200 - 1 };
-        m_state->m_window = { 0, 0, 640 - 1, 200 - 1 };
-        break;
-    case 2:
-        m_state->m_screen_width = 640;
-        m_state->m_screen_height = 400;
-        m_state->m_color_graphics = false;
-        m_state->m_viewport = { 0, 0, 640 - 1, 400 - 1 };
-        m_state->m_window = { 0, 0, 640 - 1, 400 - 1 };
-        break;
+    case 0: vsk_reset_graphics_8801(m_state, 640, 200, true); break;
+    case 1: vsk_reset_graphics_8801(m_state, 640, 200, false); break;
+    case 2: vsk_reset_graphics_8801(m_state, 640, 400, false); break;
+    case 3: vsk_reset_graphics_8801(m_state, 640, 200, true); break;
+    case 4: vsk_reset_graphics_8801(m_state, 640, 400, true); break;
     default:
         assert(0);
         break;
@@ -1036,6 +1032,27 @@ void Vsk8801Machine::render_color_graphics()
     }
 }
 
+// スクリーンモードが正しいか？
+bool Vsk8801Machine::is_valid_screen_mode(int screen_mode) const
+{
+    return 0 <= screen_mode && screen_mode <= 4;
+}
+
+// 描画ページが正しいか？
+bool Vsk8801Machine::is_valid_active_page(int screen_mode, int active_page, bool high_color) const
+{
+    switch (screen_mode)
+    {
+    case 0: return (0 <= active_page && active_page <= 3);
+    case 1: return (0 <= active_page && active_page <= 11);
+    case 2: return (0 <= active_page && active_page <= 5);
+    case 3: return (0 <= active_page && active_page <= 1);
+    case 4: return (0 <= active_page && active_page <= 1);
+    }
+    assert(0);
+    return false;
+}
+
 // ディスプレイページから表示すべきページのフラグ群を取得
 int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
 {
@@ -1057,7 +1074,13 @@ int Vsk8801Machine::get_display_pages_flags(int screen_mode, int display_pages)
         }
         break;
     case 2:
-        return (1 << 0);
+    case 3:
+    case 4:
+        switch (display_pages)
+        {
+        case 0: return 0;
+        case 1: return (1 << 0);
+        }
     }
     return -1;
 }
