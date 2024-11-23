@@ -4973,11 +4973,12 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
         return nullptr;
 
     VskString v0;
-    VskWord v1 = VskWord(-1);
+    VskWord v1;
     VskString v2;
+    auto arg0 = vsk_arg(args, 0), arg1 = vsk_arg(args, 1), arg2 = vsk_arg(args, 2);
     if (vsk_str(v0, args[0]) &&
-        (args.size() <= 1 || !args[1] || vsk_wrd(v1, args[1])) &&
-        (args.size() <= 2 || !args[2] || vsk_ident(v2, args[2])))
+        (!arg1 || vsk_wrd(v1, args[1])) &&
+        (!arg2 || vsk_ident(v2, args[2])))
     {
         if (v2 != "" && v2 != "R")
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
@@ -4997,10 +4998,7 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
             }
         }
 
-        if (v1 == VskWord(-1))
-            v1 = 0;
-
-        VskAddr addr = vsk_machine->resolve_addr(v1);
+        VskAddr addr = arg1 ? v1 : 0xFFFFFFFF;
 
         VskMemSize size;
         VskAddr call_addr = addr;
@@ -5034,7 +5032,7 @@ static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr self, const VskAstList& args)
     VskWord v1, v2;
     if (vsk_str(v0, args[0]) && vsk_wrd(v1, args[1]) && vsk_wrd(v2, args[2]))
     {
-        VskAddr addr = vsk_machine->resolve_addr(v1), size = v2;
+        VskAddr addr = v1, size = v2;
         if (vsk_machine->is_8801_mode())
         {
             vsk_machine->binary_save_with_header(v0.c_str(), addr, size);

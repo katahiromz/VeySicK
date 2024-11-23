@@ -2187,9 +2187,11 @@ bool VskMachine::binary_load(const char *filename, VskAddr addr, VskDword& size)
         return false;
     }
 
-    addr = resolve_addr(addr);
+    if (addr == 0xFFFFFFFF)
+        addr = 0;
+    auto real_addr = resolve_addr(addr);
 
-    for (size_t i = addr; i < addr + size; ++i)
+    for (size_t i = real_addr; i < real_addr + size; ++i)
     {
         if (is_8801_mode())
         {
@@ -2201,7 +2203,7 @@ bool VskMachine::binary_load(const char *filename, VskAddr addr, VskDword& size)
                 return false;
             }
         }
-        m_state->m_memory->write(&data[i - addr], i, 1);
+        m_state->m_memory->write(&data[i - real_addr], i, 1);
     }
 
     return true;
@@ -2245,15 +2247,16 @@ bool VskMachine::binary_load_with_header(const char *filename, VskAddr addr, Vsk
         do_error(VSK_ERR_BAD_CALL);
         return false;
     }
-    if (addr == VskAddr(-1))
+
+    if (addr == 0xFFFFFFFF)
         addr = header->m_start_addr;
+
+    auto real_addr = resolve_addr(addr);
 
     size = header->m_end_addr - header->m_start_addr;
     data.erase(data.begin(), data.begin() + sizeof(BSAVE_HEADER));
 
-    addr = resolve_addr(header->m_start_addr);
-
-    for (size_t i = addr; i < addr + size; ++i)
+    for (size_t i = real_addr; i < real_addr + size; ++i)
     {
         if (is_8801_mode())
         {
@@ -2265,7 +2268,7 @@ bool VskMachine::binary_load_with_header(const char *filename, VskAddr addr, Vsk
                 return false;
             }
         }
-        m_state->m_memory->write(&data[i - addr], i, 1);
+        m_state->m_memory->write(&data[i - real_addr], i, 1);
     }
 
     call_addr = header->m_call_addr;
@@ -2277,14 +2280,16 @@ bool VskMachine::binary_save(const char *filename, VskAddr addr, VskDword size)
     std::vector<uint8_t> data;
     data.resize(size);
 
-    for (size_t i = addr; i < addr + size; ++i)
+    auto real_addr = resolve_addr(addr);
+
+    for (size_t i = real_addr; i < real_addr + size; ++i)
     {
         if (is_8801_mode() && 0x8000 <= i && i <= 0x83FF)
         {
             bad_call();
             return false;
         }
-        m_state->m_memory->read(&data[i - addr], i, 1);
+        m_state->m_memory->read(&data[i - real_addr], i, 1);
     }
 
     VskFilePtr file;
