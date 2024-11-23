@@ -9417,8 +9417,6 @@ static VskAstPtr VSKAPI vsk_MAP(VskAstPtr self, const VskAstList& args)
     VskInt v1;
     if (vsk_dbl(v0, args[0]) && vsk_int(v1, args[1]))
     {
-        VskPointD pt;
-        VskDouble ret;
         switch (v1)
         {
         case 0: return vsk_ast_int(vsk_machine->world_to_view({ v0, 0 }).m_x);
@@ -9426,10 +9424,8 @@ static VskAstPtr VSKAPI vsk_MAP(VskAstPtr self, const VskAstList& args)
         case 2: return vsk_ast_dbl(vsk_machine->view_to_world({ vsk_round(v0), 0 }).m_x);
         case 3: return vsk_ast_dbl(vsk_machine->view_to_world({ 0, vsk_round(v0) }).m_y);
         default:
-            vsk_machine->bad_call();
-            return nullptr;
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
-        return vsk_ast_dbl(ret);
     }
 
     return nullptr;
