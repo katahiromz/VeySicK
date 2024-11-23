@@ -241,7 +241,7 @@ VskString vsk_to_string(VskDword dwd)
 VskString vsk_to_string(VskSingle sng)
 {
     char buf[256];
-    std::sprintf(buf, "%G", sng);
+    std::sprintf(buf, "%.6G", sng);
     return VskString(buf);
 }
 
