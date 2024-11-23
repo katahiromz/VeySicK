@@ -198,6 +198,22 @@ protected:
     friend struct VskFileManager;
 };
 
+VskError vsk_error_from_last_error(DWORD dwError)
+{
+    switch (dwError)
+    {
+    case ERROR_ALREADY_EXISTS:
+        return VSK_ERR_FILE_ALREADY_EXIST;
+    case ERROR_FILE_NOT_FOUND:
+    case ERROR_PATH_NOT_FOUND:
+        return VSK_ERR_FILE_NOT_FOUND;
+    case ERROR_BAD_PATHNAME:
+        return VSK_ERR_BAD_FILE_NAME;
+    default:
+        return VSK_ERR_DISK_IO_ERROR;
+    }
+}
+
 VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode, VskFile::TYPE type)
 {
     HANDLE hFile = INVALID_HANDLE_VALUE;
@@ -241,18 +257,7 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
 
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        switch (::GetLastError())
-        {
-        case ERROR_ALREADY_EXISTS:
-            return VSK_ERR_FILE_ALREADY_EXIST;
-        case ERROR_FILE_NOT_FOUND:
-        case ERROR_PATH_NOT_FOUND:
-            return VSK_ERR_FILE_NOT_FOUND;
-        case ERROR_BAD_PATHNAME:
-            return VSK_ERR_BAD_FILE_NAME;
-        default:
-            return VSK_ERR_DISK_IO_ERROR;
-        }
+        return vsk_error_from_last_error(::GetLastError());
     }
 
     file = std::make_shared<VskWin32File>(hFile, mode, type);
@@ -266,12 +271,23 @@ VskError VskFileManager::open_com_file(VskFilePtr& file, VskString device, const
     if (device == "COM")
         device = "COM1";
 
-    auto error = open_host_file(file, device.c_str(), VskFile::MODE_DEFAULT, VskFile::TYPE_COM);
-    if (error)
-        return error;
+    // RS-232C 通信ファイルを開く
+    // NOTE: 管理者権限が必要かもしれません
+    HANDLE hComFile = ::CreateFileA(
+        device.c_str(),                 // COM1, COM2, or COM3
+        GENERIC_READ | GENERIC_WRITE,   // 読み書き可能
+        0,                              // 共有モードなし
+        NULL,                           // セキュリティ属性
+        OPEN_EXISTING,                  // 既存のデバイスを開く
+        0,                              // 非同期動作なし
+        NULL                            // テンプレートなし
+    );
+    if (hComFile == INVALID_HANDLE_VALUE)
+        return vsk_error_from_last_error(::GetLastError());
 
+    file = std::make_shared<VskWin32File>(hComFile, VskFile::MODE_DEFAULT, VskFile::TYPE_COM);
     file->set_com_params(params);
-    return error;
+    return VSK_NO_ERROR;
 }
 
 bool VskWin32File::set_com_params(VskString params)
@@ -282,6 +298,7 @@ bool VskWin32File::set_com_params(VskString params)
     mstr_replace_all(str, "\t", "");
     vsk_upper(str);
 
+    // COMの設定を取得する
     DCB config = { sizeof(config) };
     if (!::GetCommState(m_hFile, &config))
     {
@@ -295,6 +312,7 @@ bool VskWin32File::set_com_params(VskString params)
     config.Parity   = ODDPARITY;     // パリティ
     config.StopBits = ONESTOPBIT;    // ストップビット
 
+    // パラメータを取得する
     size_t ich = 0;
     for (auto ch : str)
     {
@@ -351,6 +369,7 @@ bool VskWin32File::set_com_params(VskString params)
         ++ich;
     }
 
+    // パラメータを設定する
     if (!::SetCommState(m_hFile, &config))
     {
         mdbg_traceA("SetCommState failed: 0x%08lX\n", ::GetLastError());
