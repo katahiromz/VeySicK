@@ -1098,6 +1098,7 @@ void Vsk8801Machine::clear_planes(bool blue, bool red, bool green, bool intensit
 // 8801マシンを作成する関数
 std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state, VskSettings *settings)
 {
+    state->m_palette_mode = VSK_PAL_MODE_8_COLORS_DIGITAL;
     return std::make_shared<Vsk8801Machine>(state, settings);
 }
 
