@@ -2301,16 +2301,13 @@ VskError VskMachine::load(VskString filename, std::string& data)
     return VSK_NO_ERROR;
 }
 
-bool VskMachine::save(VskString filename, const std::string& data)
+VskError VskMachine::save(VskString filename, const std::string& data)
 {
     auto file_manager = vsk_get_file_manager();
     VskFilePtr file;
     auto error = file_manager->open(file, filename, VskFile::MODE_OUTPUT);
     if (error)
-    {
-        do_error(error);
-        return false;
-    }
+        return error;
 
     std::string text = data;
     mstr_replace_all(text, "\r\n", "\n");
@@ -2321,13 +2318,10 @@ bool VskMachine::save(VskString filename, const std::string& data)
     {
         error = file->write_bin(&text[0], text.size());
         if (error)
-        {
-            do_error(error);
-            return false;
-        }
+            return error;
     }
 
-    return true;
+    return VSK_NO_ERROR;
 }
 
 // ファイル番号とファイルの関連付け

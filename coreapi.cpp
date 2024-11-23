@@ -6222,8 +6222,11 @@ static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
-        if (!vsk_machine->save(v0, VSK_IMPL()->m_program_text + "\n"))
+        if (auto error = vsk_machine->save(v0, VSK_IMPL()->m_program_text + "\n"))
+        {
+            vsk_error(error);
             return nullptr;
+        }
     }
 
     return nullptr;

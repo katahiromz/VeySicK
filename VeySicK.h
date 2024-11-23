@@ -706,7 +706,7 @@ struct VskMachine : VskObject
     void step();
 
     VskError load(VskString filename, std::string& data);
-    bool save(VskString filename, const std::string& data);
+    VskError save(VskString filename, const std::string& data);
     bool run();
 };
 
