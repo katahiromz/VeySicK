@@ -6147,8 +6147,7 @@ static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr self, const VskAstList& args)
     auto arg4 = vsk_arg(args, 4), arg5 = vsk_arg(args, 5);
     if (vsk_int(x0, args[0]) && vsk_int(y0, args[1]) &&
         vsk_int(x1, args[2]) && vsk_int(y1, args[3]) &&
-        (!arg4 || vsk_int(v4, args[4])) &&
-        (!arg5 || vsk_int(v5, args[5])))
+        (!arg4 || vsk_int(v4, arg4)) && (!arg5 || vsk_int(v5, arg5)))
     {
         if (x0 < 0 || y0 < 0 || x0 >= x1 || y0 >= y1 ||
             !vsk_machine->is_valid_color(v4) ||
