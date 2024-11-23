@@ -2161,11 +2161,56 @@ struct BSAVE_HEADER
 
 #define BSAVE_MAGIC VskByte(0xFE)
 
-bool VskMachine::binary_load(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr)
+bool VskMachine::binary_load(const char *filename, VskAddr addr, VskDword& size)
 {
-    auto file_manager = vsk_get_file_manager();
     VskFilePtr file;
-    auto error = file_manager->open(file, filename, VskFile::MODE_INPUT);
+    auto error = vsk_get_file_manager()->open(file, filename, VskFile::MODE_INPUT);
+    if (error)
+    {
+        do_error(error);
+        return false;
+    }
+
+    if (!file->get_size(&size))
+    {
+        do_error(VSK_ERR_DISK_IO_ERROR);
+        return false;
+    }
+
+    std::vector<uint8_t> data;
+    data.resize(size);
+
+    error = file->read_bin(&data[0], size);
+    if (error)
+    {
+        do_error(error);
+        return false;
+    }
+
+    addr = resolve_addr(addr);
+
+    for (size_t i = addr; i < addr + size; ++i)
+    {
+        if (is_8801_mode())
+        {
+            if ((0x8000 <= i && i <= 0x83FF) ||
+                (0xE600 <= i && i <= 0xFFFF) ||
+                (has_cmd_extension() && (0xE100 <= i && i <= 0xE5FF)))
+            {
+                bad_call();
+                return false;
+            }
+        }
+        m_state->m_memory->write(&data[i - addr], i, 1);
+    }
+
+    return true;
+}
+
+bool VskMachine::binary_load_with_header(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr)
+{
+    VskFilePtr file;
+    auto error = vsk_get_file_manager()->open(file, filename, VskFile::MODE_INPUT);
     if (error)
     {
         do_error(error);
@@ -2242,9 +2287,41 @@ bool VskMachine::binary_save(const char *filename, VskAddr addr, VskDword size)
         m_state->m_memory->read(&data[i - addr], i, 1);
     }
 
-    auto file_manager = vsk_get_file_manager();
     VskFilePtr file;
-    auto error = file_manager->open(file, filename, VskFile::MODE_OUTPUT);
+    auto error = vsk_get_file_manager()->open(file, filename, VskFile::MODE_OUTPUT);
+    if (error)
+    {
+        do_error(error);
+        return false;
+    }
+
+    error = file->write_bin(data.data(), size);
+    if (error)
+    {
+        vsk_delete_file(filename);
+        return false;
+    }
+
+    return true;
+}
+
+bool VskMachine::binary_save_with_header(const char *filename, VskAddr addr, VskDword size)
+{
+    std::vector<uint8_t> data;
+    data.resize(size);
+
+    for (size_t i = addr; i < addr + size; ++i)
+    {
+        if (is_8801_mode() && 0x8000 <= i && i <= 0x83FF)
+        {
+            bad_call();
+            return false;
+        }
+        m_state->m_memory->read(&data[i - addr], i, 1);
+    }
+
+    VskFilePtr file;
+    auto error = vsk_get_file_manager()->open(file, filename, VskFile::MODE_OUTPUT);
     if (error)
     {
         do_error(error);

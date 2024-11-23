@@ -831,14 +831,11 @@ bool vsk_is_safe_zone_pathname(VskString pathname, bool for_write)
     pathname = szPath2;
 
     // EXEファイルのフォルダを取得
-    char szPath[MAX_PATH];
-    ::GetModuleFileNameA(nullptr, szPath, _countof(szPath));
-    PathRemoveFileSpecA(szPath);
-    PathAddBackslashA(szPath);
-    ::CharUpperA(szPath);
+    auto root_path = vsk_get_root();
+    ::CharUpperA(&root_path[0]);
 
     // EXEファイルのフォルダ内部にあるか？
-    return pathname.find(szPath) == 0;
+    return pathname.find(root_path) == 0;
 }
 
 // Shiftキーが押されているか？

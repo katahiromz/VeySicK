@@ -564,8 +564,10 @@ struct VskMachine : VskObject
     {
         return (addr - (m_state->m_segment << 4)) & 0x0FFF;
     }
-    bool binary_load(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr);
+    bool binary_load(const char *filename, VskAddr addr, VskDword& size);
     bool binary_save(const char *filename, VskAddr addr, VskDword size);
+    bool binary_load_with_header(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr);
+    bool binary_save_with_header(const char *filename, VskAddr addr, VskDword size);
 
     virtual void reset_palette() { }
     virtual void reset_border_color() { vsk_reset_border_color(m_state->m_border_color); }

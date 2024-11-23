@@ -4997,16 +4997,23 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
             }
         }
 
-        VskAddr addr;
         if (v1 == VskWord(-1))
-            addr = VskAddr(-1);
-        else
-            addr = vsk_machine->resolve_addr(v1);
+            v1 = 0;
+
+        VskAddr addr = vsk_machine->resolve_addr(v1);
 
         VskMemSize size;
-        VskAddr call_addr;
-        if (!vsk_machine->binary_load(v0.c_str(), addr, size, call_addr))
-            return nullptr;
+        VskAddr call_addr = addr;
+        if (vsk_machine->is_8801_mode())
+        {
+            if (!vsk_machine->binary_load_with_header(v0.c_str(), addr, size, call_addr))
+                return nullptr;
+        }
+        else
+        {
+            if (!vsk_machine->binary_load(v0.c_str(), addr, size))
+                return nullptr;
+        }
 
         if (v2 == "R")
         {
@@ -5028,7 +5035,14 @@ static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr self, const VskAstList& args)
     if (vsk_str(v0, args[0]) && vsk_wrd(v1, args[1]) && vsk_wrd(v2, args[2]))
     {
         VskAddr addr = vsk_machine->resolve_addr(v1), size = v2;
-        vsk_machine->binary_save(v0.c_str(), addr, size);
+        if (vsk_machine->is_8801_mode())
+        {
+            vsk_machine->binary_save_with_header(v0.c_str(), addr, size);
+        }
+        else
+        {
+            vsk_machine->binary_save(v0.c_str(), addr, size);
+        }
     }
 
     return nullptr;
