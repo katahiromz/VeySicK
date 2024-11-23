@@ -3181,6 +3181,7 @@ static VskAstPtr vsk_COLOR_8801(const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_MISSING_OPERAND, nullptr);
 
         vsk_machine->reset_palette();
+        VSK_STATE()->m_border_color = -1;
         vsk_machine->reset_border_color();
         return nullptr;
     }
@@ -3240,6 +3241,7 @@ static VskAstPtr vsk_COLOR_9801(const VskAstList& args)
     if (args.empty())
     {
         vsk_machine->reset_palette();
+        VSK_STATE()->m_border_color = -1;
         vsk_machine->reset_border_color();
         return nullptr;
     }
@@ -4965,11 +4967,8 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr self, const VskAstList& args)
     if (args.size() == 0 || vsk_int(v0, args[0]))
     {
         if (!(1 <= v0 && v0 <= 3))
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
-
+           VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+ 
         if (v0 & 1)
         {
             vsk_machine->clear_text();

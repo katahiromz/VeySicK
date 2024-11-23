@@ -1714,7 +1714,7 @@ void VskMachine::clear_graphic()
 // グラフィック画面をクリア
 void VskMachine::clear_graphic(const VskRectI *rect)
 {
-    fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, 0);
+    fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, m_state->m_back_color);
 }
 
 // ワールド座標をスクリーン座標に
