@@ -6143,28 +6143,27 @@ static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 4, 6))
         return nullptr;
 
-    VskDouble v0, v1, v2, v3;
-    VskInt v4 = 0, v5 = 7;
-    auto arg4 = vsk_arg(args, 4);
-    auto arg5 = vsk_arg(args, 5);
-    if (vsk_dbl(v0, args[0]) &&
-        vsk_dbl(v1, args[1]) &&
-        vsk_dbl(v2, args[2]) &&
-        vsk_dbl(v3, args[3]) &&
+    VskInt x0, y0, x1, y1, v4 = 0, v5 = 7;
+    auto arg4 = vsk_arg(args, 4), arg5 = vsk_arg(args, 5);
+    if (vsk_int(x0, args[0]) && vsk_int(y0, args[1]) &&
+        vsk_int(x1, args[2]) && vsk_int(y1, args[3]) &&
         (!arg4 || vsk_int(v4, args[4])) &&
         (!arg5 || vsk_int(v5, args[5])))
     {
-        if (v0 >= v2 || v1 >= v3 || !(0 <= v4 && v4 < 16) || !(0 <= v5 && v5 < 16))
+        if (x0 < 0 || y0 < 0 || x0 >= x1 || y0 >= y1 ||
+            !vsk_machine->is_valid_color(v4) ||
+            !vsk_machine->is_valid_color(v5) ||
+            x1 >= VSK_STATE()->m_screen_width || y1 >= VSK_STATE()->m_screen_height)
         {
             vsk_machine->bad_call();
             return nullptr;
         }
-        auto x0 = VSK_STATE()->m_viewport.m_x0 = (int)std::round(v0);
-        auto y0 = VSK_STATE()->m_viewport.m_y0 = (int)std::round(v1);
-        auto x1 = VSK_STATE()->m_viewport.m_x1 = (int)std::round(v2);
-        auto y1 = VSK_STATE()->m_viewport.m_y1 = (int)std::round(v3);
+        VSK_STATE()->m_viewport.m_x0 = x0; VSK_STATE()->m_viewport.m_y0 = y0;
+        VSK_STATE()->m_viewport.m_x1 = x1; VSK_STATE()->m_viewport.m_y1 = y1;
         if (arg4)
+        {
             vsk_machine->clear_graphic(v4);
+        }
         if (arg5)
         {
             VskRectI clipping = { 0, 0, VSK_STATE()->m_screen_width - 1, VSK_STATE()->m_screen_height - 1 };
