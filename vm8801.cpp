@@ -565,7 +565,7 @@ void Vsk8801Machine::reset_graphics()
     case 1: vsk_reset_graphics_8801(m_state, 640, 200, false); break;
     case 2: vsk_reset_graphics_8801(m_state, 640, 400, false); break;
     case 3: vsk_reset_graphics_8801(m_state, 640, 200, true); break;
-    case 4: vsk_reset_graphics_8801(m_state, 640, 400, true); break;
+    case 4: vsk_reset_graphics_8801(m_state, 640, 400, false); break;
     default:
         assert(0);
         break;
@@ -1033,13 +1033,6 @@ void Vsk8801Machine::render_color_graphics()
 // スクリーンモードが正しいか？
 bool Vsk8801Machine::is_valid_screen_mode(int screen_mode) const
 {
-    if (screen_mode == 4)
-    {
-        // TODO: 日本語8801の専用ディスプレイモード(日本語)をサポートしてちょうだい
-        mdbg_traceA("TODO: Please support Japanese 8801 special display mode\n");
-        return false;
-    }
-
     return 0 <= screen_mode && screen_mode <= 4;
 }
 
@@ -1051,7 +1044,7 @@ bool Vsk8801Machine::is_valid_active_page(int screen_mode, int active_page, bool
     case 0: return (0 <= active_page && active_page <= 3);
     case 1: return (0 <= active_page && active_page <= 11);
     case 2: return (0 <= active_page && active_page <= 5);
-    case 3: return (0 <= active_page && active_page <= 1);
+    case 3: return (0 <= active_page && active_page <= 3);
     case 4: return (0 <= active_page && active_page <= 1);
     }
     assert(0);
