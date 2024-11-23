@@ -705,7 +705,7 @@ struct VskMachine : VskObject
     void test_pattern(int type);
     void step();
 
-    bool load(VskString filename, std::string& data);
+    VskError load(VskString filename, std::string& data);
     bool save(VskString filename, const std::string& data);
     bool run();
 };
@@ -817,3 +817,15 @@ VskPointD vsk_turtle_pos_in_screen(void);
 VskDouble vsk_turtle_direction_in_radian(void);
 // アプリを終了する
 void vsk_app_quit(void);
+// ディレクトリを変更する
+VskError vsk_chdir(const char *dirname);
+// ディレクトリを作成する
+VskError vsk_mkdir(const char *dirname);
+// 空のディレクトリを削除する
+VskError vsk_rmdir(const char *dirname);
+// ファイルを削除する
+VskError vsk_delete_file(const char *filename);
+// パスからファイル名を取り除く
+VskString vsk_path_remove_filename(const VskString& pathname);
+// 現在のディレクトリを取得する
+VskString vsk_getcwd(void);

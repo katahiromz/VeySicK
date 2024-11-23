@@ -3581,7 +3581,7 @@ static VskAstPtr VSKAPI vsk_NAME(VskAstPtr self, const VskAstList& args)
         }
 
         // 変更先を消す
-        unlink(raw_path1.c_str());
+        vsk_delete_file(raw_path1.c_str());
 
         // 名前を変える
         if (rename(raw_path0.c_str(), raw_path1.c_str()) == 0)
@@ -4714,12 +4714,6 @@ enum DIR_OP
     DIR_OP_CHDIR_PARENT,
 };
 
-VskString vsk_path_remove_filename(const VskString& pathname);
-VskError vsk_getcwd(char *buf, size_t buflen);
-VskError vsk_chdir(const char *dirname);
-VskError vsk_mkdir(const char *dirname);
-VskError vsk_rmdir(const char *dirname);
-
 static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, DIR_OP op)
 {
     if (!vsk_arity_in_range(args, 0, 1))
@@ -4732,12 +4726,8 @@ static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, D
         {
         case DIR_OP_CHDIR:
             {
-                char buf[260];
-                if (auto error = vsk_getcwd(buf, 260))
-                {
-                    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DRIVE_NO, nullptr);
-                }
-                vsk_print(VskString(buf) + "\n");
+                auto dir = vsk_getcwd();
+                vsk_print(dir + "\n");
                 return nullptr;
             }
             break;
@@ -4774,7 +4764,10 @@ static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, D
         {
         case DIR_OP_CHDIR_PARENT:
             raw_path = vsk_path_remove_filename(raw_path);
-            // FALL THROUGH...
+            // 現在のディレクトリを変更する
+            if (auto error = vsk_chdir(raw_path.c_str()))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+            return nullptr;
         case DIR_OP_CHDIR:
             // 現在のディレクトリを変更する
             if (auto error = vsk_chdir(raw_path.c_str()))
@@ -6147,13 +6140,28 @@ void vsk_add_line_numbers(VskString& text, VskLineNo start = 100, VskLineNo step
 bool vsk_load_file(const VskString& filename, VskString& text, bool change_dir)
 {
     // ファイルから読み込む
-    if (!vsk_machine->load(filename, text))
+    VskString new_filename = filename;
+    auto error = vsk_machine->load(new_filename, text);
+    if (error)
+    {
+        new_filename = filename + ".BAS";
+        error = vsk_machine->load(new_filename, text);
+    }
+    if (error)
+    {
+        new_filename = filename + ".N88";
+        error = vsk_machine->load(new_filename, text);
+    }
+    if (error)
+    {
+        vsk_error(error);
         return false;
+    }
 
     // 必要ならディレクトリを変更する
     if (change_dir)
     {
-        vsk_CHDIR_MKDIR_RMDIR(nullptr, { vsk_ast_str(filename) }, DIR_OP_CHDIR_PARENT);
+        vsk_CHDIR_MKDIR_RMDIR(nullptr, { vsk_ast_str(new_filename) }, DIR_OP_CHDIR_PARENT);
     }
 
     // '\x1A' 以降を削除する

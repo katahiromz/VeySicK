@@ -2263,15 +2263,14 @@ bool VskMachine::binary_save(const char *filename, VskAddr addr, VskDword size)
         error = file->write_bin(data.data(), size);
     if (error)
     {
-        unlink(filename);
-        do_error(error);
+        vsk_delete_file(filename);
         return false;
     }
 
     return true;
 }
 
-bool VskMachine::load(VskString filename, std::string& data)
+VskError VskMachine::load(VskString filename, std::string& data)
 {
     data.clear();
 
@@ -2279,24 +2278,12 @@ bool VskMachine::load(VskString filename, std::string& data)
     VskFilePtr file;
     auto error = file_manager->open(file, filename, VskFile::MODE_INPUT);
     if (error)
-        error = file_manager->open(file, filename + ".bas", VskFile::MODE_INPUT);
-    if (error)
-        error = file_manager->open(file, filename + ".BAS", VskFile::MODE_INPUT);
-    if (error)
-        error = file_manager->open(file, filename + ".n88", VskFile::MODE_INPUT);
-    if (error)
-        error = file_manager->open(file, filename + ".N88", VskFile::MODE_INPUT);
-    if (error)
-    {
-        do_error(error);
-        return false;
-    }
+        return error;
 
     VskDword size;
     if (!file->get_size(&size))
     {
-        do_error(VSK_ERR_DISK_IO_ERROR);
-        return false;
+        return VSK_ERR_DISK_IO_ERROR;
     }
 
     if (size)
@@ -2305,16 +2292,13 @@ bool VskMachine::load(VskString filename, std::string& data)
 
         error = file->read_bin(&data[0], size);
         if (error)
-        {
-            do_error(error);
-            return false;
-        }
+            return error;
 
         mstr_replace_all(data, "\r\n", "\n");
         mstr_replace_all(data, "\r", "\n");
     }
 
-    return true;
+    return VSK_NO_ERROR;
 }
 
 bool VskMachine::save(VskString filename, const std::string& data)

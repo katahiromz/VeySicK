@@ -544,14 +544,6 @@ VskString vsk_path_remove_filename(const VskString& pathname)
 }
 
 // 現在のディレクトリを取得する
-VskError vsk_getcwd(char *buf, size_t buflen)
-{
-    ::GetCurrentDirectoryA(buflen, buf);
-    ::PathAddBackslashA(buf);
-    return VSK_NO_ERROR;
-}
-
-// 現在のディレクトリを取得する
 VskString vsk_getcwd(void)
 {
     char buf[MAX_PATH];
@@ -726,11 +718,9 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
     auto i0 = descriptor.find(':');
     if (i0 == descriptor.npos)
     {
-        // コロンがなければ、現在のパスと仮定
-        char buf[MAX_PATH];
-        vsk_getcwd(buf, MAX_PATH);
-        raw_path = buf;
+        // デバイス未定
         device.clear();
+        raw_path = descriptor;
     }
     else
     {
@@ -753,9 +743,9 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
         return true;
     }
 
-    if (PathIsUNCA(raw_path.c_str())) // UNCパスか？
+    if (!::PathIsRelativeA(raw_path.c_str()) || ::PathIsUNCA(raw_path.c_str()))
     {
-        // Windowsのフルパスと仮定
+        // Windowsのフルパス
         raw_path = descriptor;
         device.clear();
         return true;
