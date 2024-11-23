@@ -361,14 +361,14 @@ extern std::shared_ptr<VskStrMemoryBlock> vsk_str_block;
 #define VSK_SCREEN_HEIGHT 400
 
 // マシンモード
-enum VskMachineMode : VskDword
+enum VskMachineMode
 {
     VSK_MACHINE_MODE_8801,  // 8801モード
     VSK_MACHINE_MODE_9801,  // 9801モード
 };
 
 // テキストモード
-enum VskTextMode : VskDword
+enum VskTextMode
 {
     VSK_TEXT_MODE_SJIS,     // SJISモード
     VSK_TEXT_MODE_GRPH,     // GRPHモード
