@@ -5620,16 +5620,16 @@ static VskAstPtr VSKAPI vsk_FIX(VskAstPtr self, const VskAstList& args)
 // 直線や長方形を描くヘルパー関数、その１
 void vsk_LINE_helper_1(VskDouble v0, VskDouble v1, VskDouble v2, VskDouble v3, VskInt v4, VskString v5, VskInt v6 = -1, VskString v7 = "")
 {
-    // ワールド座標をクライアント座標に
-    auto pt0 = vsk_machine->world_to_client(VskPointD { v0, v1 });
-    auto pt1 = vsk_machine->world_to_client(VskPointD { v2, v3 });
+    // ワールド座標をスクリーン座標に
+    auto pt0 = vsk_machine->world_to_view({ v0, v1 });
+    auto pt1 = vsk_machine->world_to_view({ v2, v3 });
 
     if (v5 == "BF")
-        vsk_machine->fill_box(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), v4, v7);
+        vsk_machine->fill_box(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, v4, v7);
     else if (v5 == "B")
-        vsk_machine->draw_box(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), v4, v6);
+        vsk_machine->draw_box(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, v4, v6);
     else
-        vsk_machine->draw_line(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), v4, v6);
+        vsk_machine->draw_line(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, v4, v6);
 
     VSK_STATE()->m_last_point_in_world = { v2, v3 };
 }

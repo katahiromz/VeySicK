@@ -1,4 +1,4 @@
-100 ' PAINT TEST {SJIS}
+100 ' PAINT TEST
 120 screen 0
 140 view (100,50)-(600,180)
 150 window (-1,-1)-(1,1)
