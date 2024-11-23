@@ -1103,12 +1103,6 @@ void VskMachine::stop()
     vsk_stop();
 }
 
-// ベルを鳴らす
-void VskMachine::beep(int number)
-{
-    vsk_sound_beep(number);
-}
-
 // キーボードからの１文字入力処理
 void VskMachine::keyboard_ch(VskWord ch)
 {
@@ -1217,7 +1211,7 @@ void VskMachine::control_code(VskByte ch)
             return;
         if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT)
             return;
-        beep();
+        vsk_beep();
         break;
     case 'H': // BACKSPACE
         if (VSK_STATE()->m_wait_for == VSK_NO_WAIT)
@@ -1334,7 +1328,7 @@ void VskMachine::print_control(VskByte ch)
     case 'F': // FORWARD WORD
         break;
     case 'G': // BEL
-        beep();
+        vsk_beep();
         break;
     case 'H': // BACKSPACE
         back_space();

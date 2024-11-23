@@ -231,6 +231,7 @@ struct VskSoundPlayer {
     void stop();
 
     void beep(int i);
+    bool is_beeping();
 
 protected:
     ALuint  m_beep_buffer;

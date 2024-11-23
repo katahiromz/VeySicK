@@ -546,6 +546,12 @@ void VskSoundPlayer::init_beep() {
     alSourcei(m_beep_source, AL_BUFFER, m_beep_buffer);
 } // VskSoundPlayer::init_beep
 
+bool VskSoundPlayer::is_beeping() {
+    ALint state = 0;
+    alGetSourcei(m_beep_source, AL_SOURCE_STATE, &state);
+    return state == AL_PLAYING;
+}
+
 void VskSoundPlayer::beep(int i) {
     switch (i) {
     case -1:

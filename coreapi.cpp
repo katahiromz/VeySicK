@@ -282,6 +282,8 @@ struct VskMachineImpl
     VskFilePtr m_printing_device = nullptr;
     VskAstList m_printing_items = { };
     bool m_printing_is_write = false;
+    // BEEP待ち
+    bool m_beep_waiting = true;
     // AUTO文情報
     bool m_auto_mode = false;
     VskLineNo m_auto_line_number = 0;
@@ -1238,6 +1240,15 @@ VskString vsk_get_program_line_text(VskLineNo line_no)
     return VSK_IMPL()->m_target_line_text;
 }
 
+// BEEP音を鳴らす
+void vsk_beep(int number)
+{
+    vsk_sound_stop();
+    vsk_sound_beep(number);
+    if (number == -1)
+        VSK_IMPL()->m_beep_waiting = true;
+}
+
 // エラーを処理する
 bool vsk_error(VskError error)
 {
@@ -1271,9 +1282,8 @@ bool vsk_error(VskError error)
     if (vsk_target_line != 0 && vsk_target_line != -1)
         vsk_machine->print(" at " + vsk_to_string(vsk_target_line));
 
-    vsk_machine->print("\n");
-    vsk_machine->beep();
     vsk_enter_command_level();
+    vsk_beep(-1);
     return true;
 }
 
@@ -1330,8 +1340,7 @@ VskError vsk_had_new_exceptions(VskAstPtr& context)
 
     if (overflow)
     {
-        vsk_machine->print("/0\n"); // ゼロ除算を表示
-        vsk_machine->beep(); // BEEP音を出す
+        vsk_machine->print("/0\b\n"); // ゼロ除算を表示。"\b"でBEEP音を鳴らす
     }
 
     return error;
@@ -2103,8 +2112,7 @@ bool vsk_sng(VskSingle& value, VskAstPtr arg)
         if (!(std::numeric_limits<VskSingle>::lowest() <= ret->m_dbl &&
               ret->m_dbl <= std::numeric_limits<VskSingle>::max())) // オーバーフロー？
         {
-            vsk_machine->print("OV\n"); // Overflow
-            vsk_machine->beep(); // BEEP音を出す
+            vsk_machine->print("OV\b\n"); // Overflow. "\b"でBEEP音を鳴らす
             value = 0; // 自動修正
         }
         else
@@ -2657,8 +2665,7 @@ void vsk_default_trap(VskTrapType type)
             // 必要ならば停止メッセージを表示
             if (!VSK_IMPL()->m_auto_mode && !VSK_STATE()->m_edit_mode)
             {
-                vsk_machine->beep(-1);
-                vsk_print("^C\nBreak");
+                vsk_print("^C\nBreak\b"); // "\b"でBEEP音を鳴らす
                 if (vsk_target_line != 0 && vsk_target_line != -1)
                     vsk_print(" at " + vsk_to_string(vsk_target_line));
             }
@@ -2682,8 +2689,7 @@ void vsk_default_trap(VskTrapType type)
         case VSK_WAIT_FOR_PLAY:
             vsk_sound_stop();
             {
-                vsk_machine->beep(-1);
-                vsk_print("^C\nBreak");
+                vsk_print("^C\nBreak\b"); // "\b"でBEEP音を鳴らす
                 if (vsk_target_line != 0 && vsk_target_line != -1)
                     vsk_print(" at " + vsk_to_string(vsk_target_line));
             }
@@ -2931,9 +2937,29 @@ bool vsk_do_printing(void)
     return true;
 }
 
+bool vsk_beep_wait(void)
+{
+    if (!VSK_IMPL()->m_beep_waiting)
+        return false; // 待たない
+
+    if (vsk_sound_is_beeping())
+    {
+        mdbg_traceA("OK\n");
+        return true; // 待つ
+    }
+
+    vsk_sound_wait(50);
+    mdbg_traceA("WAIT\n");
+    VSK_IMPL()->m_beep_waiting = false;
+    return false; // 待たない
+}
+
 // 待つ
 bool vsk_wait(void)
 {
+    if (vsk_beep_wait())
+        return true; // 待つ
+
     switch (VSK_STATE()->m_wait_for)
     {
     case VSK_NO_WAIT:
@@ -3488,8 +3514,7 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
 
         if (!vsk_is_safe_zone_pathname(raw_path, true))
         {
-            vsk_machine->beep();
-            vsk_print("Security error!\n");
+            vsk_print("Security error!\b\n"); // "\b"でBEEP音を鳴らす
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
@@ -3575,8 +3600,7 @@ static VskAstPtr VSKAPI vsk_NAME(VskAstPtr self, const VskAstList& args)
         if (!vsk_is_safe_zone_pathname(raw_path0, true) ||
             !vsk_is_safe_zone_pathname(raw_path1, true))
         {
-            vsk_machine->beep();
-            vsk_print("Security error!\n");
+            vsk_print("Security error!\b\n"); // "\b"でBEEP音を鳴らす
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
@@ -7387,7 +7411,7 @@ static VskAstPtr VSKAPI vsk_BEEP(VskAstPtr self, const VskAstList& args)
         return nullptr;
     if (args.size())
         v0 = !!v0;
-    vsk_machine->beep(v0);
+    vsk_beep(v0);
     return nullptr;
 }
 

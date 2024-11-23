@@ -752,8 +752,12 @@ void vsk_sound_beep(int i)
     assert(vsk_sound_player);
     if (vsk_sound_player) {
         vsk_sound_player->beep(i);
-        vsk_sound_player->wait_for_stop(500);
     }
+}
+
+bool vsk_sound_is_beeping(void)
+{
+    return vsk_sound_player && vsk_sound_player->is_beeping();
 }
 
 // SSG音源で音楽再生

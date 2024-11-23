@@ -635,7 +635,6 @@ struct VskMachine : VskObject
 
     void pen(int x, int y, bool pressed);
     void stop();
-    void beep(int number = -1);
     void help();
     void back_word();
     void forward_word();
@@ -831,3 +830,5 @@ VskError vsk_delete_file(const char *filename);
 VskString vsk_path_remove_filename(const VskString& pathname);
 // 現在のディレクトリを取得する
 VskString vsk_getcwd(void);
+// BEEP音を鳴らす
+void vsk_beep(int number = -1);
