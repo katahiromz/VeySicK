@@ -3170,8 +3170,69 @@ static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr self, const VskAstList& args)
 #endif
 }
 
-// INSN_COLOR (COLOR) @implemented
-static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
+static VskAstPtr vsk_COLOR_8801(const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 0, 5))
+        return nullptr;
+
+    if (args.empty())
+    {
+        if (!VSK_SETTINGS()->m_unlimited_mode)
+            VSK_ERROR_AND_RETURN(VSK_ERR_MISSING_OPERAND, nullptr);
+
+        vsk_machine->reset_palette();
+        vsk_machine->reset_border_color();
+        return nullptr;
+    }
+
+    VskInt v0 = VSK_STATE()->m_text_color; // 機能コード
+    VskInt v1 = VSK_STATE()->m_back_color; // 背景色
+    VskInt v2 = VSK_STATE()->m_border_color; // 境界色
+    VskInt v3 = VSK_STATE()->m_fore_color; // 前景色
+    auto arg0 = vsk_arg(args, 0);
+    auto arg1 = vsk_arg(args, 1);
+    auto arg2 = vsk_arg(args, 2);
+    auto arg3 = vsk_arg(args, 3);
+    if ((!arg0 || vsk_int(v0, arg0)) &&
+        (!arg1 || vsk_int(v1, arg1)) &&
+        (!arg2 || vsk_int(v2, arg2)) &&
+        (!arg3 || vsk_int(v3, arg3)))
+    {
+        if (!(0 <= v0 && v0 < 8))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (!vsk_machine->is_valid_color(v1) || !vsk_machine->is_valid_color(v3))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        // ボーダーカラーが変更されたか？
+        bool border_change = (VSK_STATE()->m_border_color != v2);
+
+        // 引数が全部省略されたら、ボーダーカラーをリセットする
+        if (args.empty())
+        {
+            v2 = -1;
+            border_change = true;
+        }
+
+        // 格納
+        VSK_STATE()->m_text_color = v0;
+        vsk_machine->set_color(int(v0));
+        VSK_STATE()->m_back_color = v1;
+        VSK_STATE()->m_border_color = v2;
+        VSK_STATE()->m_fore_color = v3;
+        VSK_STATE()->m_palette_mode = VSK_PAL_MODE_8_COLORS_DIGITAL;
+
+        if (border_change)
+        {
+            // ボーダーカラーのリセット
+            vsk_machine->reset_border_color();
+        }
+    }
+
+    return nullptr;
+}
+
+static VskAstPtr vsk_COLOR_9801(const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 5))
         return nullptr;
@@ -3187,60 +3248,37 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
     VskInt v1 = VSK_STATE()->m_back_color; // 背景色
     VskInt v2 = VSK_STATE()->m_border_color; // 境界色
     VskInt v3 = VSK_STATE()->m_fore_color; // 前景色
-
-    VskInt v4 = -1; // パレットモード
-    if (!vsk_machine->is_8801_mode())
+    VskInt v4; // パレットモード
+    auto arg0 = vsk_arg(args, 0);
+    auto arg1 = vsk_arg(args, 1);
+    auto arg2 = vsk_arg(args, 2);
+    auto arg3 = vsk_arg(args, 3);
+    auto arg4 = vsk_arg(args, 4);
+    if ((!arg0 || vsk_int(v0, arg0)) &&
+        (!arg1 || vsk_int(v1, arg1)) &&
+        (!arg2 || vsk_int(v2, arg2)) &&
+        (!arg3 || vsk_int(v3, arg3)) &&
+        (!arg4 || vsk_int(v4, arg4)))
     {
-        switch (VSK_STATE()->m_color_mode)
+        if (!arg4)
         {
-        case VSK_COLOR_MODE_8_COLORS:   v4 = 1; break;
-        case VSK_COLOR_MODE_16_COLORS:  v4 = 2; break;
+            switch (VSK_STATE()->m_palette_mode)
+            {
+            case VSK_PAL_MODE_8_COLORS_DIGITAL: v4 = 0; break;
+            case VSK_PAL_MODE_8_COLORS_SUPER:   v4 = 1; break;
+            case VSK_PAL_MODE_16_COLORS_SUPER:  v4 = 2; break;
+            }
         }
-    }
-
-    if ((args.size() <= 0 || !args[0] || vsk_int(v0, args[0])) &&
-        (args.size() <= 1 || !args[1] || vsk_int(v1, args[1])) &&
-        (args.size() <= 2 || !args[2] || vsk_int(v2, args[2])) &&
-        (args.size() <= 3 || !args[3] || vsk_int(v3, args[3])) &&
-        (args.size() <= 4 || !args[4] || vsk_int(v4, args[4])))
-    {
-        vsk_targeting(self);
+        VskPaletteMode palette_mode = static_cast<VskPaletteMode>(v4);
 
         if (!(0 <= v0 && v0 < 8))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        VskColorMode color_mode = VSK_STATE()->m_color_mode;
-        if (vsk_machine->is_8801_mode()) // 8801モードか？
+        if (!vsk_machine->is_valid_color(v1) ||
+            !vsk_machine->is_valid_color(v3) ||
+            !(0 <= v4 && v4 <= 2))
         {
-            // バリデーション
-            if (!vsk_machine->is_valid_color(v1) ||
-                !vsk_machine->is_valid_color(v3) ||
-                (args.size() >= 4))
-            {
-                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-            }
-
-            // カラーモードをセット
-            color_mode = VSK_COLOR_MODE_8_COLORS;
-        }
-        else // 8801モード以外
-        {
-            // バリデーション
-            if (!vsk_machine->is_valid_color(v1) ||
-                !vsk_machine->is_valid_color(v3) ||
-                !(0 <= v4 && v4 <= 2))
-            {
-                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-            }
-
-            // カラーモードをセット
-            color_mode = VSK_COLOR_MODE_8_COLORS;
-            switch (v4)
-            {
-            case 0: case 1: color_mode = VSK_COLOR_MODE_8_COLORS; break;
-            case 2: color_mode = VSK_COLOR_MODE_16_COLORS; break;
-            default: assert(0); break;
-            }
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
         // ボーダーカラーが変更されたか？
@@ -3259,11 +3297,10 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
         VSK_STATE()->m_back_color = v1;
         VSK_STATE()->m_border_color = v2;
         VSK_STATE()->m_fore_color = v3;
-        VSK_STATE()->m_color_mode = color_mode;
+        VSK_STATE()->m_palette_mode = palette_mode;
 
         // パレットモードがセットされたか、引数が全部省略されたら、パレットをリセットする
-        bool set_color_mode = (args.empty() || (args.size() > 4 && args[4]));
-        if (set_color_mode || args.empty())
+        if (arg4 || args.empty())
             vsk_machine->reset_palette();
 
         if (border_change)
@@ -3273,6 +3310,20 @@ static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
         }
     }
 
+    return nullptr;
+}
+
+// INSN_COLOR (COLOR) @implemented
+static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
+{
+#ifdef ENABLE_PC8801
+    if (vsk_machine->is_8801_mode())
+        return vsk_COLOR_8801(args);
+#endif
+#ifdef ENABLE_PC9801
+    if (vsk_machine->is_9801_mode())
+        return vsk_COLOR_9801(args);
+#endif
     return nullptr;
 }
 
@@ -4866,7 +4917,7 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
             }
         }
 
-        bool high_color = (VSK_STATE()->m_color_mode == VSK_COLOR_MODE_16_COLORS);
+        bool high_color = (VSK_STATE()->m_palette_mode == VSK_PAL_MODE_16_COLORS_SUPER);
         if (!vsk_machine->is_valid_screen_mode(v0) ||
             !(0 <= v1 && v1 < 4) ||
             !vsk_machine->is_valid_active_page(v0, v2, high_color) ||
@@ -6959,13 +7010,14 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
         int M = 1;
         if (VSK_STATE()->m_color_graphics)
         {
-            switch (VSK_STATE()->m_color_mode)
+            switch (VSK_STATE()->m_palette_mode)
             {
-            case VSK_COLOR_MODE_16_COLORS:
-                M = 4;
-                break;
-            default:
+            case VSK_PAL_MODE_8_COLORS_DIGITAL:
+            case VSK_PAL_MODE_8_COLORS_SUPER:
                 M = 3;
+                break;
+            case VSK_PAL_MODE_16_COLORS_SUPER:
+                M = 4;
                 break;
             }
         }
@@ -7039,13 +7091,14 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
         int M = 1;
         if (VSK_STATE()->m_color_graphics)
         {
-            switch (VSK_STATE()->m_color_mode)
+            switch (VSK_STATE()->m_palette_mode)
             {
-            case VSK_COLOR_MODE_16_COLORS:
-                M = 4;
-                break;
-            default:
+            case VSK_PAL_MODE_8_COLORS_DIGITAL:
+            case VSK_PAL_MODE_8_COLORS_SUPER:
                 M = 3;
+                break;
+            case VSK_PAL_MODE_16_COLORS_SUPER:
+                M = 4;
                 break;
             }
         }
@@ -7699,9 +7752,9 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr self, const VskAstList& args)
         if (!vsk_machine->is_valid_color(v0))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        switch (VSK_STATE()->m_color_mode)
+        switch (VSK_STATE()->m_palette_mode)
         {
-        case VSK_COLOR_MODE_8_COLORS:
+        case VSK_PAL_MODE_8_COLORS_DIGITAL:
             {
                 VskWebColor web_color;
                 if (!vsk_web_color_from_digital_8_color_code(web_color, v1))
@@ -7709,7 +7762,8 @@ static VskAstPtr VSKAPI vsk_COLOR_equal(VskAstPtr self, const VskAstList& args)
                 VSK_STATE()->m_palette[v0] = web_color;
             }
             break;
-        case VSK_COLOR_MODE_16_COLORS:
+        case VSK_PAL_MODE_8_COLORS_SUPER:
+        case VSK_PAL_MODE_16_COLORS_SUPER:
             {
                 VskWebColor web_color;
                 if (!vsk_web_color_from_super_16_color_code(web_color, v1))
@@ -9980,15 +10034,7 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr self, const VskAstList& args)
                 }
                 break;
             case 0x6A:
-                switch (v1)
-                {
-                case 0:
-                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_8_COLORS;
-                    break;
-                case 1:
-                    VSK_STATE()->m_color_mode = VSK_COLOR_MODE_16_COLORS;
-                    break;
-                }
+                // TODO: パレットモード
                 break;
             case 0xA4:
                 // TODO: 表示画面の切り替え
@@ -10852,7 +10898,7 @@ void vsk_screen_tests_color(void)
     vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(2) });
     assert(VSK_STATE()->m_active_page == 0);
     assert(VSK_STATE()->m_display_pages_flags == (1 << 1));
-    if (vsk_machine->is_9801_mode() && VSK_STATE()->m_color_mode == VSK_COLOR_MODE_16_COLORS)
+    if (vsk_machine->is_9801_mode() && VSK_STATE()->m_palette_mode == VSK_PAL_MODE_16_COLORS_SUPER)
     {
         vsk_SCREEN(nullptr, { vsk_ast_int(screen_mode), vsk_ast_int(1), vsk_ast_int(0), vsk_ast_int(17) });
         assert(VSK_STATE()->m_active_page == 0);

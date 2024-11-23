@@ -119,10 +119,13 @@ int VskMachineState::get_graphics_num_planes() const
     if (!m_color_graphics)
         return 1;
 
-    switch (m_color_mode)
+    switch (m_palette_mode)
     {
-    case VSK_COLOR_MODE_8_COLORS: return 3;
-    case VSK_COLOR_MODE_16_COLORS: return 4;
+    case VSK_PAL_MODE_8_COLORS_DIGITAL:
+    case VSK_PAL_MODE_8_COLORS_SUPER:
+        return 3;
+    case VSK_PAL_MODE_16_COLORS_SUPER:
+        return 4;
     }
     return 0;
 }
@@ -1847,11 +1850,12 @@ bool VskMachine::is_valid_tile(const VskString& tile) const
 
 bool VskMachine::is_valid_color(int palette) const
 {
-    switch (m_state->m_color_mode)
+    switch (m_state->m_palette_mode)
     {
-    case VSK_COLOR_MODE_8_COLORS:
+    case VSK_PAL_MODE_8_COLORS_DIGITAL:
+    case VSK_PAL_MODE_8_COLORS_SUPER:
         return 0 <= palette && palette < 8;
-    case VSK_COLOR_MODE_16_COLORS:
+    case VSK_PAL_MODE_16_COLORS_SUPER:
         return 0 <= palette && palette < 16;
     default:
         assert(0);

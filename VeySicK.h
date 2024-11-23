@@ -89,10 +89,11 @@ inline VskWebColor vsk_make_web_color(VskByte red, VskByte green, VskByte blue)
 }
 
 // グラフィック画面のカラーモード
-enum VskColorMode
+enum VskPaletteMode
 {
-    VSK_COLOR_MODE_8_COLORS,
-    VSK_COLOR_MODE_16_COLORS,
+    VSK_PAL_MODE_8_COLORS_DIGITAL   = 0,
+    VSK_PAL_MODE_8_COLORS_SUPER     = 1,
+    VSK_PAL_MODE_16_COLORS_SUPER    = 2,
 };
 
 // デフォルトの色を取得
@@ -450,7 +451,7 @@ struct VskMachineState
     int m_back_color                        = 0;            // グラフィック画面の背景色
     int m_border_color                      = -1;           // グラフィック画面の境界色
     bool m_green_console                    = false;        // テキスト画面がモノクロのとき緑色で表示するか？
-    VskColorMode m_color_mode               = VSK_COLOR_MODE_8_COLORS;  // カラーモード
+    VskPaletteMode m_palette_mode           = VSK_PAL_MODE_8_COLORS_DIGITAL;  // パレットモード
     VskWebColor m_palette[16];                              // パレット番号からWebカラーへ
 
     int get_graphics_num_planes() const;

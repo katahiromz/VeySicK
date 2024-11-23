@@ -975,13 +975,14 @@ void Vsk9801Machine::render_function_keys()
 // パレットのリセット
 void Vsk9801Machine::reset_palette()
 {
-    switch (m_state->m_color_mode)
+    switch (m_state->m_palette_mode)
     {
-    case VSK_COLOR_MODE_8_COLORS:
+    case VSK_PAL_MODE_8_COLORS_DIGITAL:
+    case VSK_PAL_MODE_8_COLORS_SUPER:
         for (int i = 0; i < _countof(m_state->m_palette); ++i)
             m_state->m_palette[i] = vsk_get_default_digital_color_8(i);
         break;
-    case VSK_COLOR_MODE_16_COLORS:
+    case VSK_PAL_MODE_16_COLORS_SUPER:
         for (int i = 0; i < _countof(m_state->m_palette); ++i)
             m_state->m_palette[i] = vsk_get_default_digital_color_16(i);
         break;
