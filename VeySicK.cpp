@@ -2645,7 +2645,7 @@ void vsk_process_comment(VskString text)
         auto* state = VSK_STATE();
         auto* settings = VSK_SETTINGS();
         vsk_connect_machine(state, settings, false);
-        VSK_SETTINGS()->m_machine_mode = new_machine_mode;
+        settings->m_machine_mode = new_machine_mode;
         vsk_connect_machine(state, settings, true);
     }
 
