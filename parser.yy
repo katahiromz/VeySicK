@@ -1168,6 +1168,14 @@ matched_if_statement
         vsk_targeting($1);
         $$ = vsk_ast(INSN_IF, { $2, $4, $6 });
     }
+    | TK_IF expression TK_THEN matched_statement TK_ELSE                   {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, $4, vsk_ast(INSN_MULTI) });
+    }
+    | TK_IF expression TK_THEN                   TK_ELSE                   {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, vsk_ast(INSN_MULTI), vsk_ast(INSN_MULTI) });
+    }
     ;
 
 unmatched_if_statement
@@ -1200,6 +1208,10 @@ unmatched_if_statement
     | TK_IF expression TK_THEN statement                                     {
         vsk_targeting($1);
         $$ = vsk_ast(INSN_IF, { $2, $4, nullptr });
+    }
+    | TK_IF expression TK_THEN                                               {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_IF, { $2, vsk_ast(INSN_MULTI), nullptr });
     }
     | TK_IF expression go_to line_number                                     {
         vsk_targeting($4);
