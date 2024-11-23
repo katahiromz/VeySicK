@@ -2943,13 +2943,10 @@ bool vsk_beep_wait(void)
         return false; // 待たない
 
     if (vsk_sound_is_beeping())
-    {
-        mdbg_traceA("OK\n");
         return true; // 待つ
-    }
 
     vsk_sound_wait(50);
-    mdbg_traceA("WAIT\n");
+
     VSK_IMPL()->m_beep_waiting = false;
     return false; // 待たない
 }
