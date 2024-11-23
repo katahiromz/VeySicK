@@ -33,18 +33,18 @@ struct VskDrawEngine
     VskInt          m_draw_coord_system;
     VskInt          m_draw_color;
     VskInt          m_draw_fill_color;
-    VskDouble       m_draw_scale;
+    VskSingle       m_draw_scale;
     VskWord         m_draw_line_style;
     VskString       m_draw_tile;
-    VskPointD       m_last_point_in_screen;
+    VskPointS       m_last_point_in_screen;
 
     VskDrawEngine() { reset(); }
     bool draw_item(const VskDrawItem& item);
     void reset();
 
 protected:
-    VskPointD map_draw_delta(VskPointD pt, VskPointD delta);
-    void update_LP(const VskDrawItem& item, VskPointD pt1);
+    VskPointS map_draw_delta(VskPointS pt, VskPointS delta);
+    void update_LP(const VskDrawItem& item, VskPointS pt1);
 };
 
 // SCREENを実行すると、VskDrawEngineは初期状態になる。

@@ -85,7 +85,7 @@ bool vsk_phrase_from_sing_items(
         case 'T':
             // テンポ
             if (auto ast = vsk_get_sing_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((48 <= i0) && (i0 <= 255)) {
                     phrase->m_setting.m_tempo = i0;
                     continue;
@@ -95,7 +95,7 @@ bool vsk_phrase_from_sing_items(
         case 'O':
             // オクターブ
             if (auto ast = vsk_get_sing_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((3 <= i0) && (i0 <= 6)) {
                     phrase->m_setting.m_octave = i0 - 1;
                     continue;
@@ -105,7 +105,7 @@ bool vsk_phrase_from_sing_items(
         case 'L':
             // 音符・休符の長さ
             if (auto ast = vsk_get_sing_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((1 <= i0) && (i0 <= 32)) {
                     phrase->m_setting.m_length = (24.0f * 4.0f) / i0;
                     continue;
@@ -116,7 +116,7 @@ bool vsk_phrase_from_sing_items(
         case 'R':
             // 音符か休符
             if (auto ast = vsk_get_sing_param(item)) {
-                auto L = ast->value();
+                auto L = ast->to_int();
                 // NOTE: 24 is the length of a quarter note
                 if ((1 <= L) && (L <= 32)) {
                     length = float(24 * 4 / L);
@@ -548,7 +548,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             continue;
         case 'V':
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((0 <= i0) && (i0 <= 15)) {
                     phrase->m_setting.m_volume = i0;
                     continue;
@@ -560,7 +560,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             continue;
         case 'L':
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((1 <= i0) && (i0 <= 64)) {
                     phrase->m_setting.m_length = (24.0f * 4.0f) / i0;
                     continue;
@@ -572,7 +572,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             continue;
         case 'Q':
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((0 <= i0) && (i0 <= 8)) {
                     phrase->m_setting.m_quantity = i0;
                     continue;
@@ -584,7 +584,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             continue;
         case 'O':
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((1 <= i0) && (i0 <= 8)) {
                     phrase->m_setting.m_octave = i0 - 1;
                     continue;
@@ -609,7 +609,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
         case 'N': case 'K':
             length = phrase->m_setting.m_length;
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((0 <= i0) && (i0 <= 96)) {
                     key = i0;
                     if (key >= 96) {
@@ -635,7 +635,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             continue;
         case 'T':
             if (auto ast = vsk_get_play_param(item)) {
-                auto i0 = vsk_round(ast->value());
+                auto i0 = ast->to_int();
                 if ((32 <= i0) && (i0 <= 255)) {
                     phrase->m_setting.m_tempo = i0;
                     continue;
@@ -652,7 +652,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             }
             length = phrase->m_setting.m_length;
             if (auto ast = vsk_get_play_param(item)) {
-                auto L = ast->value();
+                auto L = ast->to_sng();
                 // NOTE: 24 is the length of a quarter note
                 if ((1 <= L) && (L <= 64)) {
                     length = float(24 * 4 / L);
@@ -675,7 +675,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
         case '@':
             if (item.m_subcommand == "@") {
                 if (auto ast = vsk_get_play_param(item)) {
-                    auto i0 = vsk_round(ast->value());
+                    auto i0 = vsk_round(ast->to_sng());
                     if ((0 <= i0) && (i0 <= 61)) {
                         phrase->m_setting.m_tone = i0;
                         continue;
@@ -683,7 +683,7 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
                 }
             } else if (item.m_subcommand == "@V") {
                 if (auto ast = vsk_get_play_param(item)) {
-                    auto i0 = vsk_round(ast->value());
+                    auto i0 = vsk_round(ast->to_sng());
                     if ((0 <= i0) && (i0 <= 127)) {
                         phrase->m_setting.m_volume =  i0 * (15.0f / 127.0f);
                         continue;

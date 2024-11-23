@@ -1010,7 +1010,7 @@ static void vsk_reset_graphics_9801(VskMachineState *state, int width, int heigh
     state->m_screen_height = height;
     state->m_color_graphics = color;
     state->m_viewport = { 0, 0, VskInt(width - 1), VskInt(height - 1) };
-    state->m_window = { 0, 0, VskDouble(width - 1), VskDouble(height - 1) };
+    state->m_window = { 0, 0, VskSingle(width - 1), VskSingle(height - 1) };
 }
 
 // グラフィック画面のリセット

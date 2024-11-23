@@ -13,7 +13,7 @@ retry:;
     {
         if (items[i].m_subcommand == "RP") { // REPEAT (繰り返し)
             if (auto ast = vsk_eval_text(items[i].m_params[0])) {
-                repeat = vsk_round(ast->value());
+                repeat = ast->to_int();
                 if (repeat < 0) {
                     assert(0);
                     return false;
@@ -208,9 +208,9 @@ void VskTurtleEngine::update_LP(const VskPointI& pt_in_view)
 }
 
 // タートルの向きをラジアンで返す
-VskDouble VskTurtleEngine::get_turtle_direction_in_radian() const
+VskSingle VskTurtleEngine::get_turtle_direction_in_radian() const
 {
-    return -(m_direction_in_degree - 90) * M_PI / 180.0;
+    return -(m_direction_in_degree - 90) * VskSingle(M_PI) / 180.0f;
 }
 
 // タートルエンジンのしょおきか
@@ -234,14 +234,14 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 
     if (item.m_subcommand == "FD") { // FORWARD (前に進む)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            auto d0 = ast0->value();
+            auto d0 = ast0->to_sng();
             auto radian = get_turtle_direction_in_radian();
             VskPointI pt0 = get_pos_in_view();
-            VskPointD pt1;
+            VskPointS pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = { pt0.m_x + d0 * std::cos(radian) * 2, pt0.m_y - d0 * std::sin(radian) };
+                pt1 = { pt0.m_x + d0 * vsk_cosf(radian) * 2, pt0.m_y - d0 * vsk_sinf(radian) };
             } else {
-                pt1 = { pt0.m_x + d0 * std::cos(radian)    , pt0.m_y - d0 * std::sin(radian) };
+                pt1 = { pt0.m_x + d0 * vsk_cosf(radian)    , pt0.m_y - d0 * vsk_sinf(radian) };
             }
             if (m_pen_down) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
@@ -251,14 +251,14 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         }
     } else if (item.m_subcommand == "BK") { // BACK (戻る)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            auto d0 = ast0->value();
+            auto d0 = ast0->to_sng();
             auto radian = get_turtle_direction_in_radian();
             VskPointI pt0 = get_pos_in_view();
-            VskPointD pt1;
+            VskPointS pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = { pt0.m_x - d0 * std::cos(radian) * 2, pt0.m_y + d0 * std::sin(radian) };
+                pt1 = { pt0.m_x - d0 * vsk_cosf(radian) * 2, pt0.m_y + d0 * vsk_sinf(radian) };
             } else {
-                pt1 = { pt0.m_x - d0 * std::cos(radian)    , pt0.m_y + d0 * std::sin(radian) };
+                pt1 = { pt0.m_x - d0 * vsk_cosf(radian)    , pt0.m_y + d0 * vsk_sinf(radian) };
             }
             if (m_pen_down) {
                 vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
@@ -269,38 +269,38 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
     } else if (item.m_subcommand == "MV") { // 移動(MOVE)、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             if (auto ast1 = vsk_get_turtle_param(item, 1)) {
-                update_LP({ vsk_round(ast0->value()), vsk_round(ast1->value()) });
+                update_LP({ ast0->to_int(), ast1->to_int() });
                 return true;
             }
         }
     } else if (item.m_subcommand == "SX") { // X方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ vsk_round(ast0->value()), get_pos_in_view().m_x });
+            update_LP({ ast0->to_int(), get_pos_in_view().m_x });
             return true;
         }
     } else if (item.m_subcommand == "SY") { // Y方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ get_pos_in_view().m_x, vsk_round(ast0->value()) });
+            update_LP({ get_pos_in_view().m_x, ast0->to_int() });
             return true;
         }
     } else if (item.m_subcommand == "HD") { // タートルの向きをセット（単位は度）
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            m_direction_in_degree = ast0->value();
+            m_direction_in_degree = ast0->to_sng();
             return true;
         }
     } else if (item.m_subcommand == "LT") { // 現在の向きから左に自転する（単位は度）
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            m_direction_in_degree -= ast0->value();
+            m_direction_in_degree -= ast0->to_sng();
             return true;
         }
     } else if (item.m_subcommand == "RT") { // 現在の向きから右に自転する（単位は度）
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            m_direction_in_degree += ast0->value();
+            m_direction_in_degree += ast0->to_sng();
             return true;
         }
     } else if (item.m_subcommand == "CP") { // タートルの位置補正
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            auto i0 = vsk_round(ast0->value());
+            auto i0 = ast0->to_int();
             if (i0 == 0) {
                 m_pos_adjustment = false;
                 return true;
@@ -317,7 +317,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         return true;
     } else if (item.m_subcommand == "PC") { // タートルのペンの色
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            auto i0 = vsk_round(ast0->value());
+            auto i0 = ast0->to_int();
             if (vsk_machine->is_valid_color(i0)) {
                 m_pen_color = i0;
                 return true;
@@ -349,16 +349,16 @@ void vsk_turtle_draw_cursor(Vsk32BppImage& image)
     }
 
     // タートル図形の頂点を決める
-    VskPointD apt[4];
+    VskPointS apt[4];
     int radian = 16; // 半径
-    apt[0].m_x = pos.m_x + radian * std::cos(direction - M_PI / 2) / 2 * screen_ratio;
-    apt[0].m_y = pos.m_y - radian * std::sin(direction - M_PI / 2) / 2;
-    apt[1].m_x = pos.m_x + radian * std::cos(direction + M_PI / 2) / 2 * screen_ratio;
-    apt[1].m_y = pos.m_y - radian * std::sin(direction + M_PI / 2) / 2;
-    apt[2].m_x = pos.m_x + radian * std::cos(direction) * screen_ratio;
-    apt[2].m_y = pos.m_y - radian * std::sin(direction);
-    apt[3].m_x = pos.m_x + radian * std::cos(direction - M_PI / 2) / 2 * screen_ratio;
-    apt[3].m_y = pos.m_y - radian * std::sin(direction - M_PI / 2) / 2;
+    apt[0].m_x = pos.m_x + radian * vsk_cosf(direction - float(M_PI) / 2) / 2 * screen_ratio;
+    apt[0].m_y = pos.m_y - radian * vsk_sinf(direction - float(M_PI) / 2) / 2;
+    apt[1].m_x = pos.m_x + radian * vsk_cosf(direction + float(M_PI) / 2) / 2 * screen_ratio;
+    apt[1].m_y = pos.m_y - radian * vsk_sinf(direction + float(M_PI) / 2) / 2;
+    apt[2].m_x = pos.m_x + radian * vsk_cosf(direction) * screen_ratio;
+    apt[2].m_y = pos.m_y - radian * vsk_sinf(direction);
+    apt[3].m_x = pos.m_x + radian * vsk_cosf(direction - float(M_PI) / 2) / 2 * screen_ratio;
+    apt[3].m_y = pos.m_y - radian * vsk_sinf(direction - float(M_PI) / 2) / 2;
 
     // XOR演算でピクセルを描画する
     auto putter = [&](int x, int y) {

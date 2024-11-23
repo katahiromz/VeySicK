@@ -138,7 +138,9 @@ struct VskAst : VskObject
 
     const char *c_str() const { return m_str.c_str(); }
     int compare(const VskAst *other) const;
-    VskDouble value() const;
+    VskInt to_int() const;
+    VskSingle to_sng() const;
+    VskDouble to_dbl() const;
     void set_column();
     void copy_node(VskAst *src);
     VskAstPtr substitute(VskAstPtr var, VskAstPtr value);

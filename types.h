@@ -16,6 +16,7 @@
 #include <cmath>            // For Math
 #include <deque>            // For std::deque
 #include <set>              // For std::set
+#include <limits>           // For std::numeric_limits
 
 //////////////////////////////////////////////////////////////////////////////
 // VeySicK 基本型
@@ -99,6 +100,15 @@ inline VskInt vsk_round(VskDouble value)
     return VskInt(std::round(value));
 }
 
+inline VskSingle vsk_sinf(VskSingle x)
+{
+    return VskSingle(std::sin(x));
+}
+inline VskSingle vsk_cosf(VskSingle x)
+{
+    return VskSingle(std::cos(x));
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // 正常性チェック
 
@@ -140,7 +150,7 @@ struct VskPoint
     T_VALUE m_x, m_y;
 };
 typedef VskPoint<int> VskPointI;
-typedef VskPoint<VskDouble> VskPointD;
+typedef VskPoint<VskSingle> VskPointS;
 
 // VskSize - サイズ
 template <typename T_VALUE>
@@ -149,7 +159,7 @@ struct VskSize
     T_VALUE m_cx, m_cy;
 };
 typedef VskSize<int> VskSizeI;
-typedef VskSize<VskDouble> VskSizeD;
+typedef VskSize<VskSingle> VskSizeS;
 
 // VskRect - 長方形領域の座標
 template <typename T_VALUE>
@@ -224,7 +234,7 @@ union VskRect
     bool intersect(const VskRect<T_VALUE>& other);
 };
 typedef VskRect<int> VskRectI;
-typedef VskRect<VskDouble> VskRectD;
+typedef VskRect<VskSingle> VskRectS;
 
 //////////////////////////////////////////////////////////////////////////////
 

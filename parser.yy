@@ -1313,13 +1313,13 @@ cmd_parameter_list
 line
     : TK_DIGITS statement TK_COMMENT {
         vsk_targeting($1);
-        vsk_target_line = $1->value();
+        vsk_target_line = $1->to_int();
         $$ = vsk_ast_multi($2, $3);
         $$->m_program_line = vsk_target_line;
     }
     | TK_DIGITS statement {
         vsk_targeting($1);
-        vsk_target_line = $1->value();
+        vsk_target_line = $1->to_int();
         $$ = $2;
         $$->m_program_line = vsk_target_line;
     }

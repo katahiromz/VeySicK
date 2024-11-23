@@ -1729,7 +1729,7 @@ void VskMachine::clear_graphic(const VskRectI* rect, int back_color)
     fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, back_color);
 }
 
-VskPointI VskMachine::world_to_view(const VskPointD& pt) const
+VskPointI VskMachine::world_to_view(const VskPointS& pt) const
 {
     auto& window = m_state->m_window;
     auto& view = m_state->m_viewport;
@@ -1744,7 +1744,7 @@ VskPointI VskMachine::world_to_view(const VskPointD& pt) const
     return { vsk_round(x), vsk_round(y) };
 }
 
-VskPointD VskMachine::view_to_world(const VskPointI& pt) const
+VskPointS VskMachine::view_to_world(const VskPointI& pt) const
 {
     auto& window = m_state->m_window;
     auto& view = m_state->m_viewport;
@@ -1760,7 +1760,7 @@ VskPointD VskMachine::view_to_world(const VskPointI& pt) const
 }
 
 // ワールド座標をクライアント座標に
-VskPointD VskMachine::world_to_client(const VskPointD& pt) const
+VskPointS VskMachine::world_to_client(const VskPointS& pt) const
 {
     auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
@@ -1768,16 +1768,8 @@ VskPointD VskMachine::world_to_client(const VskPointD& pt) const
              (((pt.m_y - m_state->m_window.m_y0) * vy / wy) + m_state->m_viewport.m_y0) };
 }
 
-// ワールド座標をクライアント座標に
-VskSizeI VskMachine::world_to_client(const VskSizeD& siz) const
-{
-    auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
-    int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
-    return { vsk_round(siz.m_cx * vx / wx), vsk_round(siz.m_cy * vy / wy) };
-}
-
 // クライアント座標をワールド座標に
-VskPointD VskMachine::client_to_world(const VskPointI& pt) const
+VskPointS VskMachine::client_to_world(const VskPointI& pt) const
 {
     auto wx = m_state->m_window.width(), wy = m_state->m_window.height();
     int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();

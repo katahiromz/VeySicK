@@ -319,7 +319,7 @@ VskPointI vsk_turtle_pos_in_view(void)
 }
 
 // タートルの向きを返す
-VskDouble vsk_turtle_direction_in_radian(void)
+VskSingle vsk_turtle_direction_in_radian(void)
 {
     return VSK_IMPL()->m_turtle_engine.get_turtle_direction_in_radian();
 }
@@ -1719,7 +1719,33 @@ bool VskAst::is_data_entry() const
     return is_data_literal() || is_number() || is_str() || is_ident();
 }
 
-VskDouble VskAst::value() const
+VskInt VskAst::to_int() const
+{
+    if (is_int())
+        return m_int;
+    if (is_sng())
+        return vsk_round(m_sng);
+    if (is_dbl())
+        return vsk_round(m_dbl);
+    if (is_lng())
+        return vsk_round(m_lng);
+    return 0;
+}
+
+VskSingle VskAst::to_sng() const
+{
+    if (is_int())
+        return VskSingle(m_int);
+    if (is_sng())
+        return m_sng;
+    if (is_dbl())
+        return VskSingle(m_dbl);
+    if (is_lng())
+        return VskSingle(m_lng);
+    return 0;
+}
+
+VskDouble VskAst::to_dbl() const
 {
     if (is_int())
         return m_int;
@@ -1728,7 +1754,7 @@ VskDouble VskAst::value() const
     if (is_dbl())
         return m_dbl;
     if (is_lng())
-        return m_lng;
+        return VskLong(m_lng);
     return 0;
 }
 
@@ -2435,7 +2461,7 @@ VskIndexList vsk_label_to_index_list(VskAstPtr arg, const VskLabelMap& label_map
         return vsk_label_to_index_list(vsk_to_string(VSK_IMPL()->m_current_line), label_map);
 
     if (arg0->is_number()) // 数値なら行番号
-        return vsk_label_to_index_list(vsk_to_string(arg0->value()), label_map);
+        return vsk_label_to_index_list(vsk_to_string(arg0->to_dbl()), label_map);
 
     auto& label_name = arg0->m_str;
     return vsk_label_to_index_list(label_name, label_map);
@@ -2456,7 +2482,7 @@ bool vsk_label_to_line_number(VskAstPtr arg, VskLineNo& number)
 
     if (arg0->is_number()) // 数値なら行番号
     {
-        number = arg0->value();
+        number = arg0->to_dbl();
         return true;
     }
 
@@ -4754,8 +4780,8 @@ static VskAstPtr VSKAPI vsk_POINT(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    VskDouble v0, v1;
-    if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1]))
+    VskSingle v0, v1;
+    if (vsk_sng(v0, args[0]) && vsk_sng(v1, args[1]))
     {
         VSK_STATE()->m_last_point_in_world = { v0, v1 };
         return nullptr;
@@ -4769,8 +4795,8 @@ static VskAstPtr VSKAPI vsk_POINT_STEP(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    VskDouble v0, v1;
-    if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1]))
+    VskSingle v0, v1;
+    if (vsk_sng(v0, args[0]) && vsk_sng(v1, args[1]))
     {
         VSK_STATE()->m_last_point_in_world.m_x += v0;
         VSK_STATE()->m_last_point_in_world.m_y += v1;
@@ -4814,7 +4840,7 @@ static VskAstPtr vsk_CHDIR_MKDIR_RMDIR(VskAstPtr self, const VskAstList& args, D
 
     // 数字だったらドライブのパス名に変更
     if (arg0->is_number())
-        arg0 = vsk_ast_str(vsk_to_string(vsk_round(arg0->value())) + ":");
+        arg0 = vsk_ast_str(vsk_to_string(arg0->to_int()) + ":");
 
     // 文字列だったらそれをファイル記述子と見なす
     if (arg0->is_str())
@@ -5621,7 +5647,7 @@ static VskAstPtr VSKAPI vsk_FIX(VskAstPtr self, const VskAstList& args)
 }
 
 // 直線や長方形を描くヘルパー関数、その１
-void vsk_LINE_helper_1(VskDouble v0, VskDouble v1, VskDouble v2, VskDouble v3, VskInt v4, VskString v5, VskInt v6 = -1, VskString v7 = "")
+void vsk_LINE_helper_1(VskSingle v0, VskSingle v1, VskSingle v2, VskSingle v3, VskInt v4, VskString v5, VskInt v6 = -1, VskString v7 = "")
 {
     // ワールド座標をスクリーン座標に
     auto pt0 = vsk_machine->world_to_view({ v0, v1 });
@@ -5647,9 +5673,9 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     auto arg5 = vsk_arg(args, 5);
     auto arg6 = vsk_arg(args, 6);
 
-    VskDouble v0 = VSK_STATE()->m_last_point_in_world.m_x;
-    VskDouble v1 = VSK_STATE()->m_last_point_in_world.m_y;
-    VskDouble v2, v3;
+    VskSingle v0 = VSK_STATE()->m_last_point_in_world.m_x;
+    VskSingle v1 = VSK_STATE()->m_last_point_in_world.m_y;
+    VskSingle v2, v3;
     VskInt v4 = VSK_STATE()->m_fore_color;
     VskString v5;
     VskInt v6;
@@ -5657,10 +5683,10 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     if (arg6)
         arg6 = vsk_eval_ast(arg6);
 
-    if ((!args[0] || vsk_dbl(v0, args[0])) &&
-        (!args[1] || vsk_dbl(v1, args[1])) &&
-        vsk_dbl(v2, args[2]) &&
-        vsk_dbl(v3, args[3]) &&
+    if ((!args[0] || vsk_sng(v0, args[0])) &&
+        (!args[1] || vsk_sng(v1, args[1])) &&
+        vsk_sng(v2, args[2]) &&
+        vsk_sng(v3, args[3]) &&
         (!arg4 || vsk_int(v4, arg4)) &&
         (!arg5 || vsk_ident(v5, arg5)))
     {
@@ -5761,21 +5787,21 @@ static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr self, const VskAstList& args)
 }
 
 // 円の弧または楕円の弧を描くヘルパー関数
-void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int palette, VskDouble start_angle, VskDouble end_angle, VskDouble aspect)
+void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect)
 {
     // 真の楕円か？
     const bool full_moon_likely = (start_angle == 0) && (end_angle == 2 * M_PI);
 
     // このaspectはただの縦横比ではない
-    VskDouble r0 = radius, r1 = radius;
+    VskSingle r0 = radius, r1 = radius;
     if (aspect < 1)
         r1 *= aspect;
     else if (aspect > 1)
         r0 /= aspect;
 
     // 座標変換
-    VskPointD pt0 = vsk_machine->world_to_client(VskPointD{ x0 - r0, y0 - r1 });
-    VskPointD pt1 = vsk_machine->world_to_client(VskPointD{ x0 + r0, y0 + r1 });
+    VskPointS pt0 = vsk_machine->world_to_client(VskPointS{ x0 - r0, y0 - r1 });
+    VskPointS pt1 = vsk_machine->world_to_client(VskPointS{ x0 + r0, y0 + r1 });
 
     if (full_moon_likely) // 真の楕円か？
     {
@@ -5793,7 +5819,7 @@ void vsk_draw_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
 }
 
 // 円の弧または楕円の弧を塗りつぶすヘルパー関数
-void vsk_fill_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int palette, VskDouble start_angle, VskDouble end_angle, VskDouble aspect, VskString tile = "")
+void vsk_fill_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect, VskString tile = "")
 {
     const bool full_moon_likely = (start_angle == 0) && (end_angle == 2 * M_PI);
     if (full_moon_likely && aspect == 1) // 真の円か？
@@ -5805,15 +5831,15 @@ void vsk_fill_circle_helper(VskDouble x0, VskDouble y0, VskDouble radius, int pa
     }
 
     // このaspectはただの縦横比ではない
-    VskDouble r0 = radius, r1 = radius;
+    VskSingle r0 = radius, r1 = radius;
     if (aspect < 1)
         r1 *= aspect;
     else if (aspect > 1)
         r0 /= aspect;
 
     // 座標変換
-    VskPointD pt0 = vsk_machine->world_to_client(VskPointD{ x0 - r0, y0 - r1 });
-    VskPointD pt1 = vsk_machine->world_to_client(VskPointD{ x0 + r0, y0 + r1 });
+    VskPointS pt0 = vsk_machine->world_to_client(VskPointS{ x0 - r0, y0 - r1 });
+    VskPointS pt1 = vsk_machine->world_to_client(VskPointS{ x0 + r0, y0 + r1 });
 
     if (full_moon_likely) // 真の楕円か？
     {
@@ -5836,11 +5862,11 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
     if (!vsk_arity_in_range(args, 3, 9))
         return nullptr;
 
-    VskDouble v0, v1, v2;
+    VskSingle v0, v1, v2;
     VskInt v3 = VSK_STATE()->m_fore_color;
-    VskDouble v4 = 0;
-    VskDouble v5 = 2 * M_PI;
-    VskDouble v6 = (VSK_STATE()->m_screen_height == 400 ? 1 : 0.5);
+    VskSingle v4 = 0;
+    VskSingle v5 = float(2 * M_PI);
+    VskSingle v6 = (VSK_STATE()->m_screen_height == 400 ? 1 : 0.5f);
     VskString v7;
     VskInt v8;
     VskString str8;
@@ -5854,13 +5880,13 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
     auto arg5 = vsk_arg(args, 5);
     auto arg6 = vsk_arg(args, 6);
     auto arg7 = vsk_arg(args, 7);
-    if (vsk_dbl(v0, args[0]) && // WX
-        vsk_dbl(v1, args[1]) && // WY
-        vsk_dbl(v2, args[2]) && // R
+    if (vsk_sng(v0, args[0]) && // WX
+        vsk_sng(v1, args[1]) && // WY
+        vsk_sng(v2, args[2]) && // R
         (!arg3 || vsk_int(v3, args[3])) && // PALETTE #1
-        (!arg4 || vsk_dbl(v4, args[4])) && // start_angle
-        (!arg5 || vsk_dbl(v5, args[5])) && // end_angle
-        (!arg6 || vsk_dbl(v6, args[6])) && // aspect
+        (!arg4 || vsk_sng(v4, args[4])) && // start_angle
+        (!arg5 || vsk_sng(v5, args[5])) && // end_angle
+        (!arg6 || vsk_sng(v6, args[6])) && // aspect
         (!arg7 || vsk_ident(v7, args[7]))) // F
     {
         if (!vsk_machine->is_valid_color(v3))
@@ -5912,8 +5938,8 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
             // この場合は角度を負にして、常に弧の両側の半径を描画する
             v4 = -std::abs(v4);
             v5 = -std::abs(v5);
-            if (v4 == 0) v4 = -0.00000001;
-            if (v5 == 0) v5 = -0.00000001;
+            if (v4 == 0) v4 = -0.00001f;
+            if (v5 == 0) v5 = -0.00001f;
         }
 
         // 円または楕円を描画。ついでに必要ならば弧の両側の半径を描画する
@@ -5936,7 +5962,7 @@ static VskAstPtr VSKAPI vsk_CIRCLE_STEP(VskAstPtr self, const VskAstList& args)
 }
 
 // 点を描画するヘルパー関数
-void vsk_do_PSET_PRESET_helper_1(VskPointD pt, VskInt palette)
+void vsk_do_PSET_PRESET_helper_1(VskPointS pt, VskInt palette)
 {
     auto newpt = vsk_machine->world_to_view(pt);
     vsk_machine->set_pixel(newpt.m_x, newpt.m_y, palette);
@@ -5949,10 +5975,10 @@ void vsk_do_PSET_PRESET_helper_2(VskAstPtr& self, const VskAstList& args, bool s
     if (!vsk_arity_in_range(args, 2, 3))
         return;
 
-    VskDouble v0, v1;
+    VskSingle v0, v1;
     VskInt v2 = (reset ? VSK_STATE()->m_back_color : VSK_STATE()->m_fore_color);
-    if (vsk_dbl(v0, args[0]) &&
-        vsk_dbl(v1, args[1]) &&
+    if (vsk_sng(v0, args[0]) &&
+        vsk_sng(v1, args[1]) &&
         (args.size() <= 2 || !args[2] || vsk_int(v2, args[2])))
     {
         vsk_targeting(self);
@@ -5998,9 +6024,9 @@ static VskAstPtr VSKAPI vsk_PRESET_STEP(VskAstPtr self, const VskAstList& args)
 }
 
 // 塗りつぶす
-static void vsk_PAINT_helper(VskDouble v0, VskDouble v1, VskInt v2, VskInt v3, VskString v4)
+static void vsk_PAINT_helper(VskSingle v0, VskSingle v1, VskInt v2, VskInt v3, VskString v4)
 {
-    auto pt = vsk_machine->world_to_client(VskPointD { v0, v1 });
+    auto pt = vsk_machine->world_to_client(VskPointS { v0, v1 });
     vsk_machine->flood_fill(vsk_round(pt.m_x), vsk_round(pt.m_y), v2, v3, v4);
     VSK_STATE()->m_last_point_in_world = { v0, v1 };
 }
@@ -6010,10 +6036,10 @@ static VskAstPtr vsk_PAINT_helper(VskAstPtr& self, const VskAstList& args, bool 
     if (!vsk_arity_in_range(args, 2, 4))
         return nullptr;
 
-    VskDouble v0, v1;
+    VskSingle v0, v1;
     VskInt v2 = VSK_STATE()->m_fore_color, v3 = VSK_STATE()->m_fore_color;
     VskString tile;
-    if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1])) // WX, WY
+    if (vsk_sng(v0, args[0]) && vsk_sng(v1, args[1])) // WX, WY
     {
         vsk_targeting(self);
         if (step)
@@ -6119,11 +6145,11 @@ static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 4, 4))
         return nullptr;
 
-    VskDouble v0, v1, v2, v3;
-    if (vsk_dbl(v0, args[0]) &&
-        vsk_dbl(v1, args[1]) &&
-        vsk_dbl(v2, args[2]) &&
-        vsk_dbl(v3, args[3]))
+    VskSingle v0, v1, v2, v3;
+    if (vsk_sng(v0, args[0]) &&
+        vsk_sng(v1, args[1]) &&
+        vsk_sng(v2, args[2]) &&
+        vsk_sng(v3, args[3]))
     {
         if (v0 >= v2 || v1 >= v3)
         {
@@ -8249,7 +8275,7 @@ static VskAstPtr vsk_FILES_LFILES_helper(const VskAstList& args, bool is_line_pr
         auto arg0 = vsk_eval_ast(args[0]);
         if (arg0->is_number())
         {
-            error = vsk_files_helper(files, device, vsk_round(arg0->value()));
+            error = vsk_files_helper(files, device, arg0->to_int());
         }
         else if (arg0->is_str())
         {
@@ -9415,16 +9441,16 @@ static VskAstPtr VSKAPI vsk_MAP(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    VskDouble v0;
+    VskSingle v0;
     VskInt v1;
-    if (vsk_dbl(v0, args[0]) && vsk_int(v1, args[1]))
+    if (vsk_sng(v0, args[0]) && vsk_int(v1, args[1]))
     {
         switch (v1)
         {
         case 0: return vsk_ast_int(vsk_machine->world_to_view({ v0, 0 }).m_x);
         case 1: return vsk_ast_int(vsk_machine->world_to_view({ 0, v0 }).m_y);
-        case 2: return vsk_ast_dbl(vsk_machine->view_to_world({ vsk_round(v0), 0 }).m_x);
-        case 3: return vsk_ast_dbl(vsk_machine->view_to_world({ 0, vsk_round(v0) }).m_y);
+        case 2: return vsk_ast_sng(vsk_machine->view_to_world({ vsk_round(v0), 0 }).m_x);
+        case 3: return vsk_ast_sng(vsk_machine->view_to_world({ 0, vsk_round(v0) }).m_y);
         default:
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
@@ -9698,7 +9724,7 @@ static VskAstPtr VSKAPI vsk_ON_ERROR_GOTO(VskAstPtr self, const VskAstList& args
     auto arg0 = args[0];
     assert(arg0->m_insn == INSN_LABEL);
     auto arg = arg0->at(0);
-    if (arg->is_number() && arg->value() == 0)
+    if (arg->is_number() && arg->to_dbl() == 0)
     {
         VSK_IMPL()->m_error_trap.reset();
         return nullptr;
@@ -11164,7 +11190,7 @@ void vsk_enter_input_text(const VskString& text)
         auto value = vsk_value_from_string(text);
         if (value && value->is_number())
         {
-            auto number = vsk_round(value->value());
+            auto number = value->to_int();
             if (!(-32768 <= number && number <= 32767))
             {
                 vsk_error(VSK_ERR_OVERFLOW);

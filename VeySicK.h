@@ -434,10 +434,10 @@ struct VskMachineState
     int m_display_pages                     = 1;            // 表示ページ
     bool m_show_graphics                    = true;         // グラフィック画面を表示するか？
     bool m_odd_line                         = false;        // グラフィック画面の奇数ラインを描画するか？
-    VskPointD m_last_point_in_world         = { 0, 0 };     // LP (Last referenced Point) ワールド座標
+    VskPointS m_last_point_in_world         = { 0, 0 };     // LP (Last referenced Point) ワールド座標
     int m_vram_bank                         = 0;            // VRAMのバンク番号
     int m_display_pages_flags               = 0;            // 表示ページのフラグ
-    VskRectD m_window                       = { 0, 0, 640 - 1, 200 - 1 };   // ワールド座標の範囲
+    VskRectS m_window                       = { 0, 0, 640 - 1, 200 - 1 };   // ワールド座標の範囲
     VskRectI m_viewport                     = { 0, 0, 640 - 1, 200 - 1 };   // ビューポート座標の範囲
     bool is_height_200() const {
         return m_screen_height == 200;
@@ -673,12 +673,11 @@ struct VskMachine : VskObject
     void set_line_column(int column);
     VskString get_input_text() const;
 
-    VskPointI world_to_view(const VskPointD& pt) const;
-    VskPointD view_to_world(const VskPointI& pt) const;
-    VskPointD world_to_client(const VskPointI& pt) const { return world_to_client(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
-    VskPointD world_to_client(const VskPointD& pt) const;
-    VskSizeI world_to_client(const VskSizeD& siz) const;
-    VskPointD client_to_world(const VskPointI& pt) const;
+    VskPointI world_to_view(const VskPointS& pt) const;
+    VskPointS view_to_world(const VskPointI& pt) const;
+    VskPointS world_to_client(const VskPointI& pt) const { return world_to_client(VskPointS{ VskSingle(pt.m_x), VskSingle(pt.m_y) }); }
+    VskPointS world_to_client(const VskPointS& pt) const;
+    VskPointS client_to_world(const VskPointI& pt) const;
     virtual bool is_valid_screen_mode(int screen_mode) const { return true; }
     virtual bool is_valid_active_page(int screen_mode, int active_page, bool high_color) const { return true; }
     virtual int get_display_pages_flags(int screen_mode, int display_pages) { return -1; }
@@ -816,7 +815,7 @@ bool vsk_turtle_shown(void);
 // タートルの位置をスクリーン座標で返す
 VskPointI vsk_turtle_pos_in_view(void);
 // タートルの向きをラジアンで返す
-VskDouble vsk_turtle_direction_in_radian(void);
+VskSingle vsk_turtle_direction_in_radian(void);
 // アプリを終了する
 void vsk_app_quit(void);
 // ディレクトリを変更する

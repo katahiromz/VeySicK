@@ -596,7 +596,7 @@ VskError vsk_PRINT_USING_helper(VskFilePtr file, const VskString& format_text, c
                     return VSK_ERR_BAD_TYPE;
                 }
                 bool is_double = (arg->m_insn == INSN_DBL_LITERAL);
-                file->write_str(item.format_numeric(arg->value(), is_double));
+                file->write_str(item.format_numeric(arg->to_dbl(), is_double));
             } else {
                 if (!arg->is_str()) {
                     return VSK_ERR_BAD_TYPE;
