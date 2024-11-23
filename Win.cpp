@@ -3016,61 +3016,78 @@ void VskWin32App::OnZoom(HWND hwnd, INT nZoom)
     ::MoveWindow(hwnd, rcWnd.left, rcWnd.top, (rc.right - rc.left), (rc.bottom - rc.top), TRUE);
 }
 
+// クリップボードにテキストをコピー
+BOOL vsk_copy_text_to_clipboard(HWND hwnd, const std::string& text)
+{
+    if (!::OpenClipboard(hwnd))
+        return false;
+
+    ::EmptyClipboard();
+
+    BOOL bOK = FALSE;
+    size_t cbText = (text.size() + 1) * sizeof(char);
+    if (HANDLE hText = ::GlobalAlloc(GHND | GMEM_SHARE, cbText))
+    {
+        if (char *psz = (char *)::GlobalLock(hText))
+        {
+            ::CopyMemory(psz, text.c_str(), cbText);
+            bOK = !!::SetClipboardData(CF_TEXT, hText);
+            ::GlobalUnlock(hText);
+        }
+        if (!bOK)
+            ::GlobalFree(hText);
+    }
+
+    ::CloseClipboard();
+    return !!bOK;
+}
+
+// クリップボードからテキストを取得
+BOOL vsk_get_text_from_clipboard(HWND hwnd, std::string& text)
+{
+    if (!::IsClipboardFormatAvailable(CF_TEXT) || !::OpenClipboard(hwnd))
+        return FALSE;
+
+    BOOL bOK = FALSE;
+    if (HANDLE hText = ::GetClipboardData(CF_OEMTEXT))
+    {
+        if (char *psz = (char *)::GlobalLock(hText))
+        {
+            text = psz;
+            bOK = TRUE;
+            ::GlobalUnlock(hText);
+        }
+    }
+
+    ::CloseClipboard();
+    return !!bOK;
+}
+
 // ID_COPY_TEXT
 void VskWin32App::OnCopy(HWND hwnd)
 {
-    if (!vsk_machine || !OpenClipboard(hwnd))
+    if (!vsk_machine)
     {
         assert(0);
         return;
     }
 
-    if (EmptyClipboard())
-    {
-        VskString text = vsk_machine->copy_text_screen();
-        int cch = int(text.size() + 1);
-        size_t cbText = (text.size() + 1) * sizeof(char);
-        if (HANDLE hText = GlobalAlloc(GHND | GMEM_SHARE, cbText))
-        {
-            LPSTR psz = (LPSTR)GlobalLock(hText);
-            if (psz)
-            {
-                lstrcpynA(psz, text.c_str(), cch);
-                GlobalUnlock(hText);
-
-                if (!SetClipboardData(CF_OEMTEXT, hText))
-                    GlobalFree(hText);
-            }
-            else
-            {
-                GlobalFree(hText);
-            }
-        }
-    }
-
-    CloseClipboard();
+    VskString text = vsk_machine->copy_text_screen();
+    vsk_copy_text_to_clipboard(hwnd, text);
 }
 
 // ID_PASTE_TEXT
 // テキストをクリップボードから貼り付け
 void VskWin32App::OnPaste(HWND hwnd)
 {
-    if (!vsk_machine || !IsClipboardFormatAvailable(CF_TEXT) || !OpenClipboard(hwnd))
+    std::string text;
+    if (!vsk_machine || !vsk_get_text_from_clipboard(hwnd, text))
     {
         assert(0);
         return;
     }
 
-    if (HANDLE hText = GetClipboardData(CF_OEMTEXT))
-    {
-        if (char *psz = (char *)GlobalLock(hText))
-        {
-            vsk_machine->keyboard_str(psz);
-            GlobalUnlock(hText);
-        }
-    }
-
-    CloseClipboard();
+    vsk_machine->keyboard_str(text);
 }
 
 // ID_OPEN_README
