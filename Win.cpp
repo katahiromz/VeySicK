@@ -552,14 +552,11 @@ VskString vsk_getcwd(void)
     return buf;
 }
 
-VskInt vsk_driveno = 1;
-
 // ディレクトリを変更する
 VskError vsk_chdir(const char *dirname)
 {
     if (!::SetCurrentDirectoryA(dirname))
     {
-        vsk_driveno = -1;
         auto error = ::GetLastError();
         mdbg_traceA("%s: %d\n", dirname, error);
         return VSK_ERR_BAD_OPERATION;
@@ -760,16 +757,9 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
 
         // ドライブパスを先頭に追加
         if (device.empty())
-        {
-            if (vsk_driveno == -1)
-                raw_path = vsk_getcwd() + raw_path;
-            else
-                raw_path = vsk_get_drive_path(vsk_driveno) + raw_path;
-        }
+            raw_path = vsk_getcwd() + raw_path;
         else
-        {
             raw_path = vsk_get_drive_path(std::atoi(device.c_str())) + raw_path;
-        }
 
         // バックスラッシュを取り除く
         if (raw_path.size() && raw_path[raw_path.size() - 1] == '\\')
@@ -1909,6 +1899,11 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
     // タイマーを開始
     start_stop_timers(hwnd, true);
+
+    // 可能ならばドライブ 1を現在のディレクトリにする
+    auto path = vsk_get_drive_path(1);
+    if (::PathIsDirectoryA(path.c_str()))
+        ::SetCurrentDirectoryA(path.c_str());
 
 #ifndef VSK_SINGLE_THREAD
     // 別スレッドで処理
