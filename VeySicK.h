@@ -578,8 +578,10 @@ struct VskMachine : VskObject
     virtual void clear_text();
     virtual void clear_text(int y0, int y1) { }
     virtual void clear_graphic();
+    void clear_graphic(int back_color);
+    void clear_graphic(const VskRectI* rect);
+    virtual void clear_graphic(const VskRectI* rect, int back_color);
     virtual void clear_planes(bool blue, bool red, bool green, bool intensity) { }
-    virtual void clear_graphic(const VskRectI *rect);
     virtual void clear_screen_image() { }
     virtual bool clear_memory(VskDword addr) { return true; }
     virtual VskDword get_free_size() { return 0; }
@@ -689,7 +691,7 @@ struct VskMachine : VskObject
     int get_pixel(int x0, int y0);
     void set_pixel(int x0, int y0, int palette);
     void draw_line(int x0, int y0, int x1, int y1, int palette, VskWord line_style = 0xFFFF);
-    void draw_box(int x0, int y0, int x1, int y1, int palette, VskWord line_style = 0xFFFF);
+    void draw_box(int x0, int y0, int x1, int y1, int palette, VskWord line_style = 0xFFFF, const VskRectI* clipping = nullptr);
     void fill_box(int x0, int y0, int x1, int y1, int palette, const VskString& tile = "");
     void draw_circle(int x0, int y0, int r, int palette);
     void fill_circle(int x0, int y0, int r, int palette);

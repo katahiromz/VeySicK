@@ -6145,29 +6145,31 @@ static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr self, const VskAstList& args)
 
     VskDouble v0, v1, v2, v3;
     VskInt v4 = 0, v5 = 7;
+    auto arg4 = vsk_arg(args, 4);
+    auto arg5 = vsk_arg(args, 5);
     if (vsk_dbl(v0, args[0]) &&
         vsk_dbl(v1, args[1]) &&
         vsk_dbl(v2, args[2]) &&
         vsk_dbl(v3, args[3]) &&
-        (args.size() <= 4 || !args[4] || vsk_int(v4, args[4])) &&
-        (args.size() <= 5 || !args[5] || vsk_int(v5, args[5])))
+        (!arg4 || vsk_int(v4, args[4])) &&
+        (!arg5 || vsk_int(v5, args[5])))
     {
         if (v0 >= v2 || v1 >= v3 || !(0 <= v4 && v4 < 16) || !(0 <= v5 && v5 < 16))
         {
             vsk_machine->bad_call();
             return nullptr;
         }
-        VSK_STATE()->m_viewport.m_x0 = (int)std::round(v0 = v0);
-        VSK_STATE()->m_viewport.m_y0 = (int)std::round(v1 = v1);
-        VSK_STATE()->m_viewport.m_x1 = (int)std::round(v2 = v2);
-        VSK_STATE()->m_viewport.m_y1 = (int)std::round(v3 = v3);
-        if (args[4])
+        auto x0 = VSK_STATE()->m_viewport.m_x0 = (int)std::round(v0);
+        auto y0 = VSK_STATE()->m_viewport.m_y0 = (int)std::round(v1);
+        auto x1 = VSK_STATE()->m_viewport.m_x1 = (int)std::round(v2);
+        auto y1 = VSK_STATE()->m_viewport.m_y1 = (int)std::round(v3);
+        if (arg4)
+            vsk_machine->clear_graphic(v4);
+        if (arg5)
         {
-            vsk_machine->set_color(VskByte(v4));
-            vsk_machine->clear_text();
+            VskRectI clipping = { 0, 0, VSK_STATE()->m_screen_width - 1, VSK_STATE()->m_screen_height - 1 };
+            vsk_machine->draw_box(x0 - 1, y0 - 1, x1 + 1, y1 + 1, v5, 0xFFFF, &clipping);
         }
-        if (args[5])
-            vsk_machine->draw_box(vsk_round(v0 - 1), vsk_round(v1 - 1), vsk_round(v2 + 1), vsk_round(v3 + 1), v5);
     }
 
     return nullptr;

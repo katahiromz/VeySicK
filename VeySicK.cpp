@@ -1708,13 +1708,25 @@ void VskMachine::clear_text()
 // グラフィック画面をクリア
 void VskMachine::clear_graphic()
 {
-    clear_graphic(&m_state->m_viewport);
+    clear_graphic(&m_state->m_viewport, m_state->m_back_color);
+}
+
+// グラフィック画面をクリア
+void VskMachine::clear_graphic(int back_color)
+{
+    clear_graphic(&m_state->m_viewport, back_color);
 }
 
 // グラフィック画面をクリア
 void VskMachine::clear_graphic(const VskRectI *rect)
 {
-    fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, m_state->m_back_color);
+    clear_graphic(rect, m_state->m_back_color);
+}
+
+// グラフィック画面をクリア
+void VskMachine::clear_graphic(const VskRectI* rect, int back_color)
+{
+    fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, back_color);
 }
 
 // ワールド座標をスクリーン座標に
@@ -1801,20 +1813,22 @@ void VskMachine::draw_line(int x0, int y0, int x1, int y1, int palette, VskWord 
 }
 
 // 長方形を描画
-void VskMachine::draw_box(int x0, int y0, int x1, int y1, int palette, VskWord line_style)
+void VskMachine::draw_box(int x0, int y0, int x1, int y1, int palette, VskWord line_style, const VskRectI *clipping)
 {
-    if (auto putter = get_color_putter(palette, nullptr))
+    if (!clipping)
+        clipping = &m_state->m_viewport;
+    if (auto putter = get_color_putter(palette, clipping))
     {
         if (line_style != 0xFFFF)
         {
             if (auto putter2 = std::make_shared<VskLinePutter<VskPixelPutter>>(putter.get(), line_style))
             {
-                vsk_draw_box(*putter2, x0, y0, x1, y1, &m_state->m_viewport);
+                vsk_draw_box(*putter2, x0, y0, x1, y1, clipping);
             }
         }
         else
         {
-            vsk_draw_box(*putter, x0, y0, x1, y1, &m_state->m_viewport);
+            vsk_draw_box(*putter, x0, y0, x1, y1, clipping);
         }
     }
 }
