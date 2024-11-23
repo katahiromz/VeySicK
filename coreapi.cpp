@@ -5930,8 +5930,8 @@ static VskAstPtr VSKAPI vsk_CIRCLE_STEP(VskAstPtr self, const VskAstList& args)
 // 点を描画するヘルパー関数
 void vsk_do_PSET_PRESET_helper_1(VskPointD pt, VskInt palette)
 {
-    auto newpt = vsk_machine->world_to_client(pt);
-    vsk_machine->set_pixel(vsk_round(newpt.m_x), vsk_round(newpt.m_y), palette);
+    auto newpt = vsk_machine->world_to_view(pt);
+    vsk_machine->set_pixel(newpt.m_x, newpt.m_y, palette);
     VSK_STATE()->m_last_point_in_world = pt;
 }
 
