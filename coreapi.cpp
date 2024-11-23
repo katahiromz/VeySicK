@@ -4836,13 +4836,12 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
                     assert(0);
                     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
                 }
+
+                // シフトJISモードにする
                 VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
+
                 v2 = 0;
                 v3 = 1;
-            }
-            else
-            {
-                VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_GRPH;
             }
         }
 
