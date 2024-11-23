@@ -9421,26 +9421,10 @@ static VskAstPtr VSKAPI vsk_MAP(VskAstPtr self, const VskAstList& args)
         VskDouble ret;
         switch (v1)
         {
-        case 0:
-            pt = { v0, 0 };
-            pt = vsk_machine->world_to_screen(pt);
-            ret = pt.m_x;
-            break;
-        case 1:
-            pt = { 0, v0 };
-            pt = vsk_machine->world_to_screen(pt);
-            ret = pt.m_y;
-            break;
-        case 2:
-            pt = { v0, 0 };
-            pt = vsk_machine->screen_to_world(pt);
-            ret = pt.m_x;
-            break;
-        case 3:
-            pt = { 0, v0 };
-            pt = vsk_machine->screen_to_world(pt);
-            ret = pt.m_y;
-            break;
+        case 0: return vsk_ast_int(vsk_machine->world_to_view({ v0, 0 }).m_x);
+        case 1: return vsk_ast_int(vsk_machine->world_to_view({ 0, v0 }).m_y);
+        case 2: return vsk_ast_dbl(vsk_machine->view_to_world({ vsk_round(v0), 0 }).m_x);
+        case 3: return vsk_ast_dbl(vsk_machine->view_to_world({ 0, vsk_round(v0) }).m_y);
         default:
             vsk_machine->bad_call();
             return nullptr;

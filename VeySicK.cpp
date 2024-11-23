@@ -1729,6 +1729,36 @@ void VskMachine::clear_graphic(const VskRectI* rect, int back_color)
     fill_box(rect->m_x0, rect->m_y0, rect->m_x1, rect->m_y1, back_color);
 }
 
+VskPointI VskMachine::world_to_view(const VskPointD& pt) const
+{
+    auto& window = m_state->m_window;
+    auto& view = m_state->m_viewport;
+    assert(window.width() > 0);
+    assert(window.height() > 0);
+    assert(view.width() > 0);
+    assert(view.height() > 0);
+    assert(m_state->m_screen_width > 0);
+    assert(m_state->m_screen_height > 0);
+    auto x = (pt.m_x - window.m_x0) * (m_state->m_screen_width - 1) / window.width() + view.m_x0;
+    auto y = (pt.m_y - window.m_y0) * (m_state->m_screen_height - 1) / window.height() + view.m_y0;
+    return { vsk_round(x), vsk_round(y) };
+}
+
+VskPointD VskMachine::view_to_world(const VskPointI& pt) const
+{
+    auto& window = m_state->m_window;
+    auto& view = m_state->m_viewport;
+    assert(window.width() > 0);
+    assert(window.height() > 0);
+    assert(view.width() > 0);
+    assert(view.height() > 0);
+    assert(m_state->m_screen_width > 0);
+    assert(m_state->m_screen_height > 0);
+    auto x = (pt.m_x - view.m_x0) * window.width() / (m_state->m_screen_width - 1) + window.m_x0;
+    auto y = (pt.m_y - view.m_y0) * window.height() / (m_state->m_screen_height - 1) + window.m_y0;
+    return { x, y };
+}
+
 // ワールド座標をスクリーン座標に
 VskPointD VskMachine::world_to_screen(const VskPointD& pt) const
 {

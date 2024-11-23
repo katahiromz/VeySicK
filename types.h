@@ -163,10 +163,12 @@ union VskRect
     {
         VskPoint<T_VALUE> m_pt0, m_pt1;
     };
+    enum { m_is_integer = std::numeric_limits<T_VALUE>::is_integer };
 
     VskRect()
     {
-        m_x0 = m_y0 = m_x1 = m_y1 = 0;
+        m_x0 = m_y0 = 0;
+        m_x1 = m_y1 = -m_is_integer;
     }
     VskRect(const VskPoint<T_VALUE>& pt0, const VskPoint<T_VALUE>& pt1)
     {
@@ -175,32 +177,30 @@ union VskRect
     }
     VskRect(T_VALUE x0, T_VALUE y0, T_VALUE x1, T_VALUE y1)
     {
-        m_x0 = x0;
-        m_y0 = y0;
-        m_x1 = x1;
-        m_y1 = y1;
+        m_x0 = x0; m_y0 = y0;
+        m_x1 = x1; m_y1 = y1;
     }
 
     bool empty() const
     {
-        return m_x0 > m_x1 || m_y0 > m_y1;
+        return m_x0 >= m_x1 + m_is_integer || m_y0 >= m_y1 + m_is_integer;
     }
     void set_empty()
     {
-        m_x0 = m_y0 = -1;
-        m_x1 = m_y1 = 0;
+        m_x0 = m_y0 = 0;
+        m_x1 = m_y1 = -m_is_integer;
     }
     bool inside_x(const T_VALUE& x) const
     {
-        return m_x0 <= x && x <= m_x1;
+        return m_x0 <= x && x <= m_x1 + m_is_integer;
     }
     bool inside_y(const T_VALUE& y) const
     {
-        return m_y0 <= y && y <= m_y1;
+        return m_y0 <= y && y <= m_y1 + m_is_integer;
     }
     bool inside(const T_VALUE& x, const T_VALUE& y) const
     {
-        return m_x0 <= x && x <= m_x1 && m_y0 <= y && y <= m_y1;
+        return inside_x(x) && inside_y(y);
     }
     bool inside(const VskPoint<T_VALUE>& pt) const
     {
@@ -209,16 +209,16 @@ union VskRect
     T_VALUE width() const
     {
         if (empty()) return 0;
-        return m_x1 - m_x0 + 1;
+        return m_x1 - m_x0 + m_is_integer;
     }
     T_VALUE height() const
     {
         if (empty()) return 0;
-        return m_y1 - m_y0 + 1;
+        return m_y1 - m_y0 + m_is_integer;
     }
-    VskPoint<T_VALUE>  center_point() const
+    VskPoint<T_VALUE> center_point() const
     {
-        return { (m_x0 + m_x1) / 2, (m_y0 + m_y1) / 2 };
+        return { (m_x0 + m_x1 + m_is_integer) / 2, (m_y0 + m_y1 + m_is_integer) / 2 };
     }
 
     bool intersect(const VskRect<T_VALUE>& other);
