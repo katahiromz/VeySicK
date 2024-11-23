@@ -1759,24 +1759,6 @@ VskPointD VskMachine::view_to_world(const VskPointI& pt) const
     return { x, y };
 }
 
-// ワールド座標をスクリーン座標に
-VskPointD VskMachine::world_to_screen(const VskPointD& pt) const
-{
-    VskDouble wx = m_state->m_window.width(),   wy = m_state->m_window.height();
-    int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
-    return { (pt.m_x - m_state->m_window.m_x0) * vx / wx,
-             (pt.m_y - m_state->m_window.m_y0) * vy / wy };
-}
-
-// スクリーン座標をワールド座標に
-VskPointD VskMachine::screen_to_world(const VskPointD& pt) const
-{
-    VskDouble wx = m_state->m_window.width(),   wy = m_state->m_window.height();
-    int vx = m_state->m_viewport.width(), vy = m_state->m_viewport.height();
-    return { pt.m_x * wx / vx + m_state->m_window.m_x0,
-             pt.m_y * wy / vy + m_state->m_window.m_y0 };
-}
-
 // ワールド座標をクライアント座標に
 VskPointD VskMachine::world_to_client(const VskPointD& pt) const
 {
@@ -1807,10 +1789,7 @@ VskPointD VskMachine::client_to_world(const VskPointI& pt) const
 int VskMachine::get_pixel(int x0, int y0)
 {
     if (auto getter = get_color_getter(nullptr))
-    {
-        int ret = (*getter)(x0, y0);
-        return ret;
-    }
+        return (*getter)(x0, y0);
     return -1;
 }
 
@@ -1818,9 +1797,7 @@ int VskMachine::get_pixel(int x0, int y0)
 void VskMachine::set_pixel(int x0, int y0, int palette)
 {
     if (auto putter = get_color_putter(palette, nullptr))
-    {
         (*putter)(x0, y0);
-    }
 }
 
 // 直線を描画

@@ -673,12 +673,8 @@ struct VskMachine : VskObject
     void set_line_column(int column);
     VskString get_input_text() const;
 
-    VskPointD world_to_screen(const VskPointI& pt) const { return world_to_screen(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
-    VskPointD world_to_screen(const VskPointD& pt) const;
     VskPointI world_to_view(const VskPointD& pt) const;
     VskPointD view_to_world(const VskPointI& pt) const;
-    VskPointD screen_to_world(const VskPointI& pt) const { return screen_to_world(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
-    VskPointD screen_to_world(const VskPointD& pt) const;
     VskPointD world_to_client(const VskPointI& pt) const { return world_to_client(VskPointD{ VskDouble(pt.m_x), VskDouble(pt.m_y) }); }
     VskPointD world_to_client(const VskPointD& pt) const;
     VskSizeI world_to_client(const VskSizeD& siz) const;
@@ -818,7 +814,7 @@ void vsk_field_close(int fileno);
 // タートルが表示されているか？
 bool vsk_turtle_shown(void);
 // タートルの位置をスクリーン座標で返す
-VskPointD vsk_turtle_pos_in_screen(void);
+VskPointI vsk_turtle_pos_in_view(void);
 // タートルの向きをラジアンで返す
 VskDouble vsk_turtle_direction_in_radian(void);
 // アプリを終了する

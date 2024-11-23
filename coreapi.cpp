@@ -313,9 +313,9 @@ bool vsk_turtle_shown(void)
 }
 
 // タートルの位置を返す
-VskPointD vsk_turtle_pos_in_screen(void)
+VskPointI vsk_turtle_pos_in_view(void)
 {
-    return VSK_IMPL()->m_turtle_engine.m_last_point_in_screen;
+    return VSK_IMPL()->m_turtle_engine.m_last_point_in_view;
 }
 
 // タートルの向きを返す
@@ -4716,19 +4716,13 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr self, const VskAstList& args)
             switch (v0)
             {
             case 0:
-                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_point_in_world.m_x));
+                return vsk_ast_dbl(VSK_STATE()->m_last_point_in_world.m_x);
             case 1:
-                return vsk_ast_dbl(VskDouble(VSK_STATE()->m_last_point_in_world.m_y));
+                return vsk_ast_dbl(VSK_STATE()->m_last_point_in_world.m_y);
             case 2:
-                {
-                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world);
-                    return vsk_ast_dbl(VskDouble(pt.m_x));
-                }
+                return vsk_ast_int(vsk_machine->world_to_view(VSK_STATE()->m_last_point_in_world).m_x);
             case 3:
-                {
-                    auto pt = vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world);
-                    return vsk_ast_dbl(VskDouble(pt.m_y));
-                }
+                return vsk_ast_int(vsk_machine->world_to_view(VSK_STATE()->m_last_point_in_world).m_y);
             default:
                 vsk_machine->bad_call();
                 break;
@@ -4739,10 +4733,10 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr self, const VskAstList& args)
 
     if (args.size() == 2)
     {
-        VskDouble v0, v1;
-        if (vsk_dbl(v0, args[0]) && vsk_dbl(v1, args[1]))
+        VskInt v0, v1;
+        if (vsk_int(v0, args[0]) && vsk_int(v1, args[1]))
         {
-            int pixel = vsk_machine->get_pixel(vsk_round(v0), vsk_round(v1));
+            int pixel = vsk_machine->get_pixel(v0, v1);
             return vsk_ast_int(VskInt(pixel));
         }
         return nullptr;

@@ -284,9 +284,9 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
             if (auto ast1 = vsk_get_draw_param(item, 1)) {
                 VskPointD pt0 = m_last_point_in_screen;
                 VskPointD pt1 = { ast0->value(), ast1->value() };
-                pt1 = vsk_machine->world_to_screen(pt1);
+                auto pt = vsk_machine->world_to_view(pt1);
                 if (!item.m_B) {
-                    vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), color, m_draw_line_style);
+                    vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt), color, m_draw_line_style);
                 }
                 update_LP(item, pt1);
                 return true;
