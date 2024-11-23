@@ -4681,9 +4681,12 @@ static VskAstPtr VSKAPI vsk_LOCATE(VskAstPtr self, const VskAstList& args)
     VskInt v0 = 0;
     VskInt v1 = VSK_STATE()->m_caret_y;
     VskInt v2 = VSK_STATE()->m_show_caret;
-    if ((args.size() <= 0 || !args[0] || vsk_int(v0, args[0])) &&
-        (args.size() <= 1 || !args[1] || vsk_int(v1, args[1])) &&
-        (args.size() <= 2 || !args[2] || vsk_int(v2, args[2])))
+    auto arg0 = vsk_arg(args, 0);
+    auto arg1 = vsk_arg(args, 1);
+    auto arg2 = vsk_arg(args, 2);
+    if ((!arg0 || vsk_int(v0, args[0])) &&
+        (!arg1 || vsk_int(v1, args[1])) &&
+        (!arg2 || vsk_int(v2, args[2])))
     {
         if (v0 < 0 || v1 < 0)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
@@ -5640,9 +5643,9 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     if (!vsk_arity_in_range(args, 4, 7))
         return nullptr;
 
-    auto arg4 = ((args.size() <= 4) ? nullptr : args[4]);
-    auto arg5 = ((args.size() <= 5) ? nullptr : args[5]);
-    auto arg6 = ((args.size() <= 6) ? nullptr : args[6]);
+    auto arg4 = vsk_arg(args, 4);
+    auto arg5 = vsk_arg(args, 5);
+    auto arg6 = vsk_arg(args, 6);
 
     VskDouble v0 = VSK_STATE()->m_last_point_in_world.m_x;
     VskDouble v1 = VSK_STATE()->m_last_point_in_world.m_y;
@@ -5712,7 +5715,7 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
         }
         else if (arg6 && arg6->is_number()) // ラインスタイル
         {
-            if (!vsk_int(v6, arg6))
+            if (!vsk_wrd((VskWord&)v6, arg6))
                 return nullptr;
             vsk_LINE_helper_1(v0, v1, v2, v3, v4, v5, v6);
         }
@@ -5846,14 +5849,19 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
     if (!(args.size() <= 8))
         arg8 = vsk_eval_ast(args[8]);
 
+    auto arg3 = vsk_arg(args, 3);
+    auto arg4 = vsk_arg(args, 4);
+    auto arg5 = vsk_arg(args, 5);
+    auto arg6 = vsk_arg(args, 6);
+    auto arg7 = vsk_arg(args, 7);
     if (vsk_dbl(v0, args[0]) && // WX
         vsk_dbl(v1, args[1]) && // WY
         vsk_dbl(v2, args[2]) && // R
-        (args.size() <= 3 || !args[3] || vsk_int(v3, args[3])) && // PALETTE #1
-        (args.size() <= 4 || !args[4] || vsk_dbl(v4, args[4])) && // start_angle
-        (args.size() <= 5 || !args[5] || vsk_dbl(v5, args[5])) && // end_angle
-        (args.size() <= 6 || !args[6] || vsk_dbl(v6, args[6])) && // aspect
-        (args.size() <= 7 || !args[7] || vsk_ident(v7, args[7]))) // F
+        (!arg3 || vsk_int(v3, args[3])) && // PALETTE #1
+        (!arg4 || vsk_dbl(v4, args[4])) && // start_angle
+        (!arg5 || vsk_dbl(v5, args[5])) && // end_angle
+        (!arg6 || vsk_dbl(v6, args[6])) && // aspect
+        (!arg7 || vsk_ident(v7, args[7]))) // F
     {
         if (!vsk_machine->is_valid_color(v3))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
