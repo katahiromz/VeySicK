@@ -17,7 +17,7 @@ OCTAL              (&O|&o|&)[0-7]+
 HEX                (&H|&h)[0-9A-Fa-f]+
 DIGITS             [0-9]+[0-9 \t]*
 REAL               ([0-9]+[0-9 \t]*\.[0-9 \t]*|\.[0-9]+[0-9 \t]*)
-EXPONENT           ({DIGITS}|{REAL})[eEdD][\-\+]?[0-9]+
+EXPONENT           ({DIGITS}|{REAL})[ \t]*[eEdD][ \t]*[\-\+]?[0-9]+
 
 %%
 
@@ -71,9 +71,7 @@ REM([ \t]|:).* {
 "*"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_ASTERISK; }
 "/"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_SLASH; }
 "^"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_HAT; }
-"#"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_SHARP; }
 "$"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_DOLLAR; }
-"%"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_PERCENT; }
 "~"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_TILDA; }
 "|"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_VBAR; }
 "\\"    { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_BACKSLASH; }
@@ -92,43 +90,53 @@ REM([ \t]|:).* {
 "<"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_LT; }
 ">"     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_GT; }
 "."     { yylval = vsk_ast(); vsk_target_column += yyleng; return TK_PERIOD; }
+"%"     { yylval = vsk_ast(INSN_CINT); vsk_target_column += yyleng; return TK_PERCENT; }
+"#"     { yylval = vsk_ast(INSN_CDBL); vsk_target_column += yyleng; return TK_SHARP; }
+"!"     { yylval = vsk_ast(INSN_CSNG); vsk_target_column += yyleng; return TK_BANG; }
+"&"     { yylval = vsk_ast(INSN_CLNG); vsk_target_column += yyleng; return TK_AMPERSAND; }
 
-{HEX} {
-    // Hexadecimal
-    yylval = vsk_ast_digits(yytext, 16);
+{HEX} { // Hexadecimal
+    VSK_TYPE type;
+    auto ast = vsk_parse_number(yytext, nullptr, type);
+    assert(ast);
+    assert(ast->is_number());
+    yylval = vsk_ast(INSN_CINT, { ast });
     vsk_target_column += yyleng;
     return TK_HEXADECIMAL;
 }
-{OCTAL} {
-    // Octal
-    yylval = vsk_ast_digits(yytext, 8);
+{OCTAL} { // Octal
+    VSK_TYPE type;
+    auto ast = vsk_parse_number(yytext, nullptr, type);
+    assert(ast);
+    assert(ast->is_number());
+    yylval = vsk_ast(INSN_CINT, { ast });
+    vsk_target_column += yyleng;
     return TK_OCTAL;
 }
-{EXPONENT}[#!%&]? {
-    // Exponent numeric with/without type
-    yylval = vsk_ast_exponent(yytext);
-    vsk_target_column += yyleng;
-    return TK_NUMERIC;
-}
-{REAL}[#!%&]? {
-    // Real numeric with/without type
-    yylval = vsk_ast_real(yytext);
-    vsk_target_column += yyleng;
-    return TK_NUMERIC;
-}
-{DIGITS}[#!%&] {
-    // Digits with type
-    yylval = vsk_ast_digits(yytext, 10);
-    vsk_target_column += yyleng;
+{EXPONENT} { // Exponent numeric
+    VSK_TYPE type;
+    yylval = vsk_parse_number(yytext, nullptr, type);
+    assert(yylval);
     assert(yylval->is_number());
-    return TK_NUMERIC;
-}
-{DIGITS} {
-    // Digits without type
-    yylval = vsk_ast_digits(yytext, 10);
+    assert(type == VSK_TYPE_SINGLE || type == VSK_TYPE_DOUBLE);
     vsk_target_column += yyleng;
+    return TK_FLOATING;
+}
+{REAL} { // Real numeric
+    VSK_TYPE type;
+    yylval = vsk_parse_number(yytext, nullptr, type);
+    assert(yylval);
     assert(yylval->is_number());
-    return (yylval->is_negative() ? TK_NUMERIC : TK_DIGITS);
+    assert(type == VSK_TYPE_SINGLE || type == VSK_TYPE_DOUBLE);
+    vsk_target_column += yyleng;
+    return TK_FLOATING;
+}
+{DIGITS} { // Digits
+    VSK_TYPE type;
+    yylval = vsk_parse_number(yytext, nullptr, type);
+    assert(yylval);
+    assert(yylval->is_number());
+    return TK_DIGITS;
 }
 
 {IDENTIFIER} {

@@ -1165,54 +1165,6 @@ void vsk_get_label_to_line_numbers(const VskString& text, std::unordered_map<Vsk
     }
 }
 
-// 文字列から型付き数値に変換
-VskAstPtr vsk_value_from_string(VskString str)
-{
-    // ブランクを削除
-    mstr_replace_all(str, " ", "");
-    mstr_replace_all(str, "\t", "");
-    if (str.empty())
-        return vsk_ast_int(VskInt(0));
-
-    // prefixに応じて処理
-    if (str.find("&H") == 0 || str.find("&h") == 0)
-        return vsk_ast_digits(str.c_str(), 16);
-    if (str.find("&O") == 0 || str.find("&o") == 0 || str.find('&') == 0)
-        return vsk_ast_digits(str.c_str(), 8);
-
-    // 右側のゼロを取り除く。
-    mstr_trim_left(str, "0");
-
-    // 文字列が空なら"0"にする
-    if (str.empty())
-        str += '0';
-
-    // 無効な文字から始まる部分文字列を取り除く
-    auto i0 = str.find_first_not_of("-+0123456789eEdDd.");
-    if (i0 != str.npos)
-        str = str.substr(0, i0);
-
-    // 指数表示を処理
-    auto i1 = str.find_first_of("eEdD");
-    if (i1 != str.npos)
-    {
-        // 二番目の指数表示があれば取り除く
-        auto i3 = str.find_first_of("eEdD", i1 + 1);
-        if (i3 != str.npos)
-            str = str.substr(0, i3);
-
-        return vsk_ast_exponent(str.c_str());
-    }
-
-    // 小数点付きを処理
-    auto i2 = str.find('.');
-    if (i2 != str.npos)
-        return vsk_ast_real(str.c_str());
-
-    // 整数を処理
-    return vsk_ast_digits(str.c_str(), 10);
-}
-
 // 特定の行番号の行テキストを取得
 VskString vsk_get_program_line_text(VskLineNo line_no)
 {
@@ -1818,126 +1770,82 @@ VskString vsk_insn2name(INSN_TYPE insn)
 #endif
 }
 
-// 整数文字列を型付きの数値にする
-VskAstPtr vsk_ast_digits(const char *text, int base)
+// 文字列から数値を読み取って型付きのASTにする
+VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
 {
-    VskString str = text;
+    // 文字列をスキャン
+    VskString str;
+    char *dot, *exp;
+    bool minus;
+    if (!vsk_scan_number(str, ptr, &minus, &dot, &exp, endptr))
+        return nullptr; // 数値は読み取れなかった
 
-    // ブランクを削除
-    mstr_replace_all(str, " ", "");
-    mstr_replace_all(str, "\t", "");
+    int sign = (minus ? -1 : 1);
 
-    // 空の場合は無効
-    if (str.empty())
-        return nullptr;
-
-    // prefixをC/C++互換に変換し、prefixの情報を取得
-    bool hex_or_octal = false;
-    if (str.find("&") == 0)
+    if (!dot && !exp) // 整数っぽい？
     {
-        hex_or_octal = true;
-        str[0] = '0';
-        if (str[1] == 'H' || str[1] == 'h') // "&H"
-            str[1] = 'x'; // "0x..."
-        else if (str[1] == 'O' || str[1] == 'o')
-            str[1] = '0'; // "00..."
-        else
-            str[0] = '0'; // "0..."
-    }
-    else
-    {
-        mstr_trim_left(str, "0");
-        if (str.empty())
-            str += '0';
-    }
+        // prefixに応じて進数を読み取る
+        VskLong value;
+        if (str[0] == '&') {
+            type = VSK_TYPE_INTEGER;
 
-    // 型を判定して型付きの値を返す。ここでは字句解析の段階であり、8進・16進のオーバーフローが扱えないので、INSN_HEX_OR_OCTALの解釈にまかせる。
-    char type = str[str.size() - 1];
-    int64_t value = std::strtoll(str.c_str(), nullptr, base);
-    if (type == VSK_TYPE_INTEGER || std::numeric_limits<VskInt>::lowest() <= value && value <= std::numeric_limits<VskInt>::max())
-        return vsk_ast_int(VskInt(value));
-    if (type == VSK_TYPE_LONG || std::numeric_limits<VskLong>::lowest() <= value && value <= std::numeric_limits<VskLong>::max())
-        return vsk_ast_lng(VskLong(value));
-    if (type == VSK_TYPE_SINGLE || std::numeric_limits<VskSingle>::lowest() <= value && value <= std::numeric_limits<VskSingle>::max())
-        return vsk_ast_sng(VskSingle(value));
-    return vsk_ast_dbl(VskDouble(value));
-}
+            if (str[1] == 'H' || str[1] == 'h') {
+                value = std::strtoul(&str[2], nullptr, 16); // 16進数？
+            } else if (str[1] == 'O' || str[1] == 'o') {
+                value = std::strtoul(&str[2], nullptr, 8); // 8進数？
+            } else {
+                value = std::strtoul(&str[1], nullptr, 8); // 8進数？
+            }
 
-// 指数形式実数を型付きの数値にする
-VskAstPtr vsk_ast_exponent(const char *text)
-{
-    VskString str = text;
+            value = sign * value;
 
-    // ブランクを削除
-    mstr_replace_all(str, " ", "");
-    mstr_replace_all(str, "\t", "");
+            // VskIntの範囲を超えているか？
+            if (value < std::numeric_limits<VskShort>::lowest() || value > std::numeric_limits<VskWord>::max())
+                return vsk_ast_dbl(VskDouble(value)); // 倍精度
+        } else {
+            value = std::strtoul(str.c_str(), nullptr, 10); // 10進数？
+            value = sign * value;
 
-    // 空の場合は無効
-    if (str.empty())
-        return nullptr;
-
-    // 浮動小数点数をC/C++互換にし、指数表示がdoubleかどうか判定する
-    size_t i0 = str.find("d"), i1 = str.find("D");
-    bool is_double = true;
-    if (i0 != str.npos)
-        str[i0] = 'e';
-    else if (i1 != str.npos)
-        str[i1] = 'E';
-    else
-        is_double = false;
-
-    // 型を判定して型付きの値を返す
-    char type = str[str.size() - 1];
-    VskDouble value = std::strtod(str.c_str(), nullptr);
-    switch (type)
-    {
-    case VSK_TYPE_DOUBLE: return vsk_ast_dbl(VskDouble(value));
-    case VSK_TYPE_SINGLE: return vsk_ast_sng(VskSingle(value));
-    case VSK_TYPE_INTEGER: return vsk_ast_int(VskInt(value));
-    case VSK_TYPE_LONG: return vsk_ast_lng(VskLong(value));
-    default:
-        // 限界に応じて処理する
-        if (is_double ||
-            value < std::numeric_limits<VskSingle>::lowest() ||
-            std::numeric_limits<VskSingle>::max() < value)
-        {
-            return vsk_ast_dbl(VskDouble(value));
+            // VskIntの範囲を超えているか？
+            if (value < std::numeric_limits<VskShort>::lowest() || value > std::numeric_limits<VskWord>::max())
+            {
+                type = VSK_TYPE_DOUBLE;
+                return vsk_ast_dbl(VskDouble(value)); // 倍精度
+            }
         }
-        return vsk_ast_sng(VskSingle(value));
+
+        type = VSK_TYPE_INTEGER;
+        return vsk_ast_int(sign * VskInt(value)); // 整数
     }
-}
 
-// 実数文字列を型付きの数値にする
-VskAstPtr vsk_ast_real(const char *text)
-{
-    VskString str = text;
+    // 指数表示の"D"はC言語と非互換だから"E"に変える
+    mstr_replace_all(str, 'D', 'E');
 
-    // ブランクを削除
-    mstr_replace_all(str, " ", "");
-    mstr_replace_all(str, "\t", "");
-
-    // 空の場合は無効
-    if (str.empty())
-        return nullptr;
-
-    // 型を判定して型付きの値を返す
-    char type = str[str.size() - 1];
+    // 実数らしい
     VskDouble value = std::strtod(str.c_str(), nullptr);
-    bool is_double;
-    switch (type)
+    if (exp) // 指数あり？
     {
-    case VSK_TYPE_DOUBLE: return vsk_ast_dbl(VskDouble(value));
-    case VSK_TYPE_SINGLE: return vsk_ast_sng(VskSingle(value));
-    case VSK_TYPE_INTEGER: return vsk_ast_int(VskInt(value));
-    case VSK_TYPE_LONG: return vsk_ast_lng(VskLong(value));
-    default:
-        mstr_replace_all(str, ".", "");
-        is_double = (str.size() >= 8);
-        if (is_double)
-            return vsk_ast_dbl(VskDouble(value));
-        else
-            return vsk_ast_sng(VskSingle(value));
+        VskDouble power = std::strtod(exp, nullptr);
+        value *= std::pow(10, power); // 指数を適用
+        if (*exp == 'E' || *exp == 'e') // 単精度？
+        {
+            type = VSK_TYPE_SINGLE;
+            return vsk_ast_sng(sign * VskSingle(value));
+        }
     }
+    else
+    {
+        mstr_replace_all(str, ".", ""); // ドットを取り除く
+        mstr_trim(str, "0"); // 前後のゼロを取り除く
+        if (str.size() <= 7)
+        {
+            type = VSK_TYPE_SINGLE;
+            return vsk_ast_sng(sign * VskSingle(value)); // 7桁以下なら単精度
+        }
+    }
+
+    type = VSK_TYPE_DOUBLE;
+    return vsk_ast_dbl(sign * value); // 倍精度
 }
 
 // 符号付き16-bit整数を取得する
@@ -1960,25 +1868,34 @@ bool vsk_sht(VskShort& value, VskAstPtr arg)
     case INSN_LNG_LITERAL:
         {
             VskLong v = ret->m_lng;
-            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
+            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskWord>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = static_cast<VskShort>(v);
+            if (v < 0)
+                value = static_cast<VskShort>(v + 0.5);
+            else
+                value = static_cast<VskWord>(v + 0.5);
         }
         break;
     case INSN_SNG_LITERAL:
         {
             VskSingle v = ret->m_sng;
-            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
+            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskWord>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = static_cast<VskShort>(std::round(v));
+            if (v < 0)
+                value = static_cast<VskShort>(v + 0.5);
+            else
+                value = static_cast<VskWord>(v + 0.5);
         }
         break;
     case INSN_DBL_LITERAL:
         {
             VskDouble v = ret->m_dbl;
-            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < v)
+            if (v < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskWord>::max() < v)
                 VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, false);
-            value = static_cast<VskShort>(std::round(v));
+            if (v < 0)
+                value = static_cast<VskShort>(v + 0.5);
+            else
+                value = static_cast<VskWord>(v + 0.5);
         }
         break;
     case INSN_STR_LITERAL:
@@ -3172,30 +3089,6 @@ VskAstPtr vsk_run(VskIndexList index_list = { I_PROGRAM_CODE }, bool clear_vars 
 
 //////////////////////////////////////////////////////////////////////////////
 
-// INSN_HEX_OR_OCTAL ("&H", "&O", ...) @implemented
-// 実機 BASIC は8進数や16進数の境界チェックを厳しくしているようだ。
-// 実機の8進数や16進数は16ビット整数と見なされる。
-static VskAstPtr VSKAPI vsk_HEX_OR_OCTAL(VskAstPtr self, const VskAstList& args)
-{
-    auto arg0 = vsk_eval_ast(args[0]);
-
-    VskLong v0;
-    if (!vsk_lng(v0, args[0]))
-        return nullptr;
-
-#ifdef INT_IS_32BIT
-    if (v0 < std::numeric_limits<VskDword>::lowest() || std::numeric_limits<VskDword>::max() < v0)
-        VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, nullptr);
-
-    return vsk_ast_lng(VskDword(std::round(v0)));
-#else
-    if (v0 < std::numeric_limits<VskWord>::lowest() || std::numeric_limits<VskWord>::max() < v0)
-        VSK_ERROR_AND_RETURN(VSK_ERR_OVERFLOW, nullptr);
-
-    return vsk_ast_int(VskWord(std::round(v0)));
-#endif
-}
-
 static VskAstPtr vsk_COLOR_8801(const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 0, 5))
@@ -3767,6 +3660,19 @@ static VskAstPtr VSKAPI vsk_CINT(VskAstPtr self, const VskAstList& args)
     VskInt v0;
     if (vsk_int(v0, args[0]))
         return vsk_ast_int(v0);
+
+    return nullptr;
+}
+
+// INSN_CLNG (CLNG) @implemented
+static VskAstPtr VSKAPI vsk_CLNG(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskLong v0;
+    if (vsk_lng(v0, args[0]))
+        return vsk_ast_lng(v0);
 
     return nullptr;
 }
@@ -5480,7 +5386,8 @@ static VskAstPtr VSKAPI vsk_VAL(VskAstPtr self, const VskAstList& args)
     if (!vsk_str(v0, args[0]))
         return nullptr;
 
-    auto value = vsk_value_from_string(v0);
+    VSK_TYPE type;
+    auto value = vsk_parse_number(v0.c_str(), nullptr, type);
     if (!value)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
@@ -10394,9 +10301,14 @@ static VskAstPtr VSKAPI vsk_READ(VskAstPtr self, const VskAstList& args)
         if (data->is_data_literal())
         {
             if (type == VSK_TYPE_STRING)
+            {
                 data = vsk_ast_str(data->m_str);
+            }
             else
-                data = vsk_value_from_string(data->m_str);
+            {
+                VSK_TYPE type2;
+                data = vsk_parse_number(data->m_str.c_str(), nullptr, type2);
+            }
         }
 
         // 変数に代入
@@ -11085,7 +10997,8 @@ bool vsk_complete_lvalue_input(VskAstPtr lvalue, const VskString& data, bool pro
     }
     else
     {
-        auto value = vsk_value_from_string(data);
+        VSK_TYPE type;
+        auto value = vsk_parse_number(data.c_str(), nullptr, type);
         if (!value || !value->is_number())
         {
             if (prompt)
@@ -11187,7 +11100,8 @@ void vsk_enter_input_text(const VskString& text)
     // RANDOMIZE文か？
     if (node->m_insn == INSN_RANDOMIZE)
     {
-        auto value = vsk_value_from_string(text);
+        VSK_TYPE type;
+        auto value = vsk_parse_number(text.c_str(), nullptr, type);
         if (value && value->is_number())
         {
             auto number = value->to_int();

@@ -18,6 +18,7 @@
 %token TK_ABS
 %token TK_AKCNV_dollar
 %token TK_ALLOC
+%token TK_AMPERSAND
 %token TK_AND
 %token TK_ASC
 %token TK_ASTERISK
@@ -25,6 +26,7 @@
 %token TK_ATTR_dollar
 %token TK_AUTO
 %token TK_BACKSLASH
+%token TK_BANG
 %token TK_BEEP
 %token TK_BLOAD
 %token TK_BSAVE
@@ -90,6 +92,7 @@
 %token TK_FIELD_sharp
 %token TK_FILES
 %token TK_FIX
+%token TK_FLOATING
 %token TK_FN
 %token TK_FOR
 %token TK_FPOS
@@ -174,7 +177,6 @@
 %token TK_NEWLINE
 %token TK_NEXT
 %token TK_NOT
-%token TK_NUMERIC
 %token TK_OCTAL
 %token TK_OCT_dollar
 %token TK_OFF
@@ -304,12 +306,28 @@ line_number
     | TK_ASTERISK TK_IDENTIFIER { vsk_targeting($2); $$ = vsk_ast(INSN_LABEL, { $2 }); }
     ;
 
+casted_number
+    : number cast       { $$ = $2; $2->push_back($1); }
+    | number            { $$ = $1; }
+    ;
+
+number
+    : TK_DIGITS         { $$ = $1; }
+    | TK_OCTAL          { $$ = $1; }
+    | TK_HEXADECIMAL    { $$ = $1; }
+    | TK_FLOATING       { $$ = $1; }
+    ;
+
+cast
+    : TK_PERCENT        { $$ = $1; }
+    | TK_SHARP          { $$ = $1; }
+    | TK_BANG           { $$ = $1; }
+    | TK_AMPERSAND      { $$ = $1; }
+    ;
+
 primary_expression
     : lvalue                            { $$ = $1; }
-    | TK_NUMERIC                        { $$ = $1; }
-    | TK_DIGITS                         { $$ = $1; }
-    | TK_HEXADECIMAL                    { vsk_targeting($1); $$ = vsk_ast(INSN_HEX_OR_OCTAL, { $1 }); }
-    | TK_OCTAL                          { vsk_targeting($1); $$ = vsk_ast(INSN_HEX_OR_OCTAL, { $1 }); }
+    | casted_number                     { $$ = $1; }
     | TK_STRING                         { $$ = $1; }
     | TK_L_PAREN expression TK_R_PAREN  { $$ = $2; }
     | TK_DATE_dollar                    { vsk_targeting($1); $$ = vsk_ast(INSN_DATE_dollar_var); }

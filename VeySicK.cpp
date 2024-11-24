@@ -2727,3 +2727,140 @@ void VskMachine::pen(int x, int y, bool pressed)
 {
     vsk_pen(x, y, pressed);
 }
+
+// 文字列から数値を読み取る
+bool vsk_scan_number(VskString& str, const char *ptr, bool *minus, char **dot, char **exp, char **endptr)
+{
+    // 正規表現が使えないので、手動でスキャンする
+    char *pch = const_cast<char *>(ptr);
+
+    // ポインタ群を初期化する
+    if (minus) *minus = false;
+    if (dot) *dot = nullptr;
+    if (exp) *exp = nullptr;
+    if (endptr) *endptr = nullptr;
+
+    // 空白をスキップ
+    if (!*pch)
+        return false;
+    while (vsk_isblank(*pch)) ++pch;
+    if (*pch == '-')
+    {
+        str += *pch++;
+        *minus = true;
+    }
+    else if (*pch == '+')
+    {
+        ++pch;
+    }
+    while (vsk_isblank(*pch)) ++pch;
+    if (!*pch)
+        return false;
+
+    if (*pch == '&') // ８進数か16進数か？
+    {
+        str += *pch++;
+        bool hex = false;
+        if (*pch == 'H' || *pch == 'h') { // 16進数
+            hex = true;
+            str += *pch++;
+        } else if (*pch == 'O' || *pch == 'o') { // 8進数
+            str += *pch++;
+        }
+        size_t prefix_len = str.size();
+
+        if (hex) {
+            // 16進数と空白を読み取る
+            while (*pch) {
+                if (vsk_isxdigit(*pch))
+                    str += *pch;
+                else if (!vsk_isblank(*pch))
+                    break;
+                ++pch;
+            }
+        } else {
+            // 8進数と空白を読み取る
+            while (*pch) {
+                if (vsk_isoctal(*pch))
+                    str += *pch;
+                else if (!vsk_isblank(*pch))
+                    break;
+                ++pch;
+            }
+        }
+
+        // 空白をスキップ
+        while (vsk_isblank(*pch)) ++pch;
+
+        // 終端
+        if (endptr) *endptr = pch;
+
+        return str.size() > prefix_len; // prefixよりも長ければ成功
+    }
+
+    // 数字と空白を読み取る
+    while (*pch)
+    {
+        if (vsk_isdigit(*pch))
+            str += *pch;
+        else if (!vsk_isblank(*pch))
+            break;
+        ++pch;
+    }
+
+    // 終端か？
+    if (!*pch) {
+        if (endptr) *endptr = pch;
+        return str.size();
+    }
+
+    // ドットか？
+    if (*pch == '.') {
+        str += *pch;
+        if (dot) *dot = pch;
+        ++pch;
+    }
+
+    // 数字と空白を読み取る
+    while (*pch) {
+        if (vsk_isdigit(*pch))
+            str += *pch;
+        else if (!vsk_isblank(*pch))
+            break;
+        ++pch;
+    }
+
+    if (*pch == 'E' || *pch == 'D' || *pch == 'e' || *pch == 'd') {
+        // 指数開始
+        if (exp)
+            *exp = pch;
+        str += *pch++;
+
+        // 空白をスキップ
+        while (vsk_isblank(*pch)) ++pch;
+
+        // 指数の符号
+        if (*pch == '+' || *pch == '-')
+            str += *pch++;
+
+        // 空白をスキップ
+        while (vsk_isblank(*pch)) ++pch;
+
+        // 数字と空白を読み取る
+        while (*pch) {
+            if (vsk_isdigit(*pch))
+                str += *pch;
+            else if (!vsk_isblank(*pch))
+                break;
+            ++pch;
+        }
+    }
+
+    // 空白をスキップ
+    while (vsk_isblank(*pch)) ++pch;
+
+    // 終端
+    if (endptr) *endptr = pch;
+
+    return str.size(); // 文字列が空でなければ成功
+}

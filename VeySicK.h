@@ -832,3 +832,5 @@ VskString vsk_path_remove_filename(const VskString& pathname);
 VskString vsk_getcwd(void);
 // BEEP音を鳴らす
 void vsk_beep(int number = -1);
+// 文字列から数値を読み取る
+bool vsk_scan_number(VskString& str, const char *ptr, bool *minus = nullptr, char **dot = nullptr, char **exp = nullptr, char **endptr = nullptr);

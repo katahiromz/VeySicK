@@ -210,11 +210,6 @@ vsk_ast_goto(VskAstPtr line_number)
     #define vsk_ast_int vsk_ast_sht
 #endif
 
-// 文字列を型付きの数値にする
-VskAstPtr vsk_ast_digits(const char *text, int base = 10);
-VskAstPtr vsk_ast_exponent(const char *text);
-VskAstPtr vsk_ast_real(const char *text);
-
 // マルチステートメントにする
 VskAstPtr vsk_ast_multi(VskAstPtr x);
 VskAstPtr vsk_ast_multi(VskAstPtr x, VskAstPtr y);
@@ -258,13 +253,15 @@ bool vsk_str(VskString& value, VskAstPtr arg);
 typedef void *yyscan_t;
 
 int vsk_token_from_text(const char *text);
-VskAstPtr vsk_value_from_string(VskString str);
 
 extern "C" int isatty(int);
 
 extern bool vsk_in_data;
 
 void vsk_targeting(VskAstPtr ast);
+
+// 文字列から数値を読み取って型付きのASTにする
+VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type);
 
 //////////////////////////////////////////////////////////////////////////////
 // VeySicK の構文解析
