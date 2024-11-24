@@ -105,6 +105,7 @@ struct VskAst : VskObject
     std::string m_str;
     union
     {
+        // ここはサイズが大きい順に並べてください
         VskDouble m_dbl;
         VskSingle m_sng;
         VskDword m_dwd;

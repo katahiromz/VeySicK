@@ -102,11 +102,19 @@ inline VskInt vsk_round(VskDouble value)
 
 inline VskSingle vsk_sinf(VskSingle x)
 {
+#ifdef HAS_STD_SINF
+    return std::sinf(x);
+#else
     return VskSingle(std::sin(x));
+#endif
 }
 inline VskSingle vsk_cosf(VskSingle x)
 {
+#ifdef HAS_STD_COSF
+    return std::cosf(x);
+#else
     return VskSingle(std::cos(x));
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////

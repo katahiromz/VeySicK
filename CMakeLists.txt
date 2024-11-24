@@ -138,6 +138,23 @@ add_custom_target(jam
     DEPENDS LIMEJAM)
 
 ##############################################################################
+# check function existence
+
+set(TMP_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+# std::sinf check
+try_compile(HAS_STD_SINF ${TMP_BIN_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake-tests/sinf.cpp)
+if(HAS_STD_SINF)
+    add_definitions(-DHAS_STD_SINF)
+endif()
+
+# std::cosf check
+try_compile(HAS_STD_COSF ${TMP_BIN_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake-tests/cosf.cpp)
+if(HAS_STD_COSF)
+    add_definitions(-DHAS_STD_COSF)
+endif()
+
+##############################################################################
 # VeySicK
 
 # VeySicK.exe

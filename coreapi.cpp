@@ -1767,7 +1767,7 @@ void VskAst::copy_node(VskAst *src)
 {
     m_insn = src->m_insn;
     m_str = src->m_str;
-    m_dbl = src->m_dbl;
+    m_dbl = src->m_dbl; // TODO: union内で一番大きいメンバーを選んでください
     m_program_line = src->m_program_line;
     m_column = src->m_column;
 }
