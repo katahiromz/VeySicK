@@ -154,6 +154,9 @@ if(HAS_STD_COSF)
     add_definitions(-DHAS_STD_COSF)
 endif()
 
+message(STATUS "HAS_STD_SINF: ${HAS_STD_SINF}")
+message(STATUS "HAS_STD_COSF: ${HAS_STD_COSF}")
+
 ##############################################################################
 # VeySicK
 
