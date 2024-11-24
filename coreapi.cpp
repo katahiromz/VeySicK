@@ -379,6 +379,13 @@ int vsk_field_get_len(int fileno, int field_index = -1)
             ++index;
         }
     }
+
+    if (VSK_SETTINGS()->m_field_width == 0)
+        VSK_SETTINGS()->m_field_width = 256;
+
+    if (VSK_SETTINGS()->m_field_width != -1)
+        record_len = VSK_SETTINGS()->m_field_width;
+
     return record_len;
 }
 
@@ -8026,7 +8033,10 @@ static VskAstPtr VSKAPI vsk_PUT_sharp(VskAstPtr self, const VskAstList& args)
         {
             if (v1 == 0)
             {
-                bin.resize(256, ' ');
+                if (VSK_SETTINGS()->m_field_width == -1)
+                    bin.resize(256, ' ');
+                else
+                    bin.resize(VSK_SETTINGS()->m_field_width, ' ');
                 if (auto error = file->write_bin(bin.c_str(), 256))
                     VSK_ERROR_AND_RETURN(error, nullptr);
             }

@@ -94,6 +94,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("MachineMode"), NULL, NULL, (BYTE*)&m_machine_mode, &cbValue);
         cbValue = sizeof(m_text_mode);
         ::RegQueryValueEx(hKey, TEXT("TextMode"), NULL, NULL, (BYTE*)&m_text_mode, &cbValue);
+        cbValue = sizeof(m_field_width);
+        ::RegQueryValueEx(hKey, TEXT("FieldWidth"), NULL, NULL, (BYTE*)&m_field_width, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -135,6 +137,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("MachineMode"), 0, REG_DWORD, (BYTE*)&m_machine_mode, cbValue);
         cbValue = sizeof(m_text_mode);
         ::RegSetValueEx(hKey, TEXT("TextMode"), 0, REG_DWORD, (BYTE*)&m_text_mode, cbValue);
+        cbValue = sizeof(m_field_width);
+        ::RegSetValueEx(hKey, TEXT("FieldWidth"), 0, REG_DWORD, (BYTE*)&m_field_width, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -2789,6 +2793,7 @@ BOOL Settings_OnOK(HWND hwnd)
     VSK_SETTINGS()->m_move_caret_by_mouse_click = (IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED);
     VSK_SETTINGS()->m_remember_window_pos = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
     VSK_SETTINGS()->m_unlimited_mode = (IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED);
+    VSK_SETTINGS()->m_field_width = GetDlgItemInt(hwnd, edt1, nullptr, TRUE);
     return TRUE;
 }
 
@@ -2805,6 +2810,8 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::CheckDlgButton(hwnd, chx2, BST_CHECKED);
         if (VSK_SETTINGS()->m_unlimited_mode)
             ::CheckDlgButton(hwnd, chx3, BST_CHECKED);
+        ::SetDlgItemInt(hwnd, edt1, VSK_SETTINGS()->m_field_width, TRUE);
+        ::SendDlgItemMessage(hwnd, scr1, UDM_SETRANGE, 0, MAKELONG(1024, -1));
         return TRUE; // オートフォーカス
     case WM_COMMAND:
         switch (LOWORD(wParam))

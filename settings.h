@@ -11,6 +11,7 @@ struct VskSettings
     int m_unlimited_mode = true;                        // 無制限モード（実機の制限を乗り越える）
     VskMachineMode m_machine_mode = VSK_MACHINE_MODE_9801;  // マシンモード
     VskTextMode m_text_mode = VSK_TEXT_MODE_GRPH;       // テキストモード
+    int m_field_width = 256;                            // フィールド幅
 
     void reset()
     {
