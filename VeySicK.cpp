@@ -261,17 +261,16 @@ VskString vsk_to_string(VskSingle sng)
         ret += buf;
         return is_negative ? ("-" + ret) : ret;
     }
+    std::sprintf(buf, "%.*f", int(6 - log10), sng);
     if (log10 >= 0)
     {
-        std::sprintf(buf, "%.*f", int(6 - log10), sng);
         ret += buf;
         mstr_trim(ret, "0");
         mstr_trim_right(ret, ".");
         return is_negative ? ("-" + ret) : ret;
     }
-    if (log10 < 0)
+    else
     {
-        std::sprintf(buf, "%.*f", int(6 - log10), sng);
         VskString str = buf;
         mstr_trim(str, "0");
         if (str.size() <= 8)
