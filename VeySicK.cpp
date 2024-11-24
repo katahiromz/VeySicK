@@ -1786,12 +1786,8 @@ VskPointI VskMachine::world_to_view(const VskPointS& pt) const
 {
     auto& window = m_state->m_window;
     auto& view = m_state->m_viewport;
-    assert(window.width() > 0);
-    assert(window.height() > 0);
-    assert(view.width() > 0);
-    assert(view.height() > 0);
-    assert(m_state->m_screen_width > 0);
-    assert(m_state->m_screen_height > 0);
+    assert(window.width() > 0 && window.height() > 0);
+    assert(view.width() > 0 && view.height() > 0);
     auto x = (pt.m_x - window.m_x0) * view.width() / window.width() + view.m_x0;
     auto y = (pt.m_y - window.m_y0) * view.height() / window.height() + view.m_y0;
     return { vsk_round(x), vsk_round(y) };
@@ -1801,12 +1797,8 @@ VskPointS VskMachine::view_to_world(const VskPointI& pt) const
 {
     auto& window = m_state->m_window;
     auto& view = m_state->m_viewport;
-    assert(window.width() > 0);
-    assert(window.height() > 0);
-    assert(view.width() > 0);
-    assert(view.height() > 0);
-    assert(m_state->m_screen_width > 0);
-    assert(m_state->m_screen_height > 0);
+    assert(window.width() > 0 && window.height() > 0);
+    assert(view.width() > 0 && view.height() > 0);
     auto x = (pt.m_x - view.m_x0) * window.width() / view.width() + window.m_x0;
     auto y = (pt.m_y - view.m_y0) * window.height() / view.height() + window.m_y0;
     return { x, y };

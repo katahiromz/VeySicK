@@ -185,8 +185,7 @@ union VskRect
 
     VskRect()
     {
-        m_x0 = m_y0 = 0;
-        m_x1 = m_y1 = -m_is_integer;
+        set_empty();
     }
     VskRect(const VskPoint<T_VALUE>& pt0, const VskPoint<T_VALUE>& pt1)
     {
@@ -210,11 +209,11 @@ union VskRect
     }
     bool inside_x(const T_VALUE& x) const
     {
-        return m_x0 <= x && x <= m_x1 + m_is_integer;
+        return m_x0 <= x && x <= m_x1;
     }
     bool inside_y(const T_VALUE& y) const
     {
-        return m_y0 <= y && y <= m_y1 + m_is_integer;
+        return m_y0 <= y && y <= m_y1;
     }
     bool inside(const T_VALUE& x, const T_VALUE& y) const
     {
@@ -227,16 +226,16 @@ union VskRect
     T_VALUE width() const
     {
         if (empty()) return 0;
-        return m_x1 - m_x0 + m_is_integer;
+        return m_x1 - m_x0;
     }
     T_VALUE height() const
     {
         if (empty()) return 0;
-        return m_y1 - m_y0 + m_is_integer;
+        return m_y1 - m_y0;
     }
     VskPoint<T_VALUE> center_point() const
     {
-        return { (m_x0 + m_x1 + m_is_integer) / 2, (m_y0 + m_y1 + m_is_integer) / 2 };
+        return { (m_x0 + m_x1) / 2, (m_y0 + m_y1) / 2 };
     }
 
     bool intersect(const VskRect<T_VALUE>& other);
