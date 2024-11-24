@@ -1792,8 +1792,8 @@ VskPointI VskMachine::world_to_view(const VskPointS& pt) const
     assert(view.height() > 0);
     assert(m_state->m_screen_width > 0);
     assert(m_state->m_screen_height > 0);
-    auto x = (pt.m_x - window.m_x0) * (m_state->m_screen_width - 1) / window.width() + view.m_x0;
-    auto y = (pt.m_y - window.m_y0) * (m_state->m_screen_height - 1) / window.height() + view.m_y0;
+    auto x = (pt.m_x - window.m_x0) * view.width() / window.width() + view.m_x0;
+    auto y = (pt.m_y - window.m_y0) * view.height() / window.height() + view.m_y0;
     return { vsk_round(x), vsk_round(y) };
 }
 
@@ -1807,8 +1807,8 @@ VskPointS VskMachine::view_to_world(const VskPointI& pt) const
     assert(view.height() > 0);
     assert(m_state->m_screen_width > 0);
     assert(m_state->m_screen_height > 0);
-    auto x = (pt.m_x - view.m_x0) * window.width() / (m_state->m_screen_width - 1) + window.m_x0;
-    auto y = (pt.m_y - view.m_y0) * window.height() / (m_state->m_screen_height - 1) + window.m_y0;
+    auto x = (pt.m_x - view.m_x0) * window.width() / view.width() + window.m_x0;
+    auto y = (pt.m_y - view.m_y0) * window.height() / view.height() + window.m_y0;
     return { x, y };
 }
 
