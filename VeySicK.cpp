@@ -303,7 +303,7 @@ VskString vsk_to_string(VskDouble dbl)
     char buf[256];
     std::sprintf(buf, "%.16G", dbl);
     VskString str = buf;
-    mstr_replace_all(str, "E", "D");
+    mstr_replace_all(str, 'E', 'D');
     return str;
 }
 

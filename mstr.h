@@ -40,18 +40,18 @@ template <typename T_STR>
 inline bool
 mstr_replace_all(T_STR& str, const T_STR& from, const T_STR& to)
 {
-    bool ret = false;
+    bool found = false;
     size_t i = 0;
     for (;;)
     {
         i = str.find(from, i);
         if (i == T_STR::npos)
             break;
-        ret = true;
+        found = true;
         str.replace(i, from.size(), to);
         i += to.size();
     }
-    return ret;
+    return found;
 }
 template <typename T_STR>
 inline bool
@@ -60,6 +60,21 @@ mstr_replace_all(T_STR& str,
                  const typename T_STR::value_type *to)
 {
     return mstr_replace_all(str, T_STR(from), T_STR(to));
+}
+template <typename T_STR>
+inline bool
+mstr_replace_all(T_STR& str, typename T_STR::value_type from, typename T_STR::value_type to)
+{
+    bool found = false;
+    for (auto& ch : str)
+    {
+        if (ch == from)
+        {
+            ch = to;
+            found = true;
+        }
+    }
+    return found;
 }
 
 template <typename T_STR_CONTAINER>
