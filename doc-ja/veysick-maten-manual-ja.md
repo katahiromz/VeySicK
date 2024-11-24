@@ -2329,6 +2329,7 @@ CMD TURTLE "FD(dist)"
 
 - 【注意】 この関数は、JISコード専用関数です。[SJISモード](#char_mode)ではこの関数の戻り値を正しく表示できません。
 - 【注意】 [JISモード](#char_mode)で漢字を表示するには、前後にKI/KOコード(`KNJ$("1B4B")`と`KNJ$("1B48")`)が必要です。
+- 【注意】 VeySicKでは `KNJ$` は廃止されました。
 - 【参照】 [`CHR$`](#chr_dollar)、[`JIS$`](#jis_dollar)、サンプルプログラム「`drive1/KNJ_.BAS`」
 
 ---
