@@ -104,8 +104,8 @@ endif()
 ##############################################################################
 # alut
 
-set(BUILD_EXAMPLES OFF)
-set(BUILD_TESTS OFF)
+option(BUILD_EXAMPLES "build example applications" OFF)
+option(BUILD_TESTS "build the test-suite" OFF)
 if(OpenAL_FOUND)
     if(NOT BUILD_SHARED_LIBS)
         add_definitions(-DALUT_STATIC)
