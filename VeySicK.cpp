@@ -2734,16 +2734,19 @@ bool vsk_scan_number(VskString& str, const char *ptr, bool *minus, char **dot, c
     // 正規表現が使えないので、手動でスキャンする
     char *pch = const_cast<char *>(ptr);
 
-    // ポインタ群を初期化する
+    // 初期化する
     if (minus) *minus = false;
     if (dot) *dot = nullptr;
     if (exp) *exp = nullptr;
     if (endptr) *endptr = nullptr;
 
+    // ここで終端があると失敗
+    if (!*pch) return false;
+
     // 空白をスキップ
-    if (!*pch)
-        return false;
     while (vsk_isblank(*pch)) ++pch;
+
+    // 符号を検知
     if (*pch == '-')
     {
         str += *pch++;
@@ -2753,9 +2756,12 @@ bool vsk_scan_number(VskString& str, const char *ptr, bool *minus, char **dot, c
     {
         ++pch;
     }
+
+    // 空白をスキップ
     while (vsk_isblank(*pch)) ++pch;
-    if (!*pch)
-        return false;
+
+    // ここで終端があると失敗
+    if (!*pch) return false;
 
     if (*pch == '&') // ８進数か16進数か？
     {
