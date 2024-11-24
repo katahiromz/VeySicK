@@ -2441,7 +2441,7 @@ VskError VskMachine::load(VskString filename, std::string& data)
             return error;
 
         mstr_replace_all(data, "\r\n", "\n");
-        mstr_replace_all(data, "\r", "\n");
+        mstr_replace_all(data, '\r', '\n');
     }
 
     return VSK_NO_ERROR;
@@ -2457,7 +2457,7 @@ VskError VskMachine::save(VskString filename, const std::string& data)
 
     std::string text = data;
     mstr_replace_all(text, "\r\n", "\n");
-    mstr_replace_all(text, "\r", "\n");
+    mstr_replace_all(text, '\r', '\n');
     mstr_replace_all(text, "\n", "\r\n");
 
     if (text.size())
