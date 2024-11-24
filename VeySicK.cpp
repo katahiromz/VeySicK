@@ -240,9 +240,51 @@ VskString vsk_to_string(VskDword dwd)
 
 VskString vsk_to_string(VskSingle sng)
 {
-    char buf[256];
-    std::sprintf(buf, "%.6G", sng);
-    return VskString(buf);
+    if (std::isnan(sng))
+        return "NaN";
+    if (sng == 0)
+        return "0";
+    if (std::isinf(sng))
+        return sng < 0 ? "-Infinity" : "Infinity";
+    VskString ret;
+    bool is_negative = false;
+    if (sng < 0)
+    {
+        is_negative = true;
+        sng = -sng;
+    }
+    auto log10 = std::log10(sng);
+    char buf[128];
+    if (log10 >= 6)
+    {
+        std::sprintf(buf, "%.5E", sng);
+        ret += buf;
+        return is_negative ? ("-" + ret) : ret;
+    }
+    if (log10 >= 0)
+    {
+        std::sprintf(buf, "%.*f", int(6 - log10), sng);
+        ret += buf;
+        mstr_trim(ret, "0");
+        mstr_trim_right(ret, ".");
+        return is_negative ? ("-" + ret) : ret;
+    }
+    if (log10 < 0)
+    {
+        std::sprintf(buf, "%.*f", int(6 - log10), sng);
+        VskString str = buf;
+        mstr_trim(str, "0");
+        if (str.size() <= 8)
+        {
+            ret += str;
+            mstr_trim_right(ret, ".");
+            return is_negative ? ("-" + ret) : ret;
+        }
+    }
+    std::sprintf(buf, "%.5E", sng);
+    ret += buf;
+    mstr_trim_left(ret, "0");
+    return is_negative ? ("-" + ret) : ret;
 }
 
 VskString vsk_to_string(VskDouble dbl)
