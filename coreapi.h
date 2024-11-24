@@ -218,7 +218,7 @@ VskAstPtr vsk_ast_multi(VskAstPtr x, VskAstPtr y, VskAstPtr z);
 // 符号あり16ビット整数を取得する
 bool vsk_sht(VskInt& value, VskAstPtr arg);
 // 符号なし16ビット整数を取得する
-bool vsk_wrd(VskWord& value, VskAstPtr arg);
+#define vsk_wrd(value, arg) vsk_sht(reinterpret_cast<VskShort&>(value), (arg))
 // 32ビット整数を取得する
 bool vsk_lng(VskLong& value, VskAstPtr arg);
 // 単精度型を取得する
