@@ -240,10 +240,13 @@ VskString vsk_to_string(VskDword dwd)
 
 VskString vsk_to_string(VskSingle sng)
 {
+    // N88-BASICのオリジナルの浮動小数点数には NaN はないが、念のため
     if (std::isnan(sng))
         return "NaN";
+    // 最適化のため、ここでゼロを検出
     if (sng == 0)
         return "0";
+    // N88-BASICのオリジナルの浮動小数点数には無限大はないが、念のため
     if (std::isinf(sng))
         return sng < 0 ? "-Infinity" : "Infinity";
     VskString ret;
@@ -288,6 +291,15 @@ VskString vsk_to_string(VskSingle sng)
 
 VskString vsk_to_string(VskDouble dbl)
 {
+    // N88-BASICのオリジナルの浮動小数点数には NaN はないが、念のため
+    if (std::isnan(dbl))
+        return "NaN";
+    // 最適化のため、ここでゼロを検出
+    if (dbl == 0)
+        return "0";
+    // N88-BASICのオリジナルの浮動小数点数には無限大はないが、念のため
+    if (std::isinf(dbl))
+        return dbl < 0 ? "-Infinity" : "Infinity";
     char buf[256];
     std::sprintf(buf, "%.16G", dbl);
     VskString str = buf;
