@@ -1879,14 +1879,11 @@ bool VskWin32App::save_settings()
     return m_settings.save();
 }
 
-// 終了フラグ
-bool vsk_exiting = false;
-
 // 仕事をするスレッド
 static DWORD WINAPI vsk_working_thread(LPVOID arg)
 {
     // ループ
-    while (!vsk_exiting && vsk_machine)
+    while (vsk_machine)
     {
         vsk_lock();
         if (vsk_machine)
@@ -3568,8 +3565,6 @@ void VskWin32App::exit_app()
     // ロック
     vsk_lock();
     {
-        // 終了フラグ
-        vsk_exiting = true;
         // マシンを破棄する
         vsk_machine = nullptr;
         // メモリーモデルを破棄する
