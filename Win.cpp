@@ -1847,6 +1847,7 @@ VskWin32App *vsk_pMainWnd = nullptr;
 // アプリを終了する
 void vsk_app_quit(void)
 {
+    // スレッドが違うかもしれないので、PostMessageを経由
     ::PostMessage(VSK_APP()->m_hWnd, WM_DESTROY, 0, 0);
 }
 
