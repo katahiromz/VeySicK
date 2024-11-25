@@ -2,6 +2,15 @@
 
 #include <cassert>
 
+// 角度を正規化
+inline double vsk_normalize_angle(double angle)
+{
+    angle = std::fmod(angle, 2 * M_PI);
+    if (angle < 0)
+        angle += 2 * M_PI;
+    return angle;
+}
+
 // ANK文字のピクセルを取得するクラス
 template <int t_width = 128, int t_height = 256>
 struct VskAnkGetter {
@@ -457,10 +466,8 @@ void vsk_draw_arc(T_PUTTER& putter, int x0, int y0, int x1, int y1, double start
     start_angle = std::abs(start_angle);
     end_angle = std::abs(end_angle);
     // 角度を正規化
-    start_angle = std::fmod(start_angle, 2 * M_PI);
-    end_angle = std::fmod(end_angle, 2 * M_PI);
-    if (start_angle < 0) start_angle += 2 * M_PI;
-    if (end_angle < 0) end_angle += 2 * M_PI;
+    start_angle = vsk_normalize_angle(start_angle);
+    end_angle = vsk_normalize_angle(end_angle);
 
     int a = a0, b = b0, b1 = (b & 1);
     int dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a; // エラー増分
@@ -477,9 +484,7 @@ void vsk_draw_arc(T_PUTTER& putter, int x0, int y0, int x1, int y1, double start
     auto arc_in_range = [&](int x, int y) {
         double dx = x - center_x, dy = (y - center_y) / aspect;
         auto angle = std::atan2(-dy, dx); // 数学とはY軸の向きが違う
-        angle = std::fmod(angle, 2 * M_PI);
-        if (angle < 0)
-            angle += 2 * M_PI;
+        angle = vsk_normalize_angle(angle);
         if (start_angle <= end_angle)
             return start_angle <= angle && angle <= end_angle;
         return angle <= end_angle || start_angle <= angle;
@@ -538,18 +543,14 @@ inline void vsk_fill_arc(T_PUTTER& putter, int x0, int y0, int x1, int y1, doubl
     start_angle = std::abs(start_angle);
     end_angle = std::abs(end_angle);
     // 角度を正規化
-    start_angle = std::fmod(start_angle, 2 * M_PI);
-    end_angle = std::fmod(end_angle, 2 * M_PI);
-    if (start_angle < 0) start_angle += 2 * M_PI;
-    if (end_angle < 0) end_angle += 2 * M_PI;
+    start_angle = vsk_normalize_angle(start_angle);
+    end_angle = vsk_normalize_angle(end_angle);
 
     // 弧の内部かどうか調べる関数
     auto arc_in_range = [&](int x, int y) {
         double dx = x - center_x, dy = (y - center_y) / aspect;
         auto angle = std::atan2(-dy, dx); // 数学とはY軸の向きが違う
-        angle = std::fmod(angle, 2 * M_PI);
-        if (angle < 0)
-            angle += 2 * M_PI;
+        angle = vsk_normalize_angle(angle);
         if (start_angle <= end_angle) {
             if (!(start_angle <= angle && angle <= end_angle))
                 return false;
