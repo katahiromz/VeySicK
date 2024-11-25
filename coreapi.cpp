@@ -5634,70 +5634,54 @@ static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr self, const VskAstList& args)
 }
 
 // 円の弧または楕円の弧を描くヘルパー関数
-void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect)
+void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect, bool fill = false, VskString tile = "")
 {
     // 真の楕円か？
-    const bool full_moon_likely = (start_angle == 0) && (end_angle == 2 * M_PI);
+    const bool full_moon_likely = (start_angle == 0) && (end_angle == VskSingle(2 * M_PI));
 
-    // このaspectはただの縦横比ではない
-    VskSingle r0 = radius, r1 = radius;
-    if (aspect < 1)
-        r1 *= aspect;
-    else if (aspect > 1)
-        r0 /= aspect;
+    auto& view = VSK_STATE()->m_viewport;
+    auto& window = VSK_STATE()->m_window;
 
-    // 座標変換
-    VskPointS pt0 = vsk_machine->world_to_client(VskPointS{ x0 - r0, y0 - r1 });
-    VskPointS pt1 = vsk_machine->world_to_client(VskPointS{ x0 + r0, y0 + r1 });
+    auto pt = vsk_machine->world_to_view(VskPointS{ x0 , y0 });
+    VskInt cx, cy;
+    if (aspect <= 1)
+    {
+        cx = vsk_round(radius * view.width() / window.width());
+        cy = vsk_round(cx * aspect);
+    }
+    else
+    {
+        cy = vsk_round(radius * view.height() / window.height());
+        cx = vsk_round(cy / aspect);
+    }
+    VskPointI pt0 = { pt.m_x - cx, pt.m_y - cy }, pt1 = { pt.m_x + cx, pt.m_y + cy };
 
     if (full_moon_likely) // 真の楕円か？
     {
-        // 楕円を描画する
-        vsk_machine->draw_ellipse(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), palette);
-        VSK_STATE()->m_last_point_in_world = { x0, y0 };
-        return;
+        if (fill)
+        {
+            // 楕円の内部を塗りつぶす
+            vsk_machine->fill_ellipse(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, palette, tile);
+        }
+        else
+        {
+            // 楕円を描画する
+            vsk_machine->draw_ellipse(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, palette);
+        }
     }
-
-    // 円の弧または楕円の弧を描画する
-    vsk_machine->draw_arc(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), start_angle, end_angle, palette);
-
-    // LPを覚えておく
-    VSK_STATE()->m_last_point_in_world = { x0, y0 };
-}
-
-// 円の弧または楕円の弧を塗りつぶすヘルパー関数
-void vsk_fill_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect, VskString tile = "")
-{
-    const bool full_moon_likely = (start_angle == 0) && (end_angle == 2 * M_PI);
-    if (full_moon_likely && aspect == 1) // 真の円か？
+    else
     {
-        // 円の内部を塗りつぶす
-        vsk_machine->fill_circle(vsk_round(x0), vsk_round(y0), vsk_round(radius), palette);
-        VSK_STATE()->m_last_point_in_world = { x0, y0 };
-        return;
+        if (fill)
+        {
+            // 円の弧または楕円の弧を塗りつぶす
+            vsk_machine->fill_arc(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, start_angle, end_angle, palette, tile);
+        }
+        else
+        {
+            // 円の弧または楕円の弧を描画する
+            vsk_machine->draw_arc(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, start_angle, end_angle, palette);
+        }
     }
-
-    // このaspectはただの縦横比ではない
-    VskSingle r0 = radius, r1 = radius;
-    if (aspect < 1)
-        r1 *= aspect;
-    else if (aspect > 1)
-        r0 /= aspect;
-
-    // 座標変換
-    VskPointS pt0 = vsk_machine->world_to_client(VskPointS{ x0 - r0, y0 - r1 });
-    VskPointS pt1 = vsk_machine->world_to_client(VskPointS{ x0 + r0, y0 + r1 });
-
-    if (full_moon_likely) // 真の楕円か？
-    {
-        // 楕円の内部を塗りつぶす
-        vsk_machine->fill_ellipse(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), palette, tile);
-        VSK_STATE()->m_last_point_in_world = { x0, y0 };
-        return;
-    }
-
-    // 円の弧または楕円の弧を塗りつぶす
-    vsk_machine->fill_arc(vsk_round(pt0.m_x), vsk_round(pt0.m_y), vsk_round(pt1.m_x), vsk_round(pt1.m_y), start_angle, end_angle, palette, tile);
 
     // LPを覚えておく
     VSK_STATE()->m_last_point_in_world = { x0, y0 };
@@ -5764,7 +5748,8 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
             }
         }
 
-        if (!((-2 * M_PI <= v4 && v4 <= 2 * M_PI) && (-2 * M_PI <= v5 && v5 <= 2 * M_PI)) ||
+        if (!((VskSingle(-2 * M_PI) <= v4 && v4 <= VskSingle(2 * M_PI)) &&
+              (VskSingle(-2 * M_PI) <= v5 && v5 <= VskSingle(2 * M_PI))) ||
             (v7.size() && v7 != "F"))
         {
             vsk_machine->bad_call();
@@ -5780,7 +5765,7 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
         if (v7 == "F")
         {
             // 塗りつぶす
-            vsk_fill_circle_helper(v0, v1, v2, v8, v4, v5, v6, str8);
+            vsk_draw_circle_helper(v0, v1, v2, v8, v4, v5, v6, true, str8);
 
             // この場合は角度を負にして、常に弧の両側の半径を描画する
             v4 = -std::abs(v4);
@@ -5790,7 +5775,7 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
         }
 
         // 円または楕円を描画。ついでに必要ならば弧の両側の半径を描画する
-        vsk_draw_circle_helper(v0, v1, v2, v3, v4, v5, v6);
+        vsk_draw_circle_helper(v0, v1, v2, v3, v4, v5, v6, false);
     }
 
     return nullptr;
