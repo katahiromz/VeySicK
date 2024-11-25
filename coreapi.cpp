@@ -2972,7 +2972,7 @@ void vsk_step(void)
         }
     }
 
-    // 評価する
+    // 評価するl
     auto ret = vsk_eval_ast(node);
 
     // 必要なら次のコントロールパスに移動

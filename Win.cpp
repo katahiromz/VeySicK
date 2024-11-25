@@ -1886,7 +1886,7 @@ bool vsk_exiting = false;
 static DWORD WINAPI vsk_working_thread(LPVOID arg)
 {
     // ループ
-    while (!vsk_exiting)
+    while (!vsk_exiting && vsk_machine)
     {
         vsk_lock();
         if (vsk_machine)
@@ -3565,19 +3565,24 @@ int VskWin32App::run()
 // アプリの終了時の処理
 void VskWin32App::exit_app()
 {
-    // 終了フラグ
-    vsk_exiting = true;
+    // ロック
+    vsk_lock();
+    {
+        // 終了フラグ
+        vsk_exiting = true;
+        // マシンを破棄する
+        vsk_machine = nullptr;
+        // メモリーモデルを破棄する
+        m_state.m_memory = nullptr;
+    }
+    // アンロック
+    vsk_unlock();
 
     // 設定を保存する
     save_settings();
 
     // クリティカルセクションを破棄
     ::DeleteCriticalSection(&vsk_cs_lock);
-
-    // メモリーモデルを破棄する
-    m_state.m_memory = nullptr;
-    // マシンを破棄する
-    vsk_machine = nullptr;
 }
 
 // 描画
