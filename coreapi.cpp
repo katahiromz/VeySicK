@@ -2961,16 +2961,14 @@ void vsk_step(void)
     auto node = vsk_resolve_index_list(index_list);
     vsk_targeting(node);
 
-    // 行番号があれば取得する
-    auto it = VSK_IMPL()->m_index_list_to_line_number.find(index_list);
-    if (it != VSK_IMPL()->m_index_list_to_line_number.end())
+    if (node->m_program_line != -1) // 行番号があるか？
     {
         // 現在の行番号をセット
-        vsk_target_line = it->second;
+        vsk_target_line = node->m_program_line;
 
-        if (VSK_IMPL()->m_trace_on) // TRACEがONならトレースを出力。TRON/TROFFを参照
+        if (VSK_IMPL()->m_trace_on) // TRACEがONなら行番号トレースを出力。TRON/TROFFを参照
         {
-            vsk_print("[" + vsk_to_string(it->second) + "]");
+            vsk_print("[" + vsk_to_string(vsk_target_line) + "]");
         }
     }
 
