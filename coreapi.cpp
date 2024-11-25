@@ -9807,8 +9807,17 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr self, const VskAstList& args)
                     vsk_BEEP(self, { vsk_ast_int(0) });
                 break;
             case 0x51:
-                // テキスト画面非表示
-                VSK_STATE()->m_show_text = false;
+                switch (v1)
+                {
+                case 0:
+                    // テキスト画面非表示
+                    VSK_STATE()->m_show_text = false;
+                    break;
+                case 0x20:
+                    // テキスト画面表示
+                    VSK_STATE()->m_show_text = true;
+                    break;
+                }
                 break;
             }
         }
