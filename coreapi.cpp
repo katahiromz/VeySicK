@@ -5634,7 +5634,7 @@ static VskAstPtr VSKAPI vsk_LINE3(VskAstPtr self, const VskAstList& args)
 }
 
 // 円の弧または楕円の弧を描くヘルパー関数
-void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect, bool fill = false, VskString tile = "")
+void vsk_circle_helper_2(VskSingle x0, VskSingle y0, VskSingle radius, int palette, VskSingle start_angle, VskSingle end_angle, VskSingle aspect, bool fill = false, VskString tile = "")
 {
     // 真の楕円か？
     const bool full_moon_likely = (start_angle == 0) && (end_angle == VskSingle(2 * M_PI));
@@ -5658,29 +5658,17 @@ void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int pa
 
     if (full_moon_likely) // 真の楕円か？
     {
-        if (fill)
-        {
-            // 楕円の内部を塗りつぶす
+        if (fill) // 楕円の内部を塗りつぶす
             vsk_machine->fill_ellipse(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, palette, tile);
-        }
-        else
-        {
-            // 楕円を描画する
+        else // 楕円を描画する
             vsk_machine->draw_ellipse(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, palette);
-        }
     }
     else
     {
-        if (fill)
-        {
-            // 円の弧または楕円の弧を塗りつぶす
+        if (fill) // 円の弧または楕円の弧を塗りつぶす
             vsk_machine->fill_arc(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, start_angle, end_angle, palette, tile);
-        }
-        else
-        {
-            // 円の弧または楕円の弧を描画する
+        else // 円の弧または楕円の弧を描画する
             vsk_machine->draw_arc(pt0.m_x, pt0.m_y, pt1.m_x, pt1.m_y, start_angle, end_angle, palette);
-        }
     }
 
     // LPを覚えておく
@@ -5688,7 +5676,7 @@ void vsk_draw_circle_helper(VskSingle x0, VskSingle y0, VskSingle radius, int pa
 }
 
 // "CIRCLE", "CIRCLE STEP"
-static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
+static VskAstPtr vsk_CIRCLE_helper_1(const VskAstList& args, bool step)
 {
     if (!vsk_arity_in_range(args, 3, 9))
         return nullptr;
@@ -5765,7 +5753,7 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
         if (v7 == "F")
         {
             // 塗りつぶす
-            vsk_draw_circle_helper(v0, v1, v2, v8, v4, v5, v6, true, str8);
+            vsk_circle_helper_2(v0, v1, v2, v8, v4, v5, v6, true, str8);
 
             // この場合は角度を負にして、常に弧の両側の半径を描画する
             v4 = -std::abs(v4);
@@ -5775,7 +5763,7 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
         }
 
         // 円または楕円を描画。ついでに必要ならば弧の両側の半径を描画する
-        vsk_draw_circle_helper(v0, v1, v2, v3, v4, v5, v6, false);
+        vsk_circle_helper_2(v0, v1, v2, v3, v4, v5, v6, false);
     }
 
     return nullptr;
@@ -5784,13 +5772,13 @@ static VskAstPtr vsk_CIRCLE_helper(const VskAstList& args, bool step)
 // INSN_CIRCLE (CIRCLE) @implemented
 static VskAstPtr VSKAPI vsk_CIRCLE(VskAstPtr self, const VskAstList& args)
 {
-    return vsk_CIRCLE_helper(args, false);
+    return vsk_CIRCLE_helper_1(args, false);
 }
 
 // INSN_CIRCLE_STEP (CIRCLE STEP) @implemented
 static VskAstPtr VSKAPI vsk_CIRCLE_STEP(VskAstPtr self, const VskAstList& args)
 {
-    return vsk_CIRCLE_helper(args, true);
+    return vsk_CIRCLE_helper_1(args, true);
 }
 
 // 点を描画するヘルパー関数

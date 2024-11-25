@@ -547,9 +547,8 @@ inline void vsk_fill_arc(T_PUTTER& putter, int x0, int y0, int x1, int y1, doubl
     auto arc_in_range = [&](int x, int y) {
         double dx = x - center_x, dy = (y - center_y) / aspect;
         auto angle = std::atan2(-dy, dx); // 数学とはY軸の向きが違う
-        angle = std::fmod(angle, 2 * M_PI);
         if (angle < 0)
-            angle += 2 * M_PI;
+            angle = 2 * M_PI;
         if (start_angle <= end_angle) {
             if (!(start_angle <= angle && angle <= end_angle))
                 return false;
