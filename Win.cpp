@@ -2936,14 +2936,18 @@ bool vsk_save_screenshot(HBITMAP hbm)
 }
 
 // スクリーンショットを保存する
-bool vsk_save_screenshot(bool half)
+bool vsk_save_screenshot_real(bool text, bool graphics, bool half)
 {
-    if (!vsk_machine)
-        return false;
-
+    bool old_text = VSK_STATE()->m_show_text;
+    bool old_graphics = VSK_STATE()->m_show_graphics;
+    VSK_STATE()->m_show_text = text;
+    VSK_STATE()->m_show_graphics = graphics;
     vsk_machine->render();
+    VSK_STATE()->m_show_text = old_text;
+    VSK_STATE()->m_show_graphics = old_graphics;
+
     HBITMAP hbm = (HBITMAP)::CopyImage(*vsk_machine->get_screen_image(), IMAGE_BITMAP,
-                                       0, 0, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
+        0, 0, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
     if (!hbm)
         return false;
 
@@ -2953,8 +2957,8 @@ bool vsk_save_screenshot(bool half)
         ::GetObject(hbm, sizeof(bm), &bm);
 
         HBITMAP hbmHalf = (HBITMAP)::CopyImage(hbm, IMAGE_BITMAP,
-                                               bm.bmWidth, bm.bmHeight / 2,
-                                               LR_CREATEDIBSECTION);
+            bm.bmWidth, bm.bmHeight / 2,
+            LR_CREATEDIBSECTION);
         bool ret = false;
         if (hbmHalf)
         {
@@ -2970,6 +2974,22 @@ bool vsk_save_screenshot(bool half)
         ::DeleteObject(hbm);
         return ret;
     }
+}
+
+#define MYWM_SCREENSHOT (WM_USER + 101)
+
+// スクリーンショットを保存する
+bool vsk_save_screenshot(bool text, bool graphics, bool half)
+{
+    if (!vsk_machine || !vsk_pMainWnd)
+        return false;
+
+    DWORD flags = 0;
+    flags |= !!text;
+    flags |= (graphics << 1);
+    flags |= (half << 2);
+    ::PostMessage(vsk_pMainWnd->m_hWnd, MYWM_SCREENSHOT, flags, 0);
+    return true;
 }
 
 // ID_SAVE_SCREENSHOT, ID_COPY_SCREENSHOT
@@ -3426,6 +3446,9 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
     case MYWM_IME_ON_OFF:
         ime_on_off_real((bool)wParam);
+        break;
+    case MYWM_SCREENSHOT:
+        vsk_save_screenshot_real((wParam & 1), (wParam & 2), (wParam & 4));
         break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);

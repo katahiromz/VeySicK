@@ -783,7 +783,7 @@ extern VskByte vsk_inkey;
 // マウスクリックでキャレット位置を移動する
 void vsk_caret_move_by_mouse_click(int text_x, int text_y);
 // スクリーンショットを保存する
-bool vsk_save_screenshot(bool half);
+bool vsk_save_screenshot(bool text, bool graphics, bool half);
 // テキストを出力
 void vsk_print(const VskString& str);
 // 入力テキストを入れる

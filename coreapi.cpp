@@ -7704,7 +7704,6 @@ static VskAstPtr VSKAPI vsk_COPY(VskAstPtr self, const VskAstList& args)
         return nullptr;
 
     VskInt v0 = 3;
-    bool half = false;
     if (args.empty() || vsk_int(v0, args[0]))
     {
         if (!(1 <= v0 && v0 <= 5))
@@ -7713,9 +7712,7 @@ static VskAstPtr VSKAPI vsk_COPY(VskAstPtr self, const VskAstList& args)
         // 表示・非表示の状態を保存する。
         bool show_graphics = VSK_STATE()->m_show_graphics;
         bool show_text = VSK_STATE()->m_show_text;
-        bool old_show_graphics = show_graphics;
-        bool old_show_text = show_text;
-
+        bool half = false;
         switch (v0)
         {
         case 1:
@@ -7736,13 +7733,7 @@ static VskAstPtr VSKAPI vsk_COPY(VskAstPtr self, const VskAstList& args)
         }
 
         // 指定された表示・非表示の状態でスクリーンショットを保存する
-        VSK_STATE()->m_show_graphics = show_graphics;
-        VSK_STATE()->m_show_text = show_text;
-        vsk_save_screenshot(half);
-
-        // 表示・非表示の状態を復元する。
-        VSK_STATE()->m_show_graphics = old_show_graphics;
-        VSK_STATE()->m_show_text = old_show_text;
+        vsk_save_screenshot(show_text, show_graphics, half);
     }
 
     return nullptr;
