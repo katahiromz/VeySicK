@@ -2984,6 +2984,7 @@ bool vsk_save_screenshot(bool text, bool graphics, bool half)
     if (!vsk_machine || !vsk_pMainWnd)
         return false;
 
+    // スレッドが違うかもしれないので、PostMessageを経由
     DWORD flags = 0;
     flags |= !!text;
     flags |= (graphics << 1);
