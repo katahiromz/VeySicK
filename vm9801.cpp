@@ -992,14 +992,13 @@ void Vsk9801Machine::render_function_keys()
     const bool shift = vsk_is_shift_pressed(); // シフトキーが押されているか？
 
     // ファンクションキーの行のテキストをクリア
-    for (int x = 0; x < m_state->m_text_width; ++x)
-        set_ank(x, y, ' ');
-
-    // ファンクションキーの行の文字属性をリセット
-    auto attr_area = get_attr_area(y);
+    auto* attr_area = get_attr_area(y);
     VskByte attr = m_state->m_text_attr;
     for (int x = 0; x < m_state->m_text_width; ++x)
-        set_attr(x, y, attr);
+    {
+        set_ank(x, y, ' ');
+        attr_area[2 * x] = attr;
+    }
 
     // リバース属性をセット
     attr |= VSK_9801_ATTR_REVERSE;
@@ -1014,7 +1013,7 @@ void Vsk9801Machine::render_function_keys()
 
         // ファンクションキーのタブを反転する
         for (int ich = 0; ich < cx; ++ich)
-            set_attr(x + ich, y, attr);
+            attr_area[(x + ich) * 2] = attr;
 
         // キーのテキストをセット
         auto key = m_state->m_function_keys[key_no - 1];
