@@ -355,6 +355,24 @@ struct VskStrMemoryBlock : VskSimpleMemoryBlock
 extern std::shared_ptr<VskStrMemoryBlock> vsk_str_block;
 
 //////////////////////////////////////////////////////////////////////////////
+// 文字の論理属性値
+
+struct VskLogAttr
+{
+    uint8_t m_color : 7;        // 0～7: black, blue, ..., yellow, white
+    uint8_t m_effect : 7;       // 0～7: secret, blink, and/or reverse
+    uint8_t m_semigra : 1;      // 0 or 1
+    uint8_t m_upperline : 1;    // 0 or 1
+    uint8_t m_underline : 1;    // 0 or 1
+
+    void reset()
+    {
+        std::memset(this, 0, sizeof(*this));
+        m_color = 7;
+    }
+};
+
+//////////////////////////////////////////////////////////////////////////////
 // machine state - マシン状態
 
 #define VSK_SCREEN_WIDTH 640

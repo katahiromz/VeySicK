@@ -46,6 +46,54 @@ struct Vsk9801TextVRAM : VskSimpleMemoryBlock
     }
 };
 
+// 論理文字属性からバイト値へ変換
+static VskByte vsk_9801_byte_from_log_attr(const VskLogAttr& log_attr)
+{
+    uint8_t ret = VSK_9801_ATTR_SET_COLOR(log_attr.m_color);
+
+    switch (log_attr.m_effect)
+    {
+    case 0: ret |= VSK_9801_ATTR_SHOW;                                               break;
+    case 1:                                                                          break;
+    case 2: ret |= VSK_9801_ATTR_SHOW |                         VSK_9801_ATTR_BLINK; break;
+    case 3: ret |=                                              VSK_9801_ATTR_BLINK; break;
+    case 4: ret |= VSK_9801_ATTR_SHOW | VSK_9801_ATTR_REVERSE;                       break;
+    case 5: ret |=                      VSK_9801_ATTR_REVERSE;                       break;
+    case 6: ret |= VSK_9801_ATTR_SHOW | VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
+    case 7: ret |=                      VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
+    }
+
+    if (log_attr.m_semigra)
+        ret |= VSK_9801_ATTR_SEMIGRA;
+
+    if (log_attr.m_underline)
+        ret |= VSK_9801_ATTR_UNDERLINE;
+
+    // log_attr.m_upperline is ignored
+    return ret;
+}
+
+// バイト値から論理文字属性へ変換
+static void vsk_9801_log_attr_from_byte(VskLogAttr& log_attr, VskByte byte)
+{
+    log_attr.reset();
+
+    log_attr.m_color = VSK_9801_ATTR_GET_COLOR(byte);
+
+    if (!(byte & 1))
+        log_attr.m_effect |= VSK_9801_ATTR_SHOW;
+    if (byte & 2)
+        log_attr.m_effect |= VSK_9801_ATTR_BLINK;
+    if (byte & 4)
+        log_attr.m_effect |= VSK_9801_ATTR_REVERSE;
+
+    if (byte & VSK_9801_ATTR_SEMIGRA)
+        log_attr.m_semigra = true;
+
+    if (byte & VSK_9801_ATTR_UNDERLINE)
+        log_attr.m_underline = true;
+}
+
 // 9801 グラフィックVRAM
 #define VSK_9801_GRAPH_VRAM_PLANE_BLUE          0xA8000
 #define VSK_9801_GRAPH_VRAM_PLANE_RED           0xB0000
