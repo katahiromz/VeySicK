@@ -4,6 +4,8 @@
 #include "VeySicK.h"            // VeySicK
 #include "draw_algorithm.h"     // 描画アルゴリズム
 #include "turtle.h"             // タートル
+#include <array>                // std::array
+#include <iterator>             // std::begin, std::end
 
 ////////////////////////////////////////////////////////////////////////////////////
 // 8801 machine
@@ -21,7 +23,6 @@
 #define VSK_8801_TEXT_VRAM_ATTR_WIDTH   40
 #define VSK_8801_TEXT_VRAM_PITCH        (VSK_8801_TEXT_VRAM_TEXT_WIDTH + VSK_8801_TEXT_VRAM_ATTR_WIDTH)
 #define VSK_8801_TEXT_VRAM_MAX_HEIGHT   25
-#define VSK_8801_INVALID_COLUMN         0x80
 #define VSK_8801_GRAPH_VRAM_PLANE_PITCH (640 / CHAR_BIT)
 #define VSK_8801_VRAM_BANK_0            0 // Main memory (with text)
 #define VSK_8801_VRAM_BANK_1            1 // Plane 1 (Blue)
@@ -65,7 +66,7 @@
 #define VSK_8801_ATTR_PAIR_MAX              20  // ペアの個数
 
 // 桁位置と文字属性値のペア
-struct VSK_8801_ATTR_PAIR
+struct alignas(1) VSK_8801_ATTR_PAIR
 {
     uint8_t m_x;              // 桁位置、ゼロベース。無効なとき VSK_8801_TEXT_MAX_X になる
     uint8_t m_attr_value;     // 属性値
@@ -130,15 +131,15 @@ void vsk_8801_expand_attrs_0(VskLogAttr& log_attr, VSK_8801_ATTR_PAIR& pair, boo
 // 属性データを展開： log_attrs <-- attr_area
 void
 vsk_8801_expand_attrs(
-    VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X],           // 論理属性値の配列
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
     VskByte *attr_area,                                     // 属性ペアの配列
     bool color_mode,                                        // カラーモードか？
     bool is_width_40)                                       // WIDTH 40か？
 {
-    auto& pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
+    auto *pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
 
     // 最初のX座標はゼロで固定
-    pairs[0].m_x = 0;
+    pairs.at(0).m_x = 0;
 
     // X座標でソート
     std::sort(std::begin(pairs), std::end(pairs), [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
@@ -158,7 +159,7 @@ vsk_8801_expand_attrs(
 
         for (int x0 = old_x; x0 < pair.m_x; ++x0)
         {
-            log_attrs[x0] = log_attr;
+            log_attrs.at(x0) = log_attr;
         }
 
         vsk_8801_expand_attrs_0(log_attr, pair, color_mode);
@@ -168,19 +169,23 @@ vsk_8801_expand_attrs(
     // 残りを埋める
     for (int x0 = old_x; x0 < VSK_8801_TEXT_MAX_X; ++x0)
     {
-        log_attrs[x0] = log_attr;
+        log_attrs.at(x0) = log_attr;
     }
 }
 
 // 属性データを格納： log_attrs --> pairs
 void
 vsk_8801_store_attrs(
-    VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X],           // 論理属性値の配列
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
     VskByte *attr_area,                                     // 属性ペアの配列
     bool color_mode,                                        // カラーモードか？
     bool is_width_40)                                       // WIDTH 40か？
 {
     auto& pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
+    for (auto& pair : pairs)
+    {
+        pair.reset(color_mode);
+    }
 
     // 論理属性値を初期化
     VskLogAttr old_attr;
@@ -190,7 +195,7 @@ vsk_8801_store_attrs(
     bool first = true;
     for (int x = 0; x < VSK_8801_TEXT_MAX_X; x += 1 + !!is_width_40)
     {
-        auto& log_attr = log_attrs[x];
+        auto& log_attr = log_attrs.at(x);
         auto& pair_x = pairs.at(iPair).m_x;
         auto& attr_value = pairs.at(iPair).m_attr_value;
         if (color_mode) // カラーモードか？
@@ -530,9 +535,9 @@ struct Vsk8801Machine : VskMachine
     // ファンクションキーをテキスト画面にセットする
     void render_function_keys();
     // ANK文字を描画する
-    void render_ank(int x, int y, VskByte ch, VskByte attr);
+    void render_ank(int x, int y, VskByte ch, const VskLogAttr& log_attr);
     // JIS全角文字を描画する
-    void render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr);
+    void render_jis(int x, int y, int next_x, int next_y, VskWord jis, const VskLogAttr& log_attr);
 
     // テキスト画面を描画する
     void render_text();
@@ -955,7 +960,7 @@ void Vsk8801Machine::store_attr_line(const VskByte *attr_line, int y)
     VskByte *attr_area = get_attr_area(y);
     for (i = 0; i < 40; i += 2)
     {
-        attr_area[i + 0] = VSK_8801_INVALID_COLUMN;
+        attr_area[i + 0] = VSK_8801_TEXT_MAX_X;
         attr_area[i + 1] = m_state->m_text_attr;
     }
     x = 0;
@@ -975,7 +980,7 @@ void Vsk8801Machine::store_attr_line(const VskByte *attr_line, int y)
 }
 
 // ANK文字を描画する
-void Vsk8801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
+void Vsk8801Machine::render_ank(int x, int y, VskByte ch, const VskLogAttr& log_attr)
 {
     bool wider = m_state->m_text_wider; // テキスト画面は40文字の幅か80文字の幅か?
     bool longer = m_state->m_text_longer; // テキスト画面は20文字の高さか25文字の高さか?
@@ -983,13 +988,13 @@ void Vsk8801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
     int char_height = (longer ? 20 : 16); // 文字の高さをセット
 
     // 文字属性を処理する
-    if (attr & VSK_8801_ATTR_SECRET)
+    if (log_attr.secret())
         ch = ' ';
-    else if ((attr & VSK_8801_ATTR_BLINK) && m_state->m_blink_flag == 0)
+    else if (log_attr.blink() && m_state->m_blink_flag == 0)
         ch = ' ';
 
     // リバース（色調反転）を処理する
-    bool reverse = !!(attr & VSK_8801_ATTR_REVERSE);
+    bool reverse = log_attr.reverse();
     if (m_state->m_show_caret &&
         x == m_state->m_caret_x && y == m_state->m_caret_y &&
         (m_state->m_blink_flag & 1) &&
@@ -1000,20 +1005,19 @@ void Vsk8801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
 
     // 文字位置
     int x0 = x * char_width, y0 = y * char_height;
-    // 色付きか?
-    bool is_color = (attr & VSK_8801_ATTR_COLOR) && m_state->m_color_text;
-    // セミグラ文字か?
-    bool is_semigra = (is_color ? (attr & VSK_8801_ATTR_COLOR_SEMIGRA) : (attr & VSK_8801_ATTR_MONO_SEMIGRA));
-    // 文字パレット
-    VskByte palette = (is_color ? VSK_8801_ATTR_GET_COLOR(attr) : (m_state->m_green_console ? 4 : 7));
+
+    bool is_color = m_state->m_color_text;  // 色付きか?
+    bool is_semigra = log_attr.m_semigra;   // セミグラ文字か?
+    VskByte palette = log_attr.m_palette;   // 文字パレット
+
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
-    // アンダーライン（下線）
-    bool underline = !is_color && (attr & VSK_8801_ATTR_UNDERLINE);
     // アッパーライン（上線）
-    bool upperline = !is_color && (attr & VSK_8801_ATTR_UPPERLINE);
+    bool upperline = log_attr.m_upperline;
+    // アンダーライン（下線）
+    bool underline = log_attr.m_underline;
     if (is_semigra) // セミグラ文字か?
     {
         // セミグラ文字を描画する
@@ -1061,7 +1065,7 @@ void Vsk8801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
 }
 
 // JIS全角文字を描画する
-void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr)
+void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord jis, const VskLogAttr& log_attr)
 {
 #ifdef JAPAN
     bool wider = m_state->m_text_wider; // テキスト画面は40文字の幅か80文字の幅か?
@@ -1070,13 +1074,13 @@ void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     int char_height = (longer ? 20 : 16); // 文字の高さをセット
 
     // 文字属性を処理する
-    if (attr & VSK_8801_ATTR_SECRET)
+    if (log_attr.secret())
         jis = 0x2121;
-    else if ((attr & VSK_8801_ATTR_BLINK) && m_state->m_blink_flag == 0)
+    else if (log_attr.blink() && m_state->m_blink_flag == 0)
         jis = 0x2121;
 
     // リバース（色調反転）を処理する
-    bool reverse = !!(attr & VSK_8801_ATTR_REVERSE);
+    bool reverse = log_attr.reverse();
     if (m_state->m_show_caret &&
         ((x == m_state->m_caret_x && y == m_state->m_caret_y) ||
          (next_x == m_state->m_caret_x && next_y == m_state->m_caret_y)) &&
@@ -1090,17 +1094,15 @@ void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     int x0 = x * char_width, y0 = y * char_height;
     int x1 = (wider ? next_x * 16 : next_x * 8), y1 = next_y * char_height;
     // 色付きか?
-    bool is_color = (attr & VSK_8801_ATTR_COLOR) && m_state->m_color_text;
+    bool is_color = m_state->m_color_text;
     // テキストの色
-    VskByte palette = (is_color ? VSK_8801_ATTR_GET_COLOR(attr) : (m_state->m_green_console ? 4 : 7));
+    VskByte palette = log_attr.m_palette;
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
-    // アンダーライン（下線）
-    bool underline = !is_color && (attr & VSK_8801_ATTR_UNDERLINE);
-    // アッパーライン（上線）
-    bool upperline = !is_color && (attr & VSK_8801_ATTR_UPPERLINE);
+    bool upperline = log_attr.m_upperline;  // アッパーライン（上線）
+    bool underline = log_attr.m_underline;  // アンダーライン（下線）
     // 漢字のイメージを取得するオブジェクト
     VskKanjiGetter getter;
     if (wider) // 40文字の幅か?
@@ -1135,11 +1137,15 @@ void Vsk8801Machine::render_text()
 
     render_function_keys();
 
+    bool is_color = m_state->m_color_text;
+    bool wider = m_state->m_text_wider;
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
+
     bool was_lead = false;
-    VskByte attr_line[VSK_8801_TEXT_VRAM_TEXT_WIDTH];
     for (int y = 0; y < m_state->m_text_height; ++y)
     {
-        expand_attr_line(attr_line, y);
+        auto *attr_area = get_attr_area(y);
+        vsk_8801_expand_attrs(log_attrs, attr_area, is_color, wider);
 
         for (int x = 0; x < m_state->m_text_width; ++x)
         {
@@ -1152,9 +1158,7 @@ void Vsk8801Machine::render_text()
 #ifdef JAPAN
             if (VSK_SETTINGS()->m_text_mode != VSK_TEXT_MODE_GRPH && vsk_is_sjis_lead(ch))
             {
-                if ((attr_line[x] & VSK_8801_ATTR_COLOR) ?
-                    !(attr_line[x] & VSK_8801_ATTR_COLOR_SEMIGRA) :
-                    !(attr_line[x] & VSK_8801_ATTR_MONO_SEMIGRA))
+                if (!log_attrs.at(x).m_semigra)
                 {
                     int next_x, next_y;
                     if (get_next_x_y(next_x, next_y, x, y))
@@ -1166,10 +1170,10 @@ void Vsk8801Machine::render_text()
                             assert(vsk_is_sjis_code(sjis));
                             VskWord jis = vsk_sjis2jis(sjis);
                             assert(vsk_is_jis_code(jis));
-                            render_jis(x, y, next_x, next_y, jis, attr_line[x]);
+                            render_jis(x, y, next_x, next_y, jis, log_attrs.at(x));
 
                             if (y != next_y)
-                                expand_attr_line(attr_line, next_y);
+                                vsk_8801_expand_attrs(log_attrs, attr_area, is_color, wider);
 
                             was_lead = true;
                             continue;
@@ -1182,7 +1186,7 @@ void Vsk8801Machine::render_text()
             if (line_link(y) && x == m_state->m_text_width - 1)
                 ch = '>';
 #endif
-            render_ank(x, y, ch, attr_line[x]);
+            render_ank(x, y, ch, log_attrs.at(x));
         }
     }
 }
