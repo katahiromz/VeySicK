@@ -993,15 +993,13 @@ void Vsk9801Machine::render_function_keys()
 
     // ファンクションキーの行のテキストをクリア
     auto* attr_area = get_attr_area(y);
-    VskByte attr = m_state->m_text_attr;
+    VskByte attr = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_SET_COLOR(7);
     for (int x = 0; x < m_state->m_text_width; ++x)
     {
         set_ank(x, y, ' ');
         attr_area[2 * x] = attr;
+        attr_area[2 * x] &= ~VSK_9801_ATTR_REVERSE;;
     }
-
-    // リバース属性をセット
-    attr |= VSK_9801_ATTR_REVERSE;
 
     // F1...F10
     for (int key_no = 1; key_no <= 10; ++key_no)
@@ -1013,7 +1011,7 @@ void Vsk9801Machine::render_function_keys()
 
         // ファンクションキーのタブを反転する
         for (int ich = 0; ich < cx; ++ich)
-            attr_area[(x + ich) * 2] = attr;
+            attr_area[(x + ich) * 2] |= VSK_9801_ATTR_REVERSE;
 
         // キーのテキストをセット
         auto key = m_state->m_function_keys[key_no - 1];
