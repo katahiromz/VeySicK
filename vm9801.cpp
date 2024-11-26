@@ -49,7 +49,7 @@ struct Vsk9801TextVRAM : VskSimpleMemoryBlock
 // 論理文字属性からバイト値へ変換
 static VskByte vsk_9801_byte_from_log_attr(const VskLogAttr& log_attr)
 {
-    uint8_t ret = VSK_9801_ATTR_SET_COLOR(log_attr.m_color);
+    uint8_t ret = VSK_9801_ATTR_SET_COLOR(log_attr.m_palette);
 
     switch (log_attr.m_effect)
     {
@@ -78,7 +78,7 @@ static void vsk_9801_log_attr_from_byte(VskLogAttr& log_attr, VskByte byte)
 {
     log_attr.reset();
 
-    log_attr.m_color = VSK_9801_ATTR_GET_COLOR(byte);
+    log_attr.m_palette = VSK_9801_ATTR_GET_COLOR(byte);
 
     if (!(byte & 1))
         log_attr.m_effect |= VSK_9801_ATTR_SHOW;
@@ -465,9 +465,23 @@ struct Vsk9801Machine : VskMachine
     }
 
     // ANK文字を描画
-    void render_ank(int x, int y, VskByte ch, VskByte attr);
+    void render_ank(int x, int y, VskByte ch, VskByte attr)
+    {
+        VskLogAttr log_attr;
+        vsk_9801_log_attr_from_byte(log_attr, attr);
+        render_ank(x, y, ch, log_attr);
+    }
+
     // JIS全角文字を描画
-    void render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr);
+    void render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr)
+    {
+        VskLogAttr log_attr;
+        vsk_9801_log_attr_from_byte(log_attr, attr);
+        render_jis(x, y, next_x, next_y, jis, log_attr);
+    }
+
+    void render_ank(int x, int y, VskByte ch, const VskLogAttr& log_attr);
+    void render_jis(int x, int y, int next_x, int next_y, VskWord jis, const VskLogAttr& log_attr);
 
     // ピクセルを取得するヘルパークラス
     struct ColorGetter : VskColorGetter
@@ -828,7 +842,7 @@ void Vsk9801Machine::set_jis(int x, int y, VskWord jis)
 }
 
 // ANK文字を描画
-void Vsk9801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
+void Vsk9801Machine::render_ank(int x, int y, VskByte ch, const VskLogAttr& log_attr)
 {
     assert(0 <= x && x < m_state->m_text_width);
     assert(0 <= y && y < m_state->m_text_height);
@@ -838,13 +852,13 @@ void Vsk9801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
     int char_height = (longer ? 20 : 16); // 文字の高さをセット
 
     // 文字属性を処理する
-    if (!(attr & VSK_9801_ATTR_SHOW))
+    if (log_attr.secret())
         ch = ' ';
-    else if ((attr & VSK_9801_ATTR_BLINK) && m_state->m_blink_flag == 0)
+    else if (log_attr.blink() && m_state->m_blink_flag == 0)
         ch = ' ';
 
     // リバース（色調反転）を処理する
-    bool reverse = !!(attr & VSK_9801_ATTR_REVERSE);
+    bool reverse = log_attr.reverse();
     if (m_state->m_show_caret &&
         x == m_state->m_caret_x && y == m_state->m_caret_y &&
         (m_state->m_blink_flag & 1) &&
@@ -856,15 +870,15 @@ void Vsk9801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
     // 文字位置
     int x0 = x * char_width, y0 = y * char_height;
     // 文字パレット
-    VskByte palette = VSK_9801_ATTR_GET_COLOR(attr);
+    VskByte palette = log_attr.m_palette;
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
     // アンダーライン（下線）
-    bool underline = (attr & VSK_9801_ATTR_UNDERLINE);
+    bool underline = log_attr.m_underline;
     // セミグラ文字か?
-    bool is_semigra = (attr & VSK_9801_ATTR_SEMIGRA);
+    bool is_semigra = log_attr.m_semigra;
     if (is_semigra) // セミグラ文字なら
     {
         // セミグラ文字を描画する
@@ -912,7 +926,7 @@ void Vsk9801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
 }
 
 // JIS全角文字を描画
-void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr)
+void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord jis, const VskLogAttr& log_attr)
 {
     assert(0 <= x && x < m_state->m_text_width);
     assert(0 <= y && y < m_state->m_text_height);
@@ -923,13 +937,13 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     int char_height = (longer ? 20 : 16); // 文字の高さをセット
 
     // 文字属性を処理する
-    if (!(attr & VSK_9801_ATTR_SHOW))
+    if (log_attr.secret())
         jis = 0x2121;
-    else if ((attr & VSK_9801_ATTR_BLINK) && m_state->m_blink_flag == 0)
+    else if (log_attr.blink() && m_state->m_blink_flag == 0)
         jis = 0x2121;
 
     // リバース（色調反転）を処理する
-    bool reverse = !!(attr & VSK_9801_ATTR_REVERSE);
+    bool reverse = log_attr.reverse();
     if (m_state->m_show_caret &&
         ((x == m_state->m_caret_x && y == m_state->m_caret_y) ||
          (next_x == m_state->m_caret_x && next_y == m_state->m_caret_y)) &&
@@ -943,7 +957,7 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     int x0 = x * char_width, y0 = y * char_height;
     int x1 = next_x * char_width, y1 = next_y * char_height;
     // テキストの色
-    VskByte palette = VSK_9801_ATTR_GET_COLOR(attr);
+    VskByte palette = log_attr.m_palette;
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
     // 漢字のイメージを取得するオブジェクト
@@ -951,7 +965,7 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
     // アンダーライン（下線）
-    bool underline = (attr & VSK_9801_ATTR_UNDERLINE);
+    bool underline = log_attr.m_underline;
     if (wider) // 40文字の幅か?
     {
         if (reverse) // リバースか?

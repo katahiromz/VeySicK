@@ -359,7 +359,7 @@ extern std::shared_ptr<VskStrMemoryBlock> vsk_str_block;
 
 struct VskLogAttr
 {
-    uint8_t m_color : 7;        // 0～7: black, blue, ..., yellow, white
+    uint8_t m_palette : 7;      // 0～7: black, blue, ..., yellow, white
     uint8_t m_effect : 7;       // 0～7: secret, blink, and/or reverse
     uint8_t m_semigra : 1;      // 0 or 1
     uint8_t m_upperline : 1;    // 0 or 1
@@ -368,8 +368,11 @@ struct VskLogAttr
     void reset()
     {
         std::memset(this, 0, sizeof(*this));
-        m_color = 7;
+        m_palette = 7;
     }
+    bool secret() const { return (m_effect & 1); }
+    bool blink() const { return (m_effect & 2); }
+    bool reverse() const { return (m_effect & 4); }
 };
 
 //////////////////////////////////////////////////////////////////////////////
