@@ -493,7 +493,7 @@ struct Vsk8801Machine : VskMachine
             int offset = (y * VSK_8801_GRAPH_VRAM_PLANE_PITCH) + (x / CHAR_BIT);
             for (int iPlane = 0; iPlane < m_num_planes; ++iPlane)
             {
-                if (m_tile[y0 + iPlane] & (1 << x0))
+                if (m_tile[y0 + iPlane] & (1 << ((CHAR_BIT - 1) - x0)))
                     m_planes[iPlane][offset] |= (1 << ibit);
                 else
                     m_planes[iPlane][offset] &= ~(1 << ibit);

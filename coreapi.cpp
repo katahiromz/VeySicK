@@ -5523,7 +5523,7 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     VskSingle v2, v3;
     VskInt v4 = VSK_STATE()->m_fore_color;
     VskString v5;
-    VskInt v6;
+    VskInt v6 = 0xFFFF;
 
     if (arg6)
         arg6 = vsk_eval_ast(arg6);
@@ -5584,19 +5584,14 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
                 VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
             }
         }
-        else if (arg6 && arg6->is_number()) // ラインスタイル
+        else // Box or Line
         {
-            if (!vsk_wrd((VskWord&)v6, arg6))
-                return nullptr;
+            if (arg6) // ラインスタイル
+            {
+                if (!vsk_wrd((VskWord&)v6, arg6))
+                    return nullptr;
+            }
             vsk_LINE_helper_1(v0, v1, v2, v3, v4, v5, v6);
-        }
-        else if (!arg6) // Box or Line
-        {
-            vsk_LINE_helper_1(v0, v1, v2, v3, v4, v5);
-        }
-        else
-        {
-            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
         }
     }
 
