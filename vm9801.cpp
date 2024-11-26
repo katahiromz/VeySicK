@@ -415,14 +415,6 @@ struct Vsk9801Machine : VskMachine
         return &(*m_text_vram)[offset];
     }
 
-    // 文字属性を取得
-    VskByte get_attr(int x, int y) const override
-    {
-        assert(0 <= x && x < m_state->m_text_width);
-        assert(0 <= y && y < m_state->m_text_height);
-        return get_attr_area(y)[2 * x];
-    }
-
     // 文字属性をセット
     void set_attr(int x, int y, VskByte attr) override
     {
@@ -1103,7 +1095,8 @@ void Vsk9801Machine::render_text()
         auto text_area = get_text_area(y);
         for (int x = 0; x < m_state->m_text_width; ++x)
         {
-            auto attr = get_attr(x, y);
+            auto attr_area = get_attr_area(y);
+            auto attr = attr_area[2 * x];
             int next_x, next_y;
             if (get_next_x_y(next_x, next_y, x, y))
             {

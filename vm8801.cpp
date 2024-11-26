@@ -440,16 +440,6 @@ struct Vsk8801Machine : VskMachine
     // 指定した位置にJIS全角文字をセット
     void set_jis(int x, int y, VskWord jis) override;
 
-    // 指定した位置の文字属性を取得
-    VskByte get_attr(int x, int y) const override
-    {
-        assert(0 <= x && x < m_state->m_text_width);
-        assert(0 <= y && y < m_state->m_text_height);
-        VskByte attr_line[VSK_8801_TEXT_VRAM_TEXT_WIDTH];
-        expand_attr_line(attr_line, y);
-        return attr_line[x];
-    }
-
     // 指定した位置に文字属性をセット
     void set_attr(int x, int y, VskByte attr) override
     {

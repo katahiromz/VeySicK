@@ -638,7 +638,6 @@ struct VskMachine : VskObject
     virtual VskByte get_ank(int x, int y) const { return 0; }
     virtual void set_ank(int x, int y, VskByte ch) { }
 
-    virtual VskByte get_attr(int x, int y) const { return 0; }
     virtual void set_attr(int x, int y, VskByte attr) { }
 
     virtual VskWord get_jis(int x, int y) const { return 0; }
