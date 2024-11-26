@@ -373,6 +373,24 @@ struct VskLogAttr
     bool secret() const { return (m_effect & 1); }
     bool blink() const { return (m_effect & 2); }
     bool reverse() const { return (m_effect & 4); }
+    void secret(bool value) {
+        if (value)
+            m_effect |= 1;
+        else
+            m_effect &= ~1;
+    }
+    void blink(bool value) {
+        if (value)
+            m_effect |= 2;
+        else
+            m_effect &= ~2;
+    }
+    void reverse(bool value) {
+        if (value)
+            m_effect |= 4;
+        else
+            m_effect &= ~4;
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////

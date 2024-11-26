@@ -63,7 +63,7 @@
 #define VSK_8801_ATTR_SET_COLOR(color)  (uint8_t)(VSK_8801_ATTR_COLOR | (((color) & 0x07) << 5))
 
 #define VSK_8801_TEXT_MAX_X                 80  // テキスト画面の最大幅。無効な桁位置指定
-#define VSK_8801_ATTR_PAIR_MAX              20  // ペアの個数
+#define VSK_8801_ATTR_PAIR_MAX              20
 
 // 桁位置と文字属性値のペア
 struct alignas(1) VSK_8801_ATTR_PAIR
@@ -82,49 +82,30 @@ struct alignas(1) VSK_8801_ATTR_PAIR
         }
     }
 };
-static_assert(sizeof(VSK_8801_ATTR_PAIR) * VSK_8801_ATTR_PAIR_MAX == 40, ""); // テキストアトリビュートの幅は40
-
-// ペアの配列を初期化
-void vsk_8801_reset_attr_pairs(VSK_8801_ATTR_PAIR (&attr_area)[VSK_8801_ATTR_PAIR_MAX], bool color_mode)
-{
-    for (auto& pair : attr_area)
-    {
-        pair.reset(color_mode);
-    }
-}
-
-// 論理属性値の配列を初期化
-void vsk_8801_reset_log_attrs(VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X], bool color_mode)
-{
-    for (auto& log_attr : log_attrs)
-    {
-        log_attr.reset();
-    }
-}
 
 // 属性展開のヘルパー関数
-void vsk_8801_expand_attrs_0(VskLogAttr& log_attr, VSK_8801_ATTR_PAIR& pair, bool color_mode)
+void vsk_8801_expand_attr_0(VskLogAttr& log_attr, uint8_t attr_value, bool color_mode)
 {
     if (color_mode) // カラーモード？
     {
-        if (pair.m_attr_value & VSK_8801_ATTR_COLOR) // 色指定？
+        if (attr_value & VSK_8801_ATTR_COLOR) // 色指定？
         {
-            log_attr.m_palette = VSK_8801_ATTR_GET_COLOR(pair.m_attr_value);
-            log_attr.m_semigra = !!(pair.m_attr_value & VSK_8801_ATTR_COLOR_SEMIGRA);
+            log_attr.m_palette = VSK_8801_ATTR_GET_COLOR(attr_value);
+            log_attr.m_semigra = !!(attr_value & VSK_8801_ATTR_COLOR_SEMIGRA);
         }
         else // 修飾指定？
         {
-            log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(pair.m_attr_value);
-            log_attr.m_upperline = !!(pair.m_attr_value & VSK_8801_ATTR_UPPERLINE);
-            log_attr.m_underline = !!(pair.m_attr_value & VSK_8801_ATTR_UNDERLINE);
+            log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(attr_value);
+            log_attr.m_upperline = !!(attr_value & VSK_8801_ATTR_UPPERLINE);
+            log_attr.m_underline = !!(attr_value & VSK_8801_ATTR_UNDERLINE);
         }
     }
     else // 白黒モード？
     {
         log_attr.m_palette = 7;
-        log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(pair.m_attr_value);
-        log_attr.m_upperline = !!(pair.m_attr_value & VSK_8801_ATTR_UPPERLINE);
-        log_attr.m_underline = !!(pair.m_attr_value & VSK_8801_ATTR_UNDERLINE);
+        log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(attr_value);
+        log_attr.m_upperline = !!(attr_value & VSK_8801_ATTR_UPPERLINE);
+        log_attr.m_underline = !!(attr_value & VSK_8801_ATTR_UNDERLINE);
     }
 }
 
@@ -136,13 +117,13 @@ vsk_8801_expand_attrs(
     bool color_mode,                                        // カラーモードか？
     bool is_width_40)                                       // WIDTH 40か？
 {
-    auto *pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
+    auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
 
     // 最初のX座標はゼロで固定
-    pairs.at(0).m_x = 0;
+    pairs[0].m_x = 0;
 
     // X座標でソート
-    std::sort(std::begin(pairs), std::end(pairs), [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
+    std::sort(&pairs[0], &pairs[VSK_8801_ATTR_PAIR_MAX], [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
         return x.m_x < y.m_x;
     });
 
@@ -152,8 +133,10 @@ vsk_8801_expand_attrs(
 
     // ペアをlog_attrsに展開する
     int old_x = 0;
-    for (auto& pair : pairs)
+    for (size_t i = 0; i < VSK_8801_ATTR_PAIR_MAX; ++i)
     {
+        auto& pair = pairs[i];
+
         if (pair.m_x >= VSK_8801_TEXT_MAX_X)
             break;
 
@@ -162,7 +145,7 @@ vsk_8801_expand_attrs(
             log_attrs.at(x0) = log_attr;
         }
 
-        vsk_8801_expand_attrs_0(log_attr, pair, color_mode);
+        vsk_8801_expand_attr_0(log_attr, pair.m_attr_value, color_mode);
         old_x = pair.m_x;
     }
 
@@ -181,9 +164,11 @@ vsk_8801_store_attrs(
     bool color_mode,                                        // カラーモードか？
     bool is_width_40)                                       // WIDTH 40か？
 {
-    auto& pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
-    for (auto& pair : pairs)
+    auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
+
+    for (size_t i = 0; i < VSK_8801_ATTR_PAIR_MAX; ++i)
     {
+        auto& pair = pairs[i];
         pair.reset(color_mode);
     }
 
@@ -196,8 +181,8 @@ vsk_8801_store_attrs(
     for (int x = 0; x < VSK_8801_TEXT_MAX_X; x += 1 + !!is_width_40)
     {
         auto& log_attr = log_attrs.at(x);
-        auto& pair_x = pairs.at(iPair).m_x;
-        auto& attr_value = pairs.at(iPair).m_attr_value;
+        auto& pair_x = pairs[iPair].m_x;
+        auto& attr_value = pairs[iPair].m_attr_value;
         if (color_mode) // カラーモードか？
         {
             // 色かセミグラの属性が変化した？
@@ -817,12 +802,13 @@ void Vsk8801Machine::render_function_keys()
         set_ank(x, y, ' ');
 
     // ファンクションキーの行の文字属性をリセット
-    VskByte attr_line[VSK_8801_TEXT_VRAM_TEXT_WIDTH];
-    auto attr = (m_state->m_color_text ? m_state->m_text_attr : 0);
-    memset(attr_line, attr, sizeof(attr_line));
-
-    // リバース属性をセット
-    attr |= VSK_8801_ATTR_REVERSE;
+    auto *attr_area = get_attr_area(y);
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
+    vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+    for (auto& log_attr : log_attrs)
+    {
+        log_attr.reverse(false);
+    }
 
     // F1...F10
     for (int key_no = 1; key_no <= 10; ++key_no)
@@ -836,7 +822,7 @@ void Vsk8801Machine::render_function_keys()
         for (int ich = 0; ich < cx; ++ich)
         {
             assert(x + ich < VSK_8801_TEXT_MAX_X);
-            attr_line[x + ich] = attr;
+            log_attrs[x + ich].reverse(true);
         }
 
         // キーのテキストをセット
@@ -849,7 +835,7 @@ void Vsk8801Machine::render_function_keys()
     }
 
     // テキスト属性を格納
-    store_attr_line(attr_line, y);
+    vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
 }
 
 // テキスト画面をクリア

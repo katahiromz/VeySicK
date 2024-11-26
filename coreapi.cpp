@@ -5523,7 +5523,7 @@ VskAstPtr vsk_LINE_helper_2(const VskAstList& args, bool step0, bool step1)
     VskSingle v2, v3;
     VskInt v4 = VSK_STATE()->m_fore_color;
     VskString v5;
-    VskInt v6 = 0xFFFF;
+    VskInt v6 = -1;
 
     if (arg6)
         arg6 = vsk_eval_ast(arg6);
