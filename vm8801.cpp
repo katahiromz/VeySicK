@@ -29,20 +29,243 @@
 #define VSK_8801_VRAM_BANK_3            3 // Plane 3 (Green)
 #define VSK_8801_VRAM_BANK_MAX          4
 
-// 文字属性
-#define VSK_8801_ATTR_SECRET            (VskByte)(1 << 0)
-#define VSK_8801_ATTR_BLINK             (VskByte)(1 << 1)
-#define VSK_8801_ATTR_REVERSE           (VskByte)(1 << 2)
-#define VSK_8801_ATTR_COLOR             (VskByte)(1 << 3)
-#define VSK_8801_ATTR_MONO_UPPERLINE    (VskByte)(1 << 4)
-#define VSK_8801_ATTR_COLOR_SEMIGRA     (VskByte)(1 << 4)
-#define VSK_8801_ATTR_MONO_UNDERLINE    (VskByte)(1 << 5)
-#define VSK_8801_ATTR_COLOR_BLUE        (VskByte)(1 << 5)
-#define VSK_8801_ATTR_COLOR_RED         (VskByte)(1 << 6)
-#define VSK_8801_ATTR_MONO_SEMIGRA      (VskByte)(1 << 7)
-#define VSK_8801_ATTR_COLOR_GREEN       (VskByte)(1 << 7)
-#define VSK_8801_ATTR_GET_COLOR(attr)   VskByte(((attr) >> 5) & 0x07)
-#define VSK_8801_ATTR_SET_COLOR(color)  VskByte(VSK_8801_ATTR_COLOR | (((color) & 0x07) << 5))
+////////////////////////////////////////////////////////////////////////////////////
+// 8801 テキスト VRAM の文字属性について
+
+// 参考資料：『テキストおよびグラフィック VRAM についての覚え書き』
+// http://mydocuments.g2.xrea.com/html/p8/vraminfo.html
+
+// 文字属性値は、「白黒モードの装飾指定」「カラーモードの色指定」「カラーモードの装飾指定」の3種類ある。
+
+// 「白黒モードの装飾指定」と「カラーモードの装飾指定」で共通
+#define VSK_8801_ATTR_SECRET            (uint8_t)(1 << 0)        // シークレット文字属性(装飾指定)
+#define VSK_8801_ATTR_BLINK             (uint8_t)(1 << 1)        // ブリンク文字属性(装飾指定)
+#define VSK_8801_ATTR_REVERSE           (uint8_t)(1 << 2)        // リバース文字属性(装飾指定)
+#define VSK_8801_ATTR_GET_EFFECT(attr)  (uint8_t)((attr) & 0x07) // 上記３ビットの組み合わせ(装飾指定)
+#define VSK_8801_ATTR_UPPERLINE         (uint8_t)(1 << 4)        // 上線文字属性(白黒モード ／ カラーモードの装飾指定)
+#define VSK_8801_ATTR_UNDERLINE         (uint8_t)(1 << 5)        // 下線文字属性(白黒モード ／ カラーモードの装飾指定)
+
+// カラーモード専用。カラーモードでこれがONなら色指定、OFFなら装飾指定
+#define VSK_8801_ATTR_COLOR             (uint8_t)(1 << 3)   // カラー指定文字属性
+
+// 「カラーモードの色指定」専用
+#define VSK_8801_ATTR_COLOR_BLUE        (uint8_t)(1 << 5)   // ブルー文字属性(カラーモードの色指定)
+#define VSK_8801_ATTR_COLOR_RED         (uint8_t)(1 << 6)   // レッド文字属性(カラーモードの色指定)
+#define VSK_8801_ATTR_COLOR_GREEN       (uint8_t)(1 << 7)   // グリーン文字属性(カラーモードの色指定)
+
+// セミグラのビットは白黒とカラーで異なる
+#define VSK_8801_ATTR_COLOR_SEMIGRA     (uint8_t)(1 << 4)   // セミグラ文字属性(カラーモードの色指定)
+#define VSK_8801_ATTR_MONO_SEMIGRA      (uint8_t)(1 << 7)   // セミグラ文字属性(「白黒モード」専用)
+
+// 色の取得または設定
+#define VSK_8801_ATTR_GET_COLOR(attr)   (uint8_t)(((attr) >> 5) & 0x07)
+#define VSK_8801_ATTR_SET_COLOR(color)  (uint8_t)(VSK_8801_ATTR_COLOR | (((color) & 0x07) << 5))
+
+#define VSK_8801_TEXT_MAX_X                 80  // テキスト画面の最大幅。無効な桁位置指定
+#define VSK_8801_ATTR_PAIR_MAX              20  // ペアの個数
+
+// 桁位置と文字属性値のペア
+struct VSK_8801_ATTR_PAIR
+{
+    uint8_t m_x;              // 桁位置、ゼロベース。無効なとき VSK_8801_TEXT_MAX_X になる
+    uint8_t m_attr_value;     // 属性値
+
+    void reset(bool color_mode)
+    {
+        m_x = VSK_8801_TEXT_MAX_X;
+        m_attr_value = 0;
+        if (color_mode)
+        {
+            m_attr_value = VSK_8801_ATTR_SET_COLOR(7);
+            assert(m_attr_value == 0xE8);
+        }
+    }
+};
+static_assert(sizeof(VSK_8801_ATTR_PAIR) * VSK_8801_ATTR_PAIR_MAX == 40, ""); // テキストアトリビュートの幅は40
+
+// ペアの配列を初期化
+void vsk_8801_reset_attr_pairs(VSK_8801_ATTR_PAIR (&attr_area)[VSK_8801_ATTR_PAIR_MAX], bool color_mode)
+{
+    for (auto& pair : attr_area)
+    {
+        pair.reset(color_mode);
+    }
+}
+
+// 論理属性値の配列を初期化
+void vsk_8801_reset_log_attrs(VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X], bool color_mode)
+{
+    for (auto& log_attr : log_attrs)
+    {
+        log_attr.reset();
+    }
+}
+
+// 属性展開のヘルパー関数
+void vsk_8801_expand_attrs_0(VskLogAttr& log_attr, VSK_8801_ATTR_PAIR& pair, bool color_mode)
+{
+    if (color_mode) // カラーモード？
+    {
+        if (pair.m_attr_value & VSK_8801_ATTR_COLOR) // 色指定？
+        {
+            log_attr.m_palette = VSK_8801_ATTR_GET_COLOR(pair.m_attr_value);
+            log_attr.m_semigra = !!(pair.m_attr_value & VSK_8801_ATTR_COLOR_SEMIGRA);
+        }
+        else // 修飾指定？
+        {
+            log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(pair.m_attr_value);
+            log_attr.m_upperline = !!(pair.m_attr_value & VSK_8801_ATTR_UPPERLINE);
+            log_attr.m_underline = !!(pair.m_attr_value & VSK_8801_ATTR_UNDERLINE);
+        }
+    }
+    else // 白黒モード？
+    {
+        log_attr.m_palette = 7;
+        log_attr.m_effect = VSK_8801_ATTR_GET_EFFECT(pair.m_attr_value);
+        log_attr.m_upperline = !!(pair.m_attr_value & VSK_8801_ATTR_UPPERLINE);
+        log_attr.m_underline = !!(pair.m_attr_value & VSK_8801_ATTR_UNDERLINE);
+    }
+}
+
+// 属性データを展開： log_attrs <-- attr_area
+void
+vsk_8801_expand_attrs(
+    VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X],           // 論理属性値の配列
+    VskByte *attr_area,                                     // 属性ペアの配列
+    bool color_mode,                                        // カラーモードか？
+    bool is_width_40)                                       // WIDTH 40か？
+{
+    auto& pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
+
+    // 最初のX座標はゼロで固定
+    pairs[0].m_x = 0;
+
+    // X座標でソート
+    std::sort(std::begin(pairs), std::end(pairs), [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
+        return x.m_x < y.m_x;
+    });
+
+    // 論理属性を初期化
+    VskLogAttr log_attr;
+    log_attr.reset();
+
+    // ペアをlog_attrsに展開する
+    int old_x = 0;
+    for (auto& pair : pairs)
+    {
+        if (pair.m_x >= VSK_8801_TEXT_MAX_X)
+            break;
+
+        for (int x0 = old_x; x0 < pair.m_x; ++x0)
+        {
+            log_attrs[x0] = log_attr;
+        }
+
+        vsk_8801_expand_attrs_0(log_attr, pair, color_mode);
+        old_x = pair.m_x;
+    }
+
+    // 残りを埋める
+    for (int x0 = old_x; x0 < VSK_8801_TEXT_MAX_X; ++x0)
+    {
+        log_attrs[x0] = log_attr;
+    }
+}
+
+// 属性データを格納： log_attrs --> pairs
+void
+vsk_8801_store_attrs(
+    VskLogAttr (&log_attrs)[VSK_8801_TEXT_MAX_X],           // 論理属性値の配列
+    VskByte *attr_area,                                     // 属性ペアの配列
+    bool color_mode,                                        // カラーモードか？
+    bool is_width_40)                                       // WIDTH 40か？
+{
+    auto& pairs = reinterpret_cast<std::array<VSK_8801_ATTR_PAIR, VSK_8801_ATTR_PAIR_MAX>&>(attr_area);
+
+    // 論理属性値を初期化
+    VskLogAttr old_attr;
+    old_attr.reset();
+
+    int iPair = 0;
+    bool first = true;
+    for (int x = 0; x < VSK_8801_TEXT_MAX_X; x += 1 + !!is_width_40)
+    {
+        auto& log_attr = log_attrs[x];
+        auto& pair_x = pairs.at(iPair).m_x;
+        auto& attr_value = pairs.at(iPair).m_attr_value;
+        if (color_mode) // カラーモードか？
+        {
+            // 色かセミグラの属性が変化した？
+            if (first ||
+                log_attr.m_palette != old_attr.m_palette ||
+                log_attr.m_semigra != old_attr.m_semigra)
+            {
+                first = false;
+                // 属性を格納
+                pair_x = x;
+                attr_value = VSK_8801_ATTR_SET_COLOR(old_attr.m_palette);
+                if (log_attr.m_semigra)
+                    attr_value |= VSK_8801_ATTR_COLOR_SEMIGRA;
+                // 古い属性として覚えておく
+                old_attr.m_palette = log_attr.m_palette;
+                old_attr.m_semigra = log_attr.m_semigra;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+            if (log_attr.m_effect != old_attr.m_effect ||
+                log_attr.m_upperline != old_attr.m_upperline ||
+                log_attr.m_underline != old_attr.m_underline)
+            {
+                // 属性を格納
+                pair_x = x;
+                attr_value = log_attr.m_effect;
+                if (log_attr.m_upperline)
+                    attr_value |= VSK_8801_ATTR_UPPERLINE;
+                if (log_attr.m_underline)
+                    attr_value |= VSK_8801_ATTR_UNDERLINE;
+                // 古い属性として覚えておく
+                old_attr.m_effect = log_attr.m_effect;
+                old_attr.m_upperline = log_attr.m_upperline;
+                old_attr.m_underline = log_attr.m_underline;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+        }
+        else // 白黒モードか？
+        {
+            // 属性が変化した？
+            if (first ||
+                log_attr.m_effect != old_attr.m_effect ||
+                log_attr.m_semigra != old_attr.m_semigra ||
+                log_attr.m_upperline != old_attr.m_upperline ||
+                log_attr.m_underline != old_attr.m_underline)
+            {
+                first = false;
+                // 属性を格納
+                pair_x = x;
+                attr_value = log_attr.m_effect;
+                if (log_attr.m_semigra)
+                    attr_value |= VSK_8801_ATTR_MONO_SEMIGRA;
+                if (log_attr.m_upperline)
+                    attr_value |= VSK_8801_ATTR_UPPERLINE;
+                if (log_attr.m_underline)
+                    attr_value |= VSK_8801_ATTR_UNDERLINE;
+                // 古い属性として覚えておく
+                old_attr.m_effect = log_attr.m_effect;
+                old_attr.m_semigra = log_attr.m_semigra;
+                old_attr.m_upperline = log_attr.m_upperline;
+                old_attr.m_underline = log_attr.m_underline;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
 
 // 8801 VRAM のクラス。
 struct Vsk8801VRAM : VskMemoryBlockBase
@@ -310,6 +533,7 @@ struct Vsk8801Machine : VskMachine
     void render_ank(int x, int y, VskByte ch, VskByte attr);
     // JIS全角文字を描画する
     void render_jis(int x, int y, int next_x, int next_y, VskWord jis, VskByte attr);
+
     // テキスト画面を描画する
     void render_text();
 
@@ -606,7 +830,7 @@ void Vsk8801Machine::render_function_keys()
         // ファンクションキーのタブを反転する
         for (int ich = 0; ich < cx; ++ich)
         {
-            assert(x + ich < 80);
+            assert(x + ich < VSK_8801_TEXT_MAX_X);
             attr_line[x + ich] = attr;
         }
 
@@ -740,14 +964,14 @@ void Vsk8801Machine::store_attr_line(const VskByte *attr_line, int y)
     do
     {
         const VskByte attrs = attr_line[x];
-        while ((x < 80) && (attrs == attr_line[x]))
+        while ((x < VSK_8801_TEXT_MAX_X) && (attrs == attr_line[x]))
         {
             ++x;
             ++count;
         }
         attr_area[i++] = VskByte(count);
         attr_area[i++] = attrs;
-    } while ((i < 40) && (x < 80));
+    } while ((i < 40) && (x < VSK_8801_TEXT_MAX_X));
 }
 
 // ANK文字を描画する
@@ -787,9 +1011,9 @@ void Vsk8801Machine::render_ank(int x, int y, VskByte ch, VskByte attr)
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
     // アンダーライン（下線）
-    bool underline = !is_color && (attr & VSK_8801_ATTR_MONO_UNDERLINE);
+    bool underline = !is_color && (attr & VSK_8801_ATTR_UNDERLINE);
     // アッパーライン（上線）
-    bool upperline = !is_color && (attr & VSK_8801_ATTR_MONO_UPPERLINE);
+    bool upperline = !is_color && (attr & VSK_8801_ATTR_UPPERLINE);
     if (is_semigra) // セミグラ文字か?
     {
         // セミグラ文字を描画する
@@ -874,9 +1098,9 @@ void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
     // アンダーライン（下線）
-    bool underline = !is_color && (attr & VSK_8801_ATTR_MONO_UNDERLINE);
+    bool underline = !is_color && (attr & VSK_8801_ATTR_UNDERLINE);
     // アッパーライン（上線）
-    bool upperline = !is_color && (attr & VSK_8801_ATTR_MONO_UPPERLINE);
+    bool upperline = !is_color && (attr & VSK_8801_ATTR_UPPERLINE);
     // 漢字のイメージを取得するオブジェクト
     VskKanjiGetter getter;
     if (wider) // 40文字の幅か?
