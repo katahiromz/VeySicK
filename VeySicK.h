@@ -643,11 +643,6 @@ struct VskMachine : VskObject
     virtual VskWord get_jis(int x, int y) const { return 0; }
     virtual void set_jis(int x, int y, VskWord jis) { }
 
-    /*
-    virtual void set_color(VskByte palette) { }
-    virtual void set_color(int x, int y, VskByte palette) { }
-    */
-
     virtual std::shared_ptr<VskColorGetter> get_color_getter(const VskRectI *viewport) { return nullptr; }
     virtual std::shared_ptr<VskPixelPutter> get_color_putter(int palette, const VskRectI *viewport) { return nullptr; }
     virtual std::shared_ptr<VskPixelPutter> get_tile_putter(VskString tile, const VskRectI *viewport) { return nullptr; }

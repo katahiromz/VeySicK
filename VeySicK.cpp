@@ -652,8 +652,10 @@ void VskMachine::do_delete()
     auto text = get_line_text(m_state->m_caret_y);
     int column = get_line_column();
 #ifdef JAPAN
-    if (vsk_is_sjis_code(text[column], text[column + 1]))
+    if (is_sjis_mode() && vsk_is_sjis_code(text[column], text[column + 1]))
+    {
         text.erase(column, 1);
+    }
 #endif
     text.erase(column, 1);
     set_line_text(m_state->m_caret_y, text);
@@ -838,7 +840,8 @@ void VskMachine::set_line_text(int y, VskString text)
             was_lead = false;
             continue;
         }
-        if (vsk_is_sjis_code(text[ich], text.c_str()[ich + 1]))
+        if (is_sjis_mode() &&
+            vsk_is_sjis_code(text[ich], text.c_str()[ich + 1]))
         {
             if (int(ich + 2) >= m_state->m_console_cy0 * m_state->m_text_width)
                 break;
@@ -877,7 +880,8 @@ void VskMachine::set_line_text(int y, VskString text)
 
 #ifdef JAPAN
             // マルチバイト文字？
-            if (vsk_is_sjis_code(text[ich], text[ich + 1]))
+            if (is_sjis_mode() &&
+                vsk_is_sjis_code(text[ich], text[ich + 1]))
             {
                 auto sjis = vsk_make_word(text[ich + 1], text[ich]);
                 auto jis = vsk_sjis2jis(sjis);
@@ -1194,7 +1198,7 @@ void VskMachine::keyboard_ch(VskWord ch)
         auto text = get_line_text(m_state->m_caret_y);
         int column = get_line_column();
 #ifdef JAPAN
-        if (vsk_is_sjis_code(ch))
+        if (is_sjis_mode() && vsk_is_sjis_code(ch))
         {
             text.insert(column, 1, vsk_high_byte(ch));
             text.insert(column + 1, 1, vsk_low_byte(ch));
@@ -1440,7 +1444,7 @@ void VskMachine::print_ch(VskWord ch, bool do_control)
     int x = m_state->m_caret_x, y = m_state->m_caret_y;
 
 #ifdef JAPAN
-    if (vsk_is_sjis_code(ch)) // SJISコードの全角文字なら？
+    if (is_sjis_mode() && vsk_is_sjis_code(ch)) // SJISコードの全角文字なら？
     {
         // 必要ならスクロール処理
         if (x + 2 >= m_state->m_text_width &&
@@ -1486,7 +1490,8 @@ void VskMachine::print(const VskString& str)
         VskByte ch = str[ich];
 #ifdef JAPAN
         // 全角文字は特別な処理が必要
-        if (vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
+        if (is_sjis_mode() &&
+            vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
         {
             VskByte lead = ch, trail = str.c_str()[ich + 1];
             VskWord sjis = vsk_make_word(trail, lead);
@@ -1521,7 +1526,7 @@ VskString VskMachine::copy_text_screen()
                 continue;
             }
             // 全角文字をちゃんと処理する
-            if (!is_ank(x, y))
+            if (is_sjis_mode() && !is_ank(x, y))
             {
                 auto jis = get_jis(x, y);
                 assert(vsk_is_jis_code(jis));
@@ -1564,7 +1569,7 @@ void VskMachine::print_raw(const VskString& str)
         VskByte ch = str[ich];
 #ifdef JAPAN
         // JISの全角文字は特別な処理が必要
-        if (vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
+        if (is_sjis_mode() && vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
         {
             VskByte lead = ch, trail = str.c_str()[ich + 1];
             VskWord jis = vsk_sjis2jis(lead, trail);
@@ -1596,7 +1601,7 @@ void VskMachine::keyboard_str(const VskString& str)
         auto ch = str[ich];
 #ifdef JAPAN
         // JISの全角文字は特別な処理が必要
-        if (vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
+        if (is_sjis_mode() && vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
         {
             auto lead = ch, trail = str.c_str()[ich + 1];
             auto sjis = vsk_make_word(trail, lead);

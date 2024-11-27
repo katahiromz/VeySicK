@@ -123,9 +123,6 @@ vsk_8801_expand_attrs(
 {
     auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
 
-    // 最初のX座標はゼロで固定
-    pairs[0].m_x = 0;
-
     // X座標でソート
     std::sort(&pairs[0], &pairs[VSK_8801_ATTR_PAIR_MAX], [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
         return x.m_x < y.m_x;
@@ -134,7 +131,6 @@ vsk_8801_expand_attrs(
     // 論理属性を初期化
     VskLogAttr old_attr;
     old_attr.reset();
-    vsk_8801_expand_attr_0(old_attr, pairs[0].m_attr_value, color_mode);
 
     // ペアをlog_attrsに展開する
     int old_x = 0;
@@ -142,7 +138,7 @@ vsk_8801_expand_attrs(
     {
         auto& pair = pairs[i];
 
-        if (pair.m_x >= VSK_8801_TEXT_MAX_X)
+        if (pair.m_x >= (is_width_40 ? 40 : 80))
             break;
 
         for (int x0 = old_x; x0 < pair.m_x; ++x0)
@@ -155,7 +151,7 @@ vsk_8801_expand_attrs(
     }
 
     // 残りを埋める
-    for (int x0 = old_x; x0 < VSK_8801_TEXT_MAX_X; ++x0)
+    for (int x0 = old_x; x0 < (is_width_40 ? 40 : 80); ++x0)
     {
         log_attrs.at(x0) = old_attr;
     }
@@ -183,7 +179,7 @@ vsk_8801_store_attrs(
 
     int iPair = 0;
     bool first = true;
-    for (int x = 0; x < VSK_8801_TEXT_MAX_X; ++x)
+    for (int x = 0; x < (is_width_40 ? 40 : 80); ++x)
     {
         auto& log_attr = log_attrs.at(x);
         auto& pair_x = pairs[iPair].m_x;
@@ -795,7 +791,7 @@ void Vsk8801Machine::render_function_keys()
         // ファンクションキーのタブを反転する
         for (int ich = 0; ich < cx; ++ich)
         {
-            assert(x + ich < VSK_8801_TEXT_MAX_X);
+            assert(x + ich < m_state->m_text_width);
             log_attrs[x + ich].reverse(true);
         }
 
