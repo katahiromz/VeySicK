@@ -113,15 +113,75 @@ void vsk_8801_expand_attr_0(VskLogAttr& log_attr, uint8_t attr_value, bool color
     }
 }
 
+void vsk_reset_attr_area(VskByte *attr_area)
+{
+    for (int x = 0; x < VSK_8801_ATTR_PAIR_MAX / 2; x += 2)
+    {
+        attr_area[x + 0] = 0x80;
+        attr_area[x + 1] = 0xE8;
+    }
+}
+
 // 属性データを展開： log_attrs <-- attr_area
 void
-vsk_8801_expand_attrs(
+vsk_8801_expand_attrs_of_width_40(
     std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
     VskByte *attr_area,                                     // 属性ペアの配列
-    bool color_mode,                                        // カラーモードか？
-    bool is_width_40)                                       // WIDTH 40か？
+    bool color_mode)                                        // カラーモードか？
 {
     auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
+
+    // X座標でソート
+    std::sort(&pairs[0], &pairs[VSK_8801_ATTR_PAIR_MAX], [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
+        return x.m_x < y.m_x;
+    });
+
+    // 論理属性を初期化
+    VskLogAttr old_attr;
+    old_attr.reset();
+    vsk_8801_expand_attr_0(old_attr, pairs[0].m_attr_value, color_mode);
+
+    // ペアをlog_attrsに展開する
+    int old_x = 0;
+    for (size_t i = 0;; )
+    {
+        auto& pair = pairs[i];
+
+        if (pair.m_x >= 40)
+            break;
+
+        int next_x = (pair.m_x + 1) / 2;
+        for (int x0 = old_x; x0 < next_x; ++x0)
+        {
+            log_attrs.at(x0) = old_attr;
+        }
+
+        ++i;
+        if (i >= VSK_8801_ATTR_PAIR_MAX)
+            break;
+
+        vsk_8801_expand_attr_0(old_attr, pairs[i].m_attr_value, color_mode);
+        old_x = next_x;
+    }
+
+    // 残りを埋める
+    for (int x0 = old_x; x0 < 40; ++x0)
+    {
+        log_attrs.at(x0) = old_attr;
+    }
+}
+
+// 属性データを展開： log_attrs <-- attr_area
+void
+vsk_8801_expand_attrs_of_width_80(
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
+    VskByte *attr_area,                                     // 属性ペアの配列
+    bool color_mode)                                        // カラーモードか？
+{
+    auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
+
+    // 最初はゼロ固定
+    pairs[0].m_x = 0;
 
     // X座標でソート
     std::sort(&pairs[0], &pairs[VSK_8801_ATTR_PAIR_MAX], [&](const VSK_8801_ATTR_PAIR& x, const VSK_8801_ATTR_PAIR& y) {
@@ -138,7 +198,7 @@ vsk_8801_expand_attrs(
     {
         auto& pair = pairs[i];
 
-        if (pair.m_x >= (is_width_40 ? 40 : 80))
+        if (pair.m_x >= 80)
             break;
 
         for (int x0 = old_x; x0 < pair.m_x; ++x0)
@@ -151,10 +211,23 @@ vsk_8801_expand_attrs(
     }
 
     // 残りを埋める
-    for (int x0 = old_x; x0 < (is_width_40 ? 40 : 80); ++x0)
+    for (int x0 = old_x; x0 < 80; ++x0)
     {
         log_attrs.at(x0) = old_attr;
     }
+}
+
+// 属性データを展開： log_attrs <-- attr_area
+inline void
+vsk_8801_expand_attrs(
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
+    VskByte *attr_area,                                     // 属性ペアの配列
+    bool color_mode)                                        // カラーモードか？
+{
+    if (VSK_STATE()->m_text_wider)
+        vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area, color_mode);
+    else
+        vsk_8801_expand_attrs_of_width_80(log_attrs, attr_area, color_mode);
 }
 
 // 属性データを格納： log_attrs --> pairs
@@ -449,7 +522,7 @@ struct Vsk8801Machine : VskMachine
 
         auto *attr_area = get_attr_area(y);
         std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
-        vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+        vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text);
         log_attrs[x] = attr;
         vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
     }
@@ -512,6 +585,9 @@ struct Vsk8801Machine : VskMachine
         return &m_screen_image;
     }
 
+    // テスト
+    void do_unit_tests();
+
     // マシンを接続、または接続を切断する
     bool connect(bool do_connect) override
     {
@@ -523,6 +599,7 @@ struct Vsk8801Machine : VskMachine
             m_state->m_memory->add_block(m_free_area.get());
             VskMachine::connect(true);
             clear_text();
+            do_unit_tests();
         }
         else
         {
@@ -774,7 +851,7 @@ void Vsk8801Machine::render_function_keys()
     // ファンクションキーの行の文字属性をリセット
     auto *attr_area = get_attr_area(y);
     std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
-    vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+    vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text);
     for (auto& log_attr : log_attrs)
     {
         log_attr.reverse(false);
@@ -1053,7 +1130,7 @@ void Vsk8801Machine::render_text()
     for (int y = 0; y < m_state->m_text_height; ++y)
     {
         auto *attr_area = get_attr_area(y);
-        vsk_8801_expand_attrs(log_attrs, attr_area, is_color, wider);
+        vsk_8801_expand_attrs(log_attrs, attr_area, is_color);
 
         for (int x = 0; x < m_state->m_text_width; ++x)
         {
@@ -1081,7 +1158,7 @@ void Vsk8801Machine::render_text()
                             render_jis(x, y, next_x, next_y, jis, log_attrs.at(x));
 
                             if (y != next_y)
-                                vsk_8801_expand_attrs(log_attrs, attr_area, is_color, wider);
+                                vsk_8801_expand_attrs(log_attrs, attr_area, is_color);
 
                             was_lead = true;
                             continue;
@@ -1287,6 +1364,66 @@ bool Vsk8801Machine::clear_memory(VskDword addr)
 
     m_free_area->clear();
     return true;
+}
+
+void Vsk8801Machine::do_unit_tests()
+{
+#ifndef NDEBUG
+    std::array<VskByte, VSK_8801_ATTR_PAIR_MAX * 2> attr_area;
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x80\xE8", 2);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 7);
+    assert(log_attrs[0].m_effect == 0);
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x01\x88\x80\xE8", 4);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 4);
+    assert(log_attrs[0].m_effect == 0);
+    assert(log_attrs[1].m_palette == 7);
+    assert(log_attrs[1].m_effect == 0);
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x02\x88\x80\xE8", 4);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 4);
+    assert(log_attrs[0].m_effect == 0);
+    assert(log_attrs[1].m_palette == 7);
+    assert(log_attrs[1].m_effect == 0);
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x03\x88\x80\xE8", 4);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 4);
+    assert(log_attrs[0].m_effect == 0);
+    assert(log_attrs[1].m_palette == 4);
+    assert(log_attrs[1].m_effect == 0);
+    assert(log_attrs[2].m_palette == 7);
+    assert(log_attrs[2].m_effect == 0);
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x04\x88\x80\xE8", 4);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 4);
+    assert(log_attrs[0].m_effect == 0);
+    assert(log_attrs[1].m_palette == 4);
+    assert(log_attrs[1].m_effect == 0);
+    assert(log_attrs[2].m_palette == 7);
+    assert(log_attrs[2].m_effect == 0);
+
+    vsk_reset_attr_area(attr_area.data());
+    std::memcpy(attr_area.data(), "\x01\xE8\x03\x88", 4);
+    vsk_8801_expand_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(log_attrs[0].m_palette == 7);
+    assert(log_attrs[0].m_effect == 0);
+    assert(log_attrs[1].m_palette == 4);
+    assert(log_attrs[1].m_effect == 0);
+    assert(log_attrs[2].m_palette == 7);
+    assert(log_attrs[2].m_effect == 0);
+#endif
 }
 
 #endif  // def ENABLE_PC8801
