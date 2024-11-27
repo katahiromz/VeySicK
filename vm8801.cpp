@@ -130,6 +130,7 @@ vsk_8801_expand_attrs(
     // 論理属性を初期化
     VskLogAttr old_attr;
     old_attr.reset();
+    vsk_8801_expand_attr_0(old_attr, pairs[0].m_attr_value, color_mode);
 
     // ペアをlog_attrsに展開する
     int old_x = 0;
@@ -193,7 +194,7 @@ vsk_8801_store_attrs(
                 first = false;
                 // 属性を格納
                 pair_x = x;
-                attr_value = VSK_8801_ATTR_SET_COLOR(old_attr.m_palette);
+                attr_value = VSK_8801_ATTR_SET_COLOR(log_attr.m_palette);
                 if (log_attr.m_semigra)
                     attr_value |= VSK_8801_ATTR_COLOR_SEMIGRA;
                 // 古い属性として覚えておく
