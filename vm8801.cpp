@@ -441,31 +441,16 @@ struct Vsk8801Machine : VskMachine
     void set_jis(int x, int y, VskWord jis) override;
 
     // 指定した位置に文字属性をセット
-    void set_attr(int x, int y, VskByte attr) override
+    void set_attr(int x, int y, const VskLogAttr& attr) override
     {
         assert(0 <= x && x < m_state->m_text_width);
         assert(0 <= y && y < m_state->m_text_height);
-        VskByte attr_line[VSK_8801_TEXT_VRAM_TEXT_WIDTH];
-        expand_attr_line(attr_line, y);
-        attr_line[x] = attr;
-        store_attr_line(attr_line, y);
-    }
 
-    // 指定した位置にパレット番号の色をセット
-    void set_color(int x, int y, VskByte palette) override
-    {
-        assert(0 <= x && x < m_state->m_text_width);
-        assert(0 <= y && y < m_state->m_text_height);
-        set_attr(x, y, VSK_8801_ATTR_SET_COLOR(palette));
-    }
-
-    // パレット番号の色をセット
-    void set_color(VskByte palette) override
-    {
-        if (VSK_STATE()->m_color_text)
-            m_state->m_text_attr = VSK_8801_ATTR_SET_COLOR(palette);
-        else
-            m_state->m_text_attr = VskByte(palette);
+        auto *attr_area = get_attr_area(y);
+        std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
+        vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+        log_attrs[x] = attr;
+        vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
     }
 
     // 指定した行の文字属性エリアを取得
@@ -481,11 +466,6 @@ struct Vsk8801Machine : VskMachine
         assert(0 <= offset && offset < VSK_8801_VRAM_SIZE);
         return &m_vram->m_8801_vram_area[0][offset];
     }
-
-    // 文字属性を展開する。文字属性は圧縮されているので展開が必要
-    void expand_attr_line(VskByte *attr_line, int y) const;
-    // 文字属性を圧縮する
-    void store_attr_line(const VskByte *attr_line, int y);
 
     // グラフィック画面を描画する
     void render_graphics()
@@ -745,7 +725,8 @@ void Vsk8801Machine::reset_text()
 {
     m_state->m_text_wider = (m_state->m_text_width == 40);
     m_state->m_text_longer = (m_state->m_text_height == 20);
-    m_state->m_text_attr = (m_state->m_color_text ? VSK_8801_ATTR_SET_COLOR(7) : 0);
+
+    m_state->m_text_attr.reset();
 
     if (m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
         m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
@@ -905,54 +886,6 @@ void Vsk8801Machine::set_jis(int x, int y, VskWord jis)
         set_ank(x, y, lead);
     }
 #endif
-}
-
-// 文字属性を展開する。8801では文字属性は圧縮されているので展開が必要
-void Vsk8801Machine::expand_attr_line(VskByte *attr_line, int y) const
-{
-    memset(attr_line, m_state->m_text_attr, VSK_8801_TEXT_VRAM_TEXT_WIDTH);
-
-    const VskByte *attr_area = get_attr_area(y);
-    VskWord x = 0;
-    for (int i = 0; i < VSK_8801_TEXT_VRAM_TEXT_WIDTH; i += 2)
-    {
-        VskByte column = attr_area[i + 0];
-        VskByte attr = attr_area[i + 1];
-        for (; x < column; ++x)
-        {
-            if (x >= VSK_8801_TEXT_VRAM_TEXT_WIDTH)
-                break;
-            attr_line[x] = attr;
-        }
-        if (x >= VSK_8801_TEXT_VRAM_TEXT_WIDTH)
-            break;
-    }
-}
-
-// 文字属性を圧縮する
-void Vsk8801Machine::store_attr_line(const VskByte *attr_line, int y)
-{
-    VskWord i, x, count;
-    VskByte *attr_area = get_attr_area(y);
-    for (i = 0; i < 40; i += 2)
-    {
-        attr_area[i + 0] = VSK_8801_TEXT_MAX_X;
-        attr_area[i + 1] = m_state->m_text_attr;
-    }
-    x = 0;
-    i = 0;
-    count = 0;
-    do
-    {
-        const VskByte attrs = attr_line[x];
-        while ((x < VSK_8801_TEXT_MAX_X) && (attrs == attr_line[x]))
-        {
-            ++x;
-            ++count;
-        }
-        attr_area[i++] = VskByte(count);
-        attr_area[i++] = attrs;
-    } while ((i < 40) && (x < VSK_8801_TEXT_MAX_X));
 }
 
 // ANK文字を描画する

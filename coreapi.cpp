@@ -3043,7 +3043,12 @@ static VskAstPtr vsk_COLOR_8801(const VskAstList& args)
         return nullptr;
     }
 
-    VskInt v0 = VSK_STATE()->m_text_color; // 機能コード
+    VskInt v0; // 機能コード
+    if (VSK_STATE()->m_color_text)
+        v0 = VSK_STATE()->m_text_attr.m_palette;
+    else
+        v0 = VSK_STATE()->m_text_attr.m_effect;
+
     VskInt v1 = VSK_STATE()->m_back_color; // 背景色
     VskInt v2 = VSK_STATE()->m_border_color; // 境界色
     VskInt v3 = VSK_STATE()->m_fore_color; // 前景色
@@ -3073,8 +3078,19 @@ static VskAstPtr vsk_COLOR_8801(const VskAstList& args)
         }
 
         // 格納
-        VSK_STATE()->m_text_color = v0;
-        vsk_machine->set_color(int(v0));
+        VSK_STATE()->m_text_attr.reset();
+        if (VSK_STATE()->m_color_text)
+        {
+            VSK_STATE()->m_text_color = v0;
+            VSK_STATE()->m_text_attr.m_palette = v0;
+        }
+        else
+        {
+            VSK_STATE()->m_text_color = (VSK_STATE()->m_green_console ? 4 : 7);
+            VSK_STATE()->m_text_attr.m_palette = VSK_STATE()->m_text_color;
+            VSK_STATE()->m_text_attr.m_effect = v0;
+        }
+
         VSK_STATE()->m_back_color = v1;
         VSK_STATE()->m_border_color = v2;
         VSK_STATE()->m_fore_color = v3;
@@ -3103,7 +3119,12 @@ static VskAstPtr vsk_COLOR_9801(const VskAstList& args)
         return nullptr;
     }
 
-    VskInt v0 = VSK_STATE()->m_text_color; // 機能コード
+    VskInt v0; // 機能コード
+    if (VSK_STATE()->m_color_text)
+        v0 = VSK_STATE()->m_text_attr.m_palette;
+    else
+        v0 = VSK_STATE()->m_text_attr.m_effect;
+
     VskInt v1 = VSK_STATE()->m_back_color; // 背景色
     VskInt v2 = VSK_STATE()->m_border_color; // 境界色
     VskInt v3 = VSK_STATE()->m_fore_color; // 前景色
@@ -3151,8 +3172,19 @@ static VskAstPtr vsk_COLOR_9801(const VskAstList& args)
         }
 
         // 格納
-        VSK_STATE()->m_text_color = v0;
-        vsk_machine->set_color(int(v0));
+        VSK_STATE()->m_text_attr.reset();
+        if (VSK_STATE()->m_color_text)
+        {
+            VSK_STATE()->m_text_color = v0;
+            VSK_STATE()->m_text_attr.m_palette = v0;
+        }
+        else
+        {
+            VSK_STATE()->m_text_color = (VSK_STATE()->m_green_console ? 4 : 7);
+            VSK_STATE()->m_text_attr.m_palette = VSK_STATE()->m_text_color;
+            VSK_STATE()->m_text_attr.m_effect = v0;
+        }
+
         VSK_STATE()->m_back_color = v1;
         VSK_STATE()->m_border_color = v2;
         VSK_STATE()->m_fore_color = v3;
@@ -5016,11 +5048,7 @@ static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr self, const VskAstList& args)
             VSK_STATE()->m_console_y0 = 0;
             VSK_STATE()->m_console_cy0 = VSK_STATE()->m_text_height;
         }
-        if (arg3)
-        {
-            vsk_machine->clear_text();
-            vsk_machine->home();
-        }
+
         if (arg2)
         {
             int y = VSK_STATE()->m_console_y0 + VSK_STATE()->m_console_cy0 - 1;
@@ -5032,6 +5060,13 @@ static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr self, const VskAstList& args)
         VSK_STATE()->m_show_function_keys = !!v2;
         VSK_STATE()->m_color_text = !!v3;
         vsk_machine->reset_text();
+
+        if (arg3)
+        {
+            VSK_STATE()->m_text_attr.reset();
+            vsk_machine->clear_text();
+            vsk_machine->home();
+        }
     }
 
     return nullptr;
@@ -7633,10 +7668,12 @@ static VskAstPtr VSKAPI vsk_COLOR_at(VskAstPtr self, const VskAstList& args)
         vsk_int(v3, args[3]) &&
         (args.size() <= 4 || vsk_int(v4, args[4])))
     {
-        auto old_attr = VSK_STATE()->m_text_attr;
-        vsk_machine->set_color(VskByte(v4));
-        auto new_attr = VSK_STATE()->m_text_attr;
-        VSK_STATE()->m_text_attr = old_attr;
+        VskLogAttr new_attr;
+        new_attr.reset();
+        if (VSK_STATE()->m_color_text)
+            new_attr.m_palette = v4;
+        else
+            new_attr.m_effect = v4;
 
         if (v0 > v2) std::swap(v0, v2);
         if (v1 > v3) std::swap(v1, v3);

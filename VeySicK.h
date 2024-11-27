@@ -359,11 +359,11 @@ extern std::shared_ptr<VskStrMemoryBlock> vsk_str_block;
 
 struct VskLogAttr
 {
-    uint32_t m_palette : 7;      // 0～7: black, blue, ..., yellow, white
-    uint32_t m_effect : 7;       // 0～7: secret, blink, and/or reverse
-    uint32_t m_semigra : 1;      // 0 or 1
-    uint32_t m_upperline : 1;    // 0 or 1
-    uint32_t m_underline : 1;    // 0 or 1
+    VskDword m_palette : 7;      // 0～7: black, blue, ..., yellow, white
+    VskDword m_effect : 7;       // 0～7: secret, blink, and/or reverse
+    VskDword m_semigra : 1;      // 0 or 1
+    VskDword m_upperline : 1;    // 0 or 1
+    VskDword m_underline : 1;    // 0 or 1
 
     void reset()
     {
@@ -462,7 +462,7 @@ struct VskMachineState
     int m_caret_y                           = 0;                        // キャレットの垂直位置（文字単位）
     int m_console_y0                        = 0;                        // コンソールのスクロール範囲の最初の行の垂直位置
     int m_console_cy0                       = 25;                       // コンソールのスクロール範囲の行数
-    VskByte m_text_attr                     = 0;                        // テキスト画面のテキスト属性
+    VskLogAttr m_text_attr                  = { 7 };                    // テキスト画面のテキスト属性
     VskByte m_line_link[25]                 = { 0 };                    // 行リンク（次の行とつながっているか？）
 
     // graphic screen
@@ -485,7 +485,7 @@ struct VskMachineState
     // colors
     bool m_color_text                       = false;        // テキスト画面がカラーか？
     bool m_color_graphics                   = true;         // グラフィック画面がカラーか？
-    int m_text_color                        = 0;            // テキストの色または属性（機能コード）
+    int m_text_color                        = 7;            // テキストの色
     int m_fore_color                        = 7;            // グラフィック画面の前景色
     int m_back_color                        = 0;            // グラフィック画面の背景色
     int m_border_color                      = -1;           // グラフィック画面の境界色
@@ -638,13 +638,15 @@ struct VskMachine : VskObject
     virtual VskByte get_ank(int x, int y) const { return 0; }
     virtual void set_ank(int x, int y, VskByte ch) { }
 
-    virtual void set_attr(int x, int y, VskByte attr) { }
+    virtual void set_attr(int x, int y, const VskLogAttr& attr) { }
 
     virtual VskWord get_jis(int x, int y) const { return 0; }
     virtual void set_jis(int x, int y, VskWord jis) { }
 
+    /*
     virtual void set_color(VskByte palette) { }
     virtual void set_color(int x, int y, VskByte palette) { }
+    */
 
     virtual std::shared_ptr<VskColorGetter> get_color_getter(const VskRectI *viewport) { return nullptr; }
     virtual std::shared_ptr<VskPixelPutter> get_color_putter(int palette, const VskRectI *viewport) { return nullptr; }

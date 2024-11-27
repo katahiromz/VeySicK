@@ -2188,17 +2188,6 @@ void VskMachine::test_pattern(int type)
             ++i;
         }
         break;
-    case 2:
-        // 文字を並べる
-        for (int y = 0; y < 16; ++y)
-        {
-            for (int x = 0; x < 16; ++x)
-            {
-                set_ank(x, y, x + y * 16);
-                set_color(x, y, (x + y) % 8);
-            }
-        }
-        break;
     }
 }
 

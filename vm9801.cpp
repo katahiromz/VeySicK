@@ -416,44 +416,12 @@ struct Vsk9801Machine : VskMachine
     }
 
     // 文字属性をセット
-    void set_attr(int x, int y, VskByte attr) override
+    void set_attr(int x, int y, const VskLogAttr& log_attr) override
     {
         assert(0 <= x && x < m_state->m_text_width);
         assert(0 <= y && y < m_state->m_text_height);
+        auto attr = vsk_9801_byte_from_log_attr(log_attr);
         get_attr_area(y)[2 * x] = attr;
-    }
-
-    // 色をセット
-    void set_color(int x, int y, VskByte palette) override
-    {
-        assert(0 <= x && x < m_state->m_text_width);
-        assert(0 <= y && y < m_state->m_text_height);
-        get_attr_area(y)[2 * x] = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_SET_COLOR(palette);
-    }
-
-    // パレット番号の色をセット
-    void set_color(VskByte palette) override
-    {
-        if (m_state->m_color_text)
-        {
-            m_state->m_text_attr = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_SET_COLOR(palette);
-            return;
-        }
-
-        VskByte attr;
-        switch (palette)
-        {
-        case 0: attr = VSK_9801_ATTR_SHOW;                                               break;
-        case 1: attr = 0;                                                                break;
-        case 2: attr = VSK_9801_ATTR_SHOW |                         VSK_9801_ATTR_BLINK; break;
-        case 3: attr =                                              VSK_9801_ATTR_BLINK; break;
-        case 4: attr = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_REVERSE;                       break;
-        case 5: attr =                      VSK_9801_ATTR_REVERSE;                       break;
-        case 6: attr = VSK_9801_ATTR_SHOW | VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
-        case 7: attr =                      VSK_9801_ATTR_REVERSE | VSK_9801_ATTR_BLINK; break;
-        default: attr = 0; assert(0);
-        }
-        m_state->m_text_attr = attr | VSK_9801_ATTR_SET_COLOR(m_state->m_green_console ? 4 : 7);
     }
 
     // ANK文字を描画
@@ -759,7 +727,7 @@ void Vsk9801Machine::clear_text(int y0, int y1)
 
         // { attr, 0, attr, 0 }というパターンで初期化
         cdw = VSK_9801_TEXT_VRAM_PITCH / sizeof(VskDword);
-        auto attr = m_state->m_text_attr;
+        auto attr = vsk_9801_byte_from_log_attr(m_state->m_text_attr);
         dw = attr | (attr << 16);
         pdw = reinterpret_cast<VskDword *>(attr_area);
         while (cdw--)
@@ -1045,11 +1013,8 @@ void Vsk9801Machine::reset_text()
 {
     m_state->m_text_wider = (m_state->m_text_width == 40);
     m_state->m_text_longer = (m_state->m_text_height == 20);
-    m_state->m_text_attr = VSK_9801_ATTR_SHOW;
-    if (m_state->m_color_text)
-        m_state->m_text_attr |= VSK_9801_ATTR_SET_COLOR(7);
-    else
-        m_state->m_text_attr |= VSK_9801_ATTR_SET_COLOR(m_state->m_green_console ? 4 : 7);
+
+    m_state->m_text_attr.reset();
 
     if (m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
         m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
