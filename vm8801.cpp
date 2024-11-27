@@ -128,8 +128,8 @@ vsk_8801_expand_attrs(
     });
 
     // 論理属性を初期化
-    VskLogAttr log_attr;
-    log_attr.reset();
+    VskLogAttr old_attr;
+    old_attr.reset();
 
     // ペアをlog_attrsに展開する
     int old_x = 0;
@@ -142,17 +142,17 @@ vsk_8801_expand_attrs(
 
         for (int x0 = old_x; x0 < pair.m_x; ++x0)
         {
-            log_attrs.at(x0) = log_attr;
+            log_attrs.at(x0) = old_attr;
         }
 
-        vsk_8801_expand_attr_0(log_attr, pair.m_attr_value, color_mode);
+        vsk_8801_expand_attr_0(old_attr, pair.m_attr_value, color_mode);
         old_x = pair.m_x;
     }
 
     // 残りを埋める
     for (int x0 = old_x; x0 < VSK_8801_TEXT_MAX_X; ++x0)
     {
-        log_attrs.at(x0) = log_attr;
+        log_attrs.at(x0) = old_attr;
     }
 }
 
