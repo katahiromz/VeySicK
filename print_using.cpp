@@ -240,7 +240,8 @@ size_t VskFormatItem::next_format(const VskString& str, size_t ib0, size_t& ib1)
                 ib += 2;
                 continue;
             }
-            return str.size();
+            ++ib;
+            continue;
         case '!':
             if (found) return ib;
             ib1 = ib;
@@ -411,7 +412,9 @@ VskString vsk_format_pre_post(VskString s)
     for (size_t ib = 0; ib < s.size(); ++ib) {
         if (s[ib] == '_') {
             if (ib + 1 < s.size()) {
-                ++ib;
+                ret += s[++ib];
+            } else {
+                ret += '_';
             }
             continue;
         }
@@ -441,7 +444,8 @@ VskString VskFormatItem::format_string(VskString s) const
 }
 
 // 数値書式を評価する
-VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const {
+VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const
+{
     assert(m_type == UT_NUMERIC);
 
     // 無効な数値 (NaN; Not a Number)か？
