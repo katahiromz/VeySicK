@@ -459,9 +459,25 @@ VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const {
     if (m_scientific) {
         if (d <= std::numeric_limits<decltype(d)>::epsilon()) {
             d = 0;
-        } else if (d < 1 || d >= 10) {
-            exponent = int(std::log10(d));
+        } else {
+            exponent = int(std::floor(std::log10(d)));
             d *= std::pow(10, -exponent);
+            
+            // フォーマット幅が2以上の場合は1.0以上10未満に正規化
+            // それ以外の場合は0.1以上1未満に正規化
+            if (m_width - m_precision - m_dot >= 2) {
+                // 1未満の場合は調整
+                if (d < 1.0) {
+                    --exponent;
+                    d *= 10;
+                }
+            } else {
+                // 1以上の場合は調整
+                if (d >= 1.0) {
+                    d *= 0.1;
+                    ++exponent;
+                }
+            }
         }
     }
 
