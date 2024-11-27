@@ -62,23 +62,27 @@
 #define VSK_8801_ATTR_GET_COLOR(attr)   (uint8_t)(((attr) >> 5) & 0x07)
 #define VSK_8801_ATTR_SET_COLOR(color)  (uint8_t)(VSK_8801_ATTR_COLOR | (((color) & 0x07) << 5))
 
-#define VSK_8801_TEXT_MAX_X                 80  // テキスト画面の最大幅。無効な桁位置指定
+#define VSK_8801_INVALID_X                  0x80    // 無効な桁位置指定
+#define VSK_8801_TEXT_MAX_X                 80      // テキスト画面の最大幅
 #define VSK_8801_ATTR_PAIR_MAX              20
 
 // 桁位置と文字属性値のペア
 struct alignas(1) VSK_8801_ATTR_PAIR
 {
-    uint8_t m_x;              // 桁位置、ゼロベース。無効なとき VSK_8801_TEXT_MAX_X になる
+    uint8_t m_x;              // 桁位置、ゼロベース。無効なとき VSK_8801_INVALID_X になる
     uint8_t m_attr_value;     // 属性値
 
     void reset(bool color_mode)
     {
-        m_x = VSK_8801_TEXT_MAX_X;
-        m_attr_value = 0;
+        m_x = VSK_8801_INVALID_X;
         if (color_mode)
         {
             m_attr_value = VSK_8801_ATTR_SET_COLOR(7);
             assert(m_attr_value == 0xE8);
+        }
+        else
+        {
+            m_attr_value = 0;
         }
     }
 };
@@ -179,7 +183,7 @@ vsk_8801_store_attrs(
 
     int iPair = 0;
     bool first = true;
-    for (int x = 0; x < VSK_8801_TEXT_MAX_X; x += 1 + !!is_width_40)
+    for (int x = 0; x < VSK_8801_TEXT_MAX_X; ++x)
     {
         auto& log_attr = log_attrs.at(x);
         auto& pair_x = pairs[iPair].m_x;
@@ -726,8 +730,6 @@ void Vsk8801Machine::reset_text()
 {
     m_state->m_text_wider = (m_state->m_text_width == 40);
     m_state->m_text_longer = (m_state->m_text_height == 20);
-
-    m_state->m_text_attr.reset();
 
     if (m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
         m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
