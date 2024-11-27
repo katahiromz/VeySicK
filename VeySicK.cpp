@@ -1490,8 +1490,7 @@ void VskMachine::print(const VskString& str)
         VskByte ch = str[ich];
 #ifdef JAPAN
         // 全角文字は特別な処理が必要
-        if (is_sjis_mode() &&
-            vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
+        if (is_sjis_mode() && vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
         {
             VskByte lead = ch, trail = str.c_str()[ich + 1];
             VskWord sjis = vsk_make_word(trail, lead);
