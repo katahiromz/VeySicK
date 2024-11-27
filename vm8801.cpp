@@ -230,13 +230,12 @@ vsk_8801_expand_attrs(
         vsk_8801_expand_attrs_of_width_80(log_attrs, attr_area, color_mode);
 }
 
-// 属性データを格納： log_attrs --> pairs
+// 属性データを格納： log_attrs --> attr_area
 void
-vsk_8801_store_attrs(
+vsk_8801_store_attrs_of_width_80(
     std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
     VskByte *attr_area,                                     // 属性ペアの配列
-    bool color_mode,                                        // カラーモードか？
-    bool is_width_40)                                       // WIDTH 40か？
+    bool color_mode)                                        // カラーモードか？
 {
     auto *pairs = reinterpret_cast<VSK_8801_ATTR_PAIR *>(attr_area);
 
@@ -252,7 +251,7 @@ vsk_8801_store_attrs(
 
     int iPair = 0;
     bool first = true;
-    for (int x = 0; x < (is_width_40 ? 40 : 80); ++x)
+    for (int x = 0; x < 80; ++x)
     {
         auto& log_attr = log_attrs.at(x);
         auto& pair_x = pairs[iPair].m_x;
@@ -327,6 +326,117 @@ vsk_8801_store_attrs(
             }
         }
     }
+}
+
+// 属性データを格納： log_attrs --> attr_area
+void
+vsk_8801_store_attrs_of_width_40(
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
+    VskByte* attr_area,                                     // 属性ペアの配列
+    bool color_mode)                                        // カラーモードか？
+{
+    auto* pairs = reinterpret_cast<VSK_8801_ATTR_PAIR*>(attr_area);
+
+    for (size_t i = 0; i < VSK_8801_ATTR_PAIR_MAX; ++i)
+    {
+        auto& pair = pairs[i];
+        pair.reset(color_mode);
+    }
+
+    // 論理属性値を初期化
+    VskLogAttr old_attr;
+    old_attr.reset();
+
+    int iPair = 0;
+    bool first = true;
+    for (int x = 0; x < 40; ++x)
+    {
+        auto& log_attr = log_attrs.at(x);
+        auto& pair_x = pairs[iPair].m_x;
+        auto& attr_value = pairs[iPair].m_attr_value;
+        if (color_mode) // カラーモードか？
+        {
+            // 色かセミグラの属性が変化した？
+            if (first ||
+                log_attr.m_palette != old_attr.m_palette ||
+                log_attr.m_semigra != old_attr.m_semigra)
+            {
+                first = false;
+                // 属性を格納
+                pair_x = x * 2 + 1;
+                attr_value = VSK_8801_ATTR_SET_COLOR(log_attr.m_palette);
+                if (log_attr.m_semigra)
+                    attr_value |= VSK_8801_ATTR_COLOR_SEMIGRA;
+                // 古い属性として覚えておく
+                old_attr.m_palette = log_attr.m_palette;
+                old_attr.m_semigra = log_attr.m_semigra;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+            if (log_attr.m_effect != old_attr.m_effect ||
+                log_attr.m_upperline != old_attr.m_upperline ||
+                log_attr.m_underline != old_attr.m_underline)
+            {
+                // 属性を格納
+                pair_x = x * 2 + 1;
+                attr_value = log_attr.m_effect;
+                if (log_attr.m_upperline)
+                    attr_value |= VSK_8801_ATTR_UPPERLINE;
+                if (log_attr.m_underline)
+                    attr_value |= VSK_8801_ATTR_UNDERLINE;
+                // 古い属性として覚えておく
+                old_attr.m_effect = log_attr.m_effect;
+                old_attr.m_upperline = log_attr.m_upperline;
+                old_attr.m_underline = log_attr.m_underline;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+        }
+        else // 白黒モードか？
+        {
+            // 属性が変化した？
+            if (first ||
+                log_attr.m_effect != old_attr.m_effect ||
+                log_attr.m_semigra != old_attr.m_semigra ||
+                log_attr.m_upperline != old_attr.m_upperline ||
+                log_attr.m_underline != old_attr.m_underline)
+            {
+                first = false;
+                // 属性を格納
+                pair_x = x * 2 + 1;
+                attr_value = log_attr.m_effect;
+                if (log_attr.m_semigra)
+                    attr_value |= VSK_8801_ATTR_MONO_SEMIGRA;
+                if (log_attr.m_upperline)
+                    attr_value |= VSK_8801_ATTR_UPPERLINE;
+                if (log_attr.m_underline)
+                    attr_value |= VSK_8801_ATTR_UNDERLINE;
+                // 古い属性として覚えておく
+                old_attr.m_effect = log_attr.m_effect;
+                old_attr.m_semigra = log_attr.m_semigra;
+                old_attr.m_upperline = log_attr.m_upperline;
+                old_attr.m_underline = log_attr.m_underline;
+                // 次のペアへ
+                if (++iPair >= VSK_8801_ATTR_PAIR_MAX)
+                    break;
+            }
+        }
+    }
+}
+
+// 属性データを格納： log_attrs --> pairs
+void
+vsk_8801_store_attrs(
+    std::array<VskLogAttr, VSK_8801_TEXT_MAX_X>& log_attrs, // 論理属性値の配列
+    VskByte* attr_area,                                     // 属性ペアの配列
+    bool color_mode)                                        // カラーモードか？
+{
+    if (VSK_STATE()->m_text_wider)
+        vsk_8801_store_attrs_of_width_40(log_attrs, attr_area, color_mode);
+    else
+        vsk_8801_store_attrs_of_width_80(log_attrs, attr_area, color_mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +634,7 @@ struct Vsk8801Machine : VskMachine
         std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;
         vsk_8801_expand_attrs(log_attrs, attr_area, m_state->m_color_text);
         log_attrs[x] = attr;
-        vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+        vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text);
     }
 
     // 指定した行の文字属性エリアを取得
@@ -882,7 +992,7 @@ void Vsk8801Machine::render_function_keys()
     }
 
     // テキスト属性を格納
-    vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text, m_state->m_text_wider);
+    vsk_8801_store_attrs(log_attrs, attr_area, m_state->m_color_text);
 }
 
 // テキスト画面をクリア
@@ -1423,6 +1533,12 @@ void Vsk8801Machine::do_unit_tests()
     assert(log_attrs[1].m_effect == 0);
     assert(log_attrs[2].m_palette == 7);
     assert(log_attrs[2].m_effect == 0);
+
+    vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(attr_area[0] == 1);
+    assert(attr_area[1] == 0xE8);
+    assert(attr_area[2] == 3);
+    assert(attr_area[3] == 0x88);
 #endif
 }
 
