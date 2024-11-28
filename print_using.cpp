@@ -466,21 +466,22 @@ VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const
         } else {
             exponent = int(std::floor(std::log10(d)));
             d *= std::pow(10, -exponent);
-            
-            // フォーマット幅が2以上の場合は1.0以上10未満に正規化
-            // それ以外の場合は0.1以上1未満に正規化
-            if (m_width - m_precision - m_dot >= 2) {
-                // 1未満の場合は調整
-                if (d < 1.0) {
+
+            auto delta = m_width - m_precision - m_dot - 2;
+            if (delta > 0) {
+                do
+                {
                     --exponent;
                     d *= 10;
-                }
-            } else {
-                // 1以上の場合は調整
-                if (d >= 1.0) {
-                    d *= 0.1;
+                    --delta;
+                } while (delta > 0);
+            } else if (delta < 0) {
+                do
+                {
                     ++exponent;
-                }
+                    d /= 10;
+                    ++delta;
+                } while (delta < 0);
             }
         }
     }
@@ -529,7 +530,7 @@ VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const
         }
     }
 
-    VskString ret; // 結果文字列
+    VskString out; // 結果文字列
 
     // 必要ならば "0"を削る
     int pre_dot = m_width - precision - m_dot;
@@ -542,22 +543,22 @@ VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const
 
     auto diff = m_width - precision - m_dot - int(digits.size());
     if (diff < 0) { // 桁が足りなければ "%"を出力
-        ret = "%" + digits;
+        out = "%" + digits;
     } else if (diff > 0) { // 余裕があれば文字で埋める
         if (m_asterisk) {
-            ret += VskString(diff, '*') + digits;
+            out += VskString(diff, '*') + digits;
         } else {
-            ret += VskString(diff, ' ') + digits;
+            out += VskString(diff, ' ') + digits;
         }
     } else { // その他の場合はそのまま
-        ret = digits;
+        out = digits;
     }
 
     if (m_dot) { // 小数点があるなら、小数点と小数部を追加
         if (precision > 0) {
-            ret += decimals;
+            out += decimals;
         } else {
-            ret += '.';
+            out += '.';
         }
     }
 
@@ -569,18 +570,18 @@ VskString VskFormatItem::format_numeric(VskDouble d, bool is_double) const
         } else {
             std::sprintf(buf, "%c+%02u", ch, exponent);
         }
-        ret += buf;
+        out += buf;
     }
 
     // 末尾に符号を追加
     if (m_post_plus) {
-        ret += minus ? '-' : '+';
+        out += minus ? '-' : '+';
     } else if (m_post_minus) {
-        ret += minus ? '-' : ' ';
+        out += minus ? '-' : ' ';
     }
 
     // 前後に文字列を追加
-    return vsk_format_pre_post(m_pre) + ret + vsk_format_pre_post(m_post);
+    return vsk_format_pre_post(m_pre) + out + vsk_format_pre_post(m_post);
 }
 
 // PRINT USING文をエミュレートする
