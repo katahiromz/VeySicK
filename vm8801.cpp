@@ -94,6 +94,7 @@ void vsk_8801_expand_attr_0(VskLogAttr& log_attr, uint8_t attr_value, bool color
     {
         if (attr_value & VSK_8801_ATTR_COLOR) // 色指定？
         {
+            log_attr.m_effect = 0;
             log_attr.m_palette = VSK_8801_ATTR_GET_COLOR(attr_value);
             log_attr.m_semigra = !!(attr_value & VSK_8801_ATTR_COLOR_SEMIGRA);
         }
@@ -137,15 +138,15 @@ vsk_8801_expand_attrs_of_width_40(
     });
 
     // 論理属性を初期化
-    VskLogAttr old_attr;
-    old_attr.reset();
-    vsk_8801_expand_attr_0(old_attr, pairs[0].m_attr_value, color_mode);
+    VskLogAttr log_attr;
+    log_attr.reset();
 
     // ペアをlog_attrsに展開する
     int old_x = 0;
-    for (size_t i = 0;; )
+    for (size_t i = 0; i < VSK_8801_ATTR_PAIR_MAX; ++i)
     {
         auto& pair = pairs[i];
+        vsk_8801_expand_attr_0(log_attr, pair.m_attr_value, color_mode);
 
         if (pair.m_x >= 40)
             break;
@@ -153,21 +154,16 @@ vsk_8801_expand_attrs_of_width_40(
         int next_x = (pair.m_x + 1) / 2;
         for (int x0 = old_x; x0 < next_x; ++x0)
         {
-            log_attrs.at(x0) = old_attr;
+            log_attrs.at(x0) = log_attr;
         }
 
-        ++i;
-        if (i >= VSK_8801_ATTR_PAIR_MAX)
-            break;
-
-        vsk_8801_expand_attr_0(old_attr, pairs[i].m_attr_value, color_mode);
         old_x = next_x;
     }
 
     // 残りを埋める
     for (int x0 = old_x; x0 < 40; ++x0)
     {
-        log_attrs.at(x0) = old_attr;
+        log_attrs.at(x0) = log_attr;
     }
 }
 
@@ -338,18 +334,14 @@ vsk_8801_store_attrs_of_width_40(
     auto* pairs = reinterpret_cast<VSK_8801_ATTR_PAIR*>(attr_area);
 
     for (size_t i = 0; i < VSK_8801_ATTR_PAIR_MAX; ++i)
-    {
-        auto& pair = pairs[i];
-        pair.reset(color_mode);
-    }
+        pairs[i].reset(color_mode);
 
     // 論理属性値を初期化
-    VskLogAttr old_attr;
-    old_attr.reset();
+    VskLogAttr old_attr = log_attrs.at(0);
 
     int iPair = 0;
-    bool first = true;
-    for (int x = 0; x < 40; ++x)
+    int old_x = 0;
+    for (int x = 0; x < 40; (old_x = x), ++x)
     {
         auto& log_attr = log_attrs.at(x);
         auto& pair_x = pairs[iPair].m_x;
@@ -357,13 +349,11 @@ vsk_8801_store_attrs_of_width_40(
         if (color_mode) // カラーモードか？
         {
             // 色かセミグラの属性が変化した？
-            if (first ||
-                log_attr.m_palette != old_attr.m_palette ||
+            if (log_attr.m_palette != old_attr.m_palette ||
                 log_attr.m_semigra != old_attr.m_semigra)
             {
-                first = false;
                 // 属性を格納
-                pair_x = x * 2 + 1;
+                pair_x = old_x + 1;
                 attr_value = VSK_8801_ATTR_SET_COLOR(log_attr.m_palette);
                 if (log_attr.m_semigra)
                     attr_value |= VSK_8801_ATTR_COLOR_SEMIGRA;
@@ -379,7 +369,7 @@ vsk_8801_store_attrs_of_width_40(
                 log_attr.m_underline != old_attr.m_underline)
             {
                 // 属性を格納
-                pair_x = x * 2 + 1;
+                pair_x = old_x + 1;
                 attr_value = log_attr.m_effect;
                 if (log_attr.m_upperline)
                     attr_value |= VSK_8801_ATTR_UPPERLINE;
@@ -397,15 +387,13 @@ vsk_8801_store_attrs_of_width_40(
         else // 白黒モードか？
         {
             // 属性が変化した？
-            if (first ||
-                log_attr.m_effect != old_attr.m_effect ||
+            if (log_attr.m_effect != old_attr.m_effect ||
                 log_attr.m_semigra != old_attr.m_semigra ||
                 log_attr.m_upperline != old_attr.m_upperline ||
                 log_attr.m_underline != old_attr.m_underline)
             {
-                first = false;
                 // 属性を格納
-                pair_x = x * 2 + 1;
+                pair_x = old_x + 1;
                 attr_value = log_attr.m_effect;
                 if (log_attr.m_semigra)
                     attr_value |= VSK_8801_ATTR_MONO_SEMIGRA;
@@ -423,6 +411,16 @@ vsk_8801_store_attrs_of_width_40(
                     break;
             }
         }
+    }
+
+    VskByte default_attr_value = (color_mode ? 0xE8 : 0);
+
+    for (size_t i = VSK_8801_ATTR_PAIR_MAX - 1; i >= 0; --i)
+    {
+        auto& pair = pairs[i];
+        if (pair.m_attr_value != default_attr_value)
+            break;
+        pair.reset(color_mode);
     }
 }
 
@@ -1534,11 +1532,54 @@ void Vsk8801Machine::do_unit_tests()
     assert(log_attrs[2].m_palette == 7);
     assert(log_attrs[2].m_effect == 0);
 
+    for (auto& log_attr : log_attrs)
+    {
+        log_attr.reset();
+    }
+
     vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
-    assert(attr_area[0] == 1);
+    assert(attr_area[0] == 0x80);
     assert(attr_area[1] == 0xE8);
-    assert(attr_area[2] == 3);
-    assert(attr_area[3] == 0x88);
+    assert(attr_area[2] == 0x80);
+    assert(attr_area[3] == 0xE8);
+
+    log_attrs[0].m_palette = 4;
+    vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(attr_area[0] == 0x01);
+    assert(attr_area[1] == 0x88);
+    assert(attr_area[2] == 0x80);
+    assert(attr_area[3] == 0xE8);
+
+    log_attrs[1].m_palette = 4;
+    vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(attr_area[0] == 0x03);
+    assert(attr_area[1] == 0x88);
+    assert(attr_area[2] == 0x80);
+    assert(attr_area[3] == 0xE8);
+
+    log_attrs[0].m_palette = 7;
+    log_attrs[1].m_palette = 2;
+    log_attrs[2].m_palette = 2;
+    log_attrs[3].m_palette = 2;
+    log_attrs[4].m_palette = 7;
+    vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(attr_area[0] == 0x01);
+    assert(attr_area[1] == 0xE8);
+    assert(attr_area[2] == 0x07);
+    assert(attr_area[3] == 0x48);
+    assert(attr_area[4] == 0x80);
+
+    log_attrs[0].m_palette = 7;
+    log_attrs[1].m_palette = 6;
+    log_attrs[2].m_palette = 6;
+    log_attrs[3].m_palette = 6;
+    log_attrs[4].m_palette = 7;
+    vsk_8801_store_attrs_of_width_40(log_attrs, attr_area.data(), true);
+    assert(attr_area[0] == 0x01);
+    assert(attr_area[1] == 0xE8);
+    assert(attr_area[2] == 0x07);
+    assert(attr_area[3] == 0xC8);
+    assert(attr_area[4] == 0x80);
 #endif
 }
 

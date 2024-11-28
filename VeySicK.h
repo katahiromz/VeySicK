@@ -391,6 +391,14 @@ struct VskLogAttr
         else
             m_effect &= ~4;
     }
+    bool operator==(const VskLogAttr& other) const
+    {
+        return std::memcmp(this, &other, sizeof(other)) == 0;
+    }
+    bool operator!=(const VskLogAttr& other) const
+    {
+        return std::memcmp(this, &other, sizeof(other)) != 0;
+    }
 };
 
 //////////////////////////////////////////////////////////////////////////////
