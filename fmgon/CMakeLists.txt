@@ -44,6 +44,11 @@ if (MSVC)
 endif()
 
 ##############################################################################
+# pevent
+
+add_subdirectory(pevent)
+
+##############################################################################
 # fmgon
 
 # libfmgon.a
@@ -52,12 +57,11 @@ add_library(fmgon STATIC
     fmtimer.cpp
     opm.cpp
     opna.cpp
-    posix_pevent.cpp
     psg.cpp
     soundplayer.cpp
     YM2203.cpp
     YM2203_Timbre.cpp)
 target_include_directories(fmgon PUBLIC ../freealut/include)
-target_link_libraries(fmgon PRIVATE ${OPENAL_LIBRARY} ${ALUT_LIBRARY})
+target_link_libraries(fmgon PRIVATE pevent ${OPENAL_LIBRARY} ${ALUT_LIBRARY})
 
 ##############################################################################

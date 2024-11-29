@@ -1,68 +1,79 @@
-/* pevent --- portable event objects
- * Copyright (C) 2015 Katayama Hirofumi MZ.
- * This file is released under the terms of the Modified BSD License.
- */
+// pevent --- portable event objects
+// Copyright (C) 2015-2024 Katayama Hirofumi MZ.
+// This file is released under the terms of the Modified BSD License.
 
-#ifndef KATAHIROMZ_PEVENT_H
-#define KATAHIROMZ_PEVENT_H
+#pragma once
 
-#ifndef _INC_WINDOWS
-    #include <windows.h>
+#ifdef __cplusplus
+    #include <cstddef>
+#else
+    #include <stddef.h>
 #endif
 
 /*--------------------------------------------------------------------------*/
 /* define KATAHIROMZ_PEVENT_CPP11 if C++11 */
 
 #ifndef KATAHIROMZ_PEVENT_CPP11
-    #if defined(__cplusplus) && (__cplusplus >= 201103L)
+    #if defined(__cplusplus) && (__cplusplus >= 201103L) // C++11
         #define KATAHIROMZ_PEVENT_CPP11
     #endif
 #endif
 
 /*--------------------------------------------------------------------------*/
-/* These definitions are optimized for Win32 */
+/* for stdint.h and stdbool.h */
 
-typedef HANDLE pe_event_t;
+#if defined(__cplusplus) && (__cplusplus >= 201103L)
+    #include <cstdint>
+#elif (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))
+    #include <stdint.h>
+    #include <stdbool.h>
+#else
+    /* portable stdint.h for int*_t and uint*_t */
+    #include "pstdint.h"
+    /* portable stdbool.h for bool, false and true */
+    #include "pstdbool.h"
+#endif
+
+/*--------------------------------------------------------------------------*/
+/* pe_optional */
 
 #ifdef __cplusplus
-    #include <cassert>
-    inline pe_event_t pe_create_event(bool manual_reset, bool initial_state) {
-        pe_event_t ret;
-        ret = ::CreateEvent(NULL, manual_reset, initial_state, NULL);
-        assert(ret != NULL);
-        return ret;
-    }
-    inline bool pe_wait_for_event(pe_event_t handle, DWORD milliseconds) {
-        assert(handle != NULL);
-        return (::WaitForSingleObject(handle, milliseconds) == WAIT_TIMEOUT);
-    }
-    inline BOOL pe_close_event(pe_event_t handle) {
-        assert(handle != NULL);
-        return ::CloseHandle(handle);
-    }
-    inline BOOL pe_set_event(pe_event_t handle) {
-        assert(handle != NULL);
-        return ::SetEvent(handle);
-    }
-    inline BOOL pe_reset_event(pe_event_t handle) {
-        assert(handle != NULL);
-        return ::ResetEvent(handle);
-    }
-    inline BOOL pe_pulse_event(pe_event_t handle) {
-        assert(handle != NULL);
-        return ::PulseEvent(handle);
-    }
+    #define pe_optional(arg)    = arg
 #else
-    #define pe_create_event(manual_reset,initial_state) \
-        CreateEvent(NULL, (manual_reset), (initial_state), NULL)
+    #define pe_optional(arg)    /* empty */
+#endif
 
-    #define pe_wait_for_event(handle,milliseconds) \
-        (WaitForSingleObject((handle), (milliseconds)) == WAIT_TIMEOUT)
+/*--------------------------------------------------------------------------*/
+/* pe_event_t --- handle of an event object */
 
-    #define pe_close_event      CloseHandle
-    #define pe_set_event        SetEvent
-    #define pe_reset_event      ResetEvent
-    #define pe_pulse_event      PulseEvent
+#ifdef _WIN32
+    typedef void *pe_event_t;
+#else
+    typedef struct pe_event_struct {
+        char dummy;
+    } pe_event_struct;
+    typedef pe_event_struct *pe_event_t;
+#endif
+
+/*--------------------------------------------------------------------------*/
+/* C functions */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+pe_event_t pe_create_event(bool manual_reset   pe_optional(false),
+                           bool initial_state  pe_optional(false));
+
+bool pe_close_event(pe_event_t event);
+bool pe_set_event(pe_event_t event);
+bool pe_reset_event(pe_event_t event);
+bool pe_pulse_event(pe_event_t event);
+/* NOTE: wait_for_event() returns true if timeout. */
+bool pe_wait_for_event(pe_event_t event, uint32_t milliseconds pe_optional(-1));
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
 
 /*--------------------------------------------------------------------------*/
@@ -126,7 +137,7 @@ typedef HANDLE pe_event_t;
         }
 
         // NOTE: wait_for_event() returns true if timeout.
-        bool wait_for_event(DWORD milliseconds = -1) {
+        bool wait_for_event(uint32_t milliseconds = -1) {
             return pe_wait_for_event(m_handle, milliseconds);
         }
 
@@ -140,15 +151,15 @@ typedef HANDLE pe_event_t;
         }
 
         bool set() {
-            return !!pe_set_event(m_handle);
+            return pe_set_event(m_handle);
         }
 
         bool reset() {
-            return !!pe_reset_event(m_handle);
+            return pe_reset_event(m_handle);
         }
 
         bool pulse() {
-            return !!pe_pulse_event(m_handle);
+            return pe_pulse_event(m_handle);
         }
 
     private:
@@ -157,9 +168,5 @@ typedef HANDLE pe_event_t;
         PE_event& operator=(const PE_event& e);
     }; // struct PE_event
 #endif  /* def __cplusplus */
-
-/*--------------------------------------------------------------------------*/
-
-#endif  /* ndef KATAHIROMZ_PEVENT_H */
 
 /*--------------------------------------------------------------------------*/

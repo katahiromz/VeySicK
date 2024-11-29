@@ -1,13 +1,8 @@
-/* pevent --- portable event objects
- * Copyright (C) 2015 Katayama Hirofumi MZ.
- * This file is released under the terms of the Modified BSD License.
- */
-
-/*--------------------------------------------------------------------------*/
+// pevent --- portable event objects
+// Copyright (C) 2015-2024 Katayama Hirofumi MZ.
+// This file is released under the terms of the Modified BSD License.
 
 #ifndef _WIN32
-
-#include "fmgon.h"
 
 #ifdef __cplusplus
     #include <cstdlib>
@@ -27,7 +22,8 @@
 /*--------------------------------------------------------------------------*/
 /* internal type */
 
-typedef struct pe_event_impl_t {
+typedef struct pe_event_impl_t
+{
     pthread_cond_t      m_condition;
     pthread_mutex_t     m_lock;
     bool                m_signaled;
@@ -41,7 +37,8 @@ typedef struct pe_event_impl_t {
 extern "C" {
 #endif
 
-pe_event_t pe_create_event(bool manual_reset, bool initial_state) {
+pe_event_t pe_create_event(bool manual_reset, bool initial_state)
+{
     int result;
     pe_event_impl_t *e;
     pe_event_t event = NULL;
@@ -70,7 +67,8 @@ pe_event_t pe_create_event(bool manual_reset, bool initial_state) {
     return event;
 } /* pe_create_event */
 
-bool pe_unlocked_wait(pe_event_t event, uint32_t milliseconds) {
+bool pe_unlocked_wait(pe_event_t event, uint32_t milliseconds)
+{
     bool timeout;
     int result;
     pe_event_impl_t *e;
@@ -120,7 +118,8 @@ bool pe_unlocked_wait(pe_event_t event, uint32_t milliseconds) {
     return timeout;
 } /* pe_unlocked_wait */
 
-bool pe_wait_for_event(pe_event_t event, uint32_t milliseconds) {
+bool pe_wait_for_event(pe_event_t event, uint32_t milliseconds)
+{
     bool timeout;
     int result;
     pe_event_impl_t *e;
@@ -147,7 +146,8 @@ bool pe_wait_for_event(pe_event_t event, uint32_t milliseconds) {
     return timeout;
 } /* pe_wait_for_event */
 
-bool pe_close_event(pe_event_t event) {
+bool pe_close_event(pe_event_t event)
+{
     int result;
     pe_event_impl_t *e;
 
@@ -166,7 +166,8 @@ bool pe_close_event(pe_event_t event) {
     return true;
 } /* pe_close_event */
 
-bool pe_set_event(pe_event_t event) {
+bool pe_set_event(pe_event_t event)
+{
     int result;
     pe_event_impl_t *e;
 
@@ -201,13 +202,11 @@ bool pe_set_event(pe_event_t event) {
     return true;
 } /* pe_set_event */
 
-bool pe_reset_event(pe_event_t event) {
-    int result;
-    pe_event_impl_t *e;
+bool pe_reset_event(pe_event_t event)
+{
+    pe_event_impl_t *e = (pe_event_impl_t *)event;
 
-    e = (pe_event_impl_t *)event;
-
-    result = pthread_mutex_lock(&e->m_lock);
+    int result = pthread_mutex_lock(&e->m_lock);
     assert(result == 0);
     result = result;
 
@@ -220,10 +219,9 @@ bool pe_reset_event(pe_event_t event) {
     return true;
 } /* pe_reset_event */
 
-bool pe_pulse_event(pe_event_t event) {
-    bool ret;
-
-    ret = pe_set_event(event);
+bool pe_pulse_event(pe_event_t event)
+{
+    bool ret = pe_set_event(event);
     assert(ret);
     ret = ret;
 
@@ -238,8 +236,4 @@ bool pe_pulse_event(pe_event_t event) {
 } // extern "C"
 #endif
 
-/*--------------------------------------------------------------------------*/
-
 #endif /* ndef _WIN32 */
-
-/*--------------------------------------------------------------------------*/
