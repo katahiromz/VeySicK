@@ -2960,6 +2960,11 @@ void vsk_step(void)
     // コントロールパスを解決する
     auto node = vsk_resolve_index_list(index_list);
     vsk_targeting(node);
+    if (!node)
+    {
+        vsk_enter_command_level();
+        return;
+    }
 
     if (node->m_program_line != -1) // 行番号があるか？
     {
@@ -4953,14 +4958,19 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
         if (v2 != "" && v2 != "R")
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
+        vsk_upper(v0);
         if (VSK_SETTINGS()->m_unlimited_mode || vsk_machine->is_8801_mode())
         {
-            if (v0.find("@exst*v1") != v0.npos || v0.find("@exst*v2") != v0.npos)
+            if (v0.find("@EXST*V1") != v0.npos ||
+                v0.find("@EXST*V2") != v0.npos ||
+                v0.find("1:@EXST*V1") != v0.npos ||
+                v0.find("1:@EXST*V2") != v0.npos)
             {
                 VSK_STATE()->m_has_turtle = true;
                 return nullptr;
             }
-            if (v0.find("@exst") != v0.npos)
+            if (v0.find("@EXST") != v0.npos ||
+                v0.find("1:@EXST") != v0.npos)
             {
                 VSK_STATE()->m_has_turtle = true;
                 VSK_STATE()->m_has_cmd_extension = true;
@@ -8118,22 +8128,19 @@ static VskAstPtr vsk_FILES_LFILES_helper(const VskAstList& args, bool is_line_pr
     {
         auto arg0 = vsk_eval_ast(args[0]);
         if (arg0->is_number())
-        {
             error = vsk_files_helper(files, device, arg0->to_int());
-        }
         else if (arg0->is_str())
-        {
             error = vsk_files_helper(files, device, arg0->m_str);
-        }
         else
-        {
             error = VSK_ERR_SYNTAX;
-        }
     }
     else
     {
         error = vsk_files_helper(files, device, 1);
     }
+
+    // ソートする
+    std::sort(files.begin(), files.end());
 
     if (error)
         VSK_ERROR_AND_RETURN(error, nullptr);

@@ -661,6 +661,36 @@ bool vsk_child(const char *str)
     return (INT_PTR)ret > 32;
 }
 
+// ワイルドカードマッチング関数
+bool vsk_wildcard_match(const char *pattern, const char *str) 
+{
+    const char *star = NULL;
+    const char *ss = str;
+
+    while (*str) {
+        if ((*pattern == '?' || *pattern == *str) && *str != '*' && *str != '?') {
+            pattern++;
+            str++;
+        }
+        else if (*pattern == '*') {
+            star = pattern++;
+            ss = str;
+        }
+        else if (star) {
+            pattern = star + 1;
+            str = ++ss;
+        }
+        else {
+            return false;
+        }
+    }
+
+    // パターンの残りがすべて'*'であることを確認
+    while (*pattern == '*') pattern++;
+
+    return *pattern == '\0';
+}
+
 // ファイル名群を取得する
 VskError vsk_files_helper(std::vector<VskString>& files, VskString& device, VskString path)
 {
@@ -670,43 +700,74 @@ VskError vsk_files_helper(std::vector<VskString>& files, VskString& device, VskS
     if (!vsk_parse_file_descriptor(path, type, device, raw_path))
         return VSK_ERR_FILE_NOT_FOUND;
 
-    path = raw_path;
-    if (::PathIsDirectoryA(path.c_str()))
+    vsk_upper(raw_path);
+    vsk_upper(path);
+
+    auto drive1 = vsk_get_drive_path(1);
+    vsk_upper(drive1);
+
+    if (::PathIsDirectoryA(raw_path.c_str()))
     {
-        if (path.size() && path[path.size() - 1] != '\\' && path[path.size() - 1] != '/')
-            path += '\\';
-        path += "*";
+        if (raw_path.size() && raw_path[raw_path.size() - 1] != '\\' && raw_path[raw_path.size() - 1] != '/')
+            raw_path += '\\';
+        raw_path += "*";
+
+        // ファイル "1:@exst..." は仮想的に存在するものとする
+        if (raw_path.find(drive1) == 0 || device == "1")
+        {
+            files.push_back("@exst*V1");
+            files.push_back("@exst*V2");
+            files.push_back("@exst");
+        }
     }
+    else
+    {
+        if (raw_path.find(drive1) == 0 || device == "1")
+        {
+            // ファイル "1:@exst..." は仮想的に存在するものとする
+            if (vsk_wildcard_match(path.c_str(), "@EXST*V1"))
+                files.push_back("@exst*v1");
+            if (vsk_wildcard_match(path.c_str(), "@EXST*V2"))
+                files.push_back("@exst*v2");
+            if (vsk_wildcard_match(path.c_str(), "@EXST"))
+                files.push_back("@exst");
+        }
+    }
+
+    path = raw_path;
 
     // 列挙を開始
     WIN32_FIND_DATAA find;
     HANDLE hFind = ::FindFirstFileA(path.c_str(), &find);
-    if (hFind == INVALID_HANDLE_VALUE)
+    if (hFind == INVALID_HANDLE_VALUE && files.empty())
         return VSK_ERR_FILE_NOT_FOUND;
 
-    do
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        // "." or ".."を無視する
-        if (lstrcmpiA(find.cFileName, ".") == 0 || lstrcmpiA(find.cFileName, "..") == 0)
-            continue;
+        do
+        {
+            // "." or ".."を無視する
+            if (lstrcmpiA(find.cFileName, ".") == 0 || lstrcmpiA(find.cFileName, "..") == 0)
+                continue;
 
-        // ファイル名を取得
-        VskString item;
-        if (find.cAlternateFileName[0])
-            item = find.cAlternateFileName;
-        else
-            item = find.cFileName;
+            // ファイル名を取得
+            VskString item;
+            if (find.cAlternateFileName[0])
+                item = find.cAlternateFileName;
+            else
+                item = find.cFileName;
 
-        // フォルダならファイル名の最後にスラッシュを付ける
-        if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            item += '/';
+            // フォルダならファイル名の最後にスラッシュを付ける
+            if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                item += '/';
 
-        // filesに追加
-        files.push_back(item);
-    } while (::FindNextFileA(hFind, &find));
+            // filesに追加
+            files.push_back(item);
+        } while (::FindNextFileA(hFind, &find));
 
-    // 後始末
-    ::FindClose(hFind);
+        // 後始末
+        ::FindClose(hFind);
+    }
 
     return VSK_NO_ERROR;
 }
