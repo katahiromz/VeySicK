@@ -33,6 +33,10 @@
 #define VSK_IDEAL_FPS 20            // 理想的なFPS
 #define VSK_FPS_CHECK_INTERVAL (2 * VSK_ONE_SECOND) // FPSチェックの間隔（ミリ秒）
 
+#define MYWM_IME_ON_OFF (WM_USER + 100)
+#define MYWM_SCREENSHOT (WM_USER + 101)
+#define MYWM_RESET (WM_USER + 102)
+
 static DWORD s_dwFpsCounter = 0; // FPSチェック用の変数
 
 CRITICAL_SECTION vsk_cs_lock; // クリティカルセクション（排他制御用）
@@ -1876,6 +1880,8 @@ protected:
     void ime_on_off_real(bool on);
     void update_caret_position();
     void restart_working_thread();
+    void reset_real(VskMachineMode mode);
+    void wait_for_working_thread();
 
 protected:
     // メッセージ ハンドラ
@@ -2019,7 +2025,13 @@ void VskWin32App::restart_working_thread()
 #endif
 }
 
-#define MYWM_IME_ON_OFF (WM_USER + 100)
+// ワーキングスレッドが終わるのを待つ
+void VskWin32App::wait_for_working_thread()
+{
+#ifndef VSK_SINGLE_THREAD
+    ::WaitForSingleObject(m_hWorkingThread, INFINITE);
+#endif
+}
 
 // IMEをオンまたはオフにする(メインスレッドにゆだねる)
 void vsk_ime_on_off(bool on)
@@ -2053,14 +2065,6 @@ void VskWin32App::ime_on_off_real(bool on)
 // ウィンドウの破棄前の処理
 void VskWin32App::OnDestroy(HWND hwnd)
 {
-#ifndef VSK_SINGLE_THREAD
-    if (m_hWorkingThread)
-    {
-        ::CloseHandle(m_hWorkingThread);
-        m_hWorkingThread = nullptr;
-    }
-#endif
-
     // 行儀よくIMEの後始末。
     ::ImmAssociateContext(hwnd, nullptr);
     ImmDestroyContext(m_hIMC);
@@ -2072,11 +2076,18 @@ void VskWin32App::OnDestroy(HWND hwnd)
     // マシンとの接続を切断
     vsk_connect_machine(&m_state, &m_settings, false);
 
+#ifndef VSK_SINGLE_THREAD
+    assert(vsk_machine == nullptr); // 接続を切ったので、nullptrが代入されているはず
+    wait_for_working_thread(); // よってm_hWorkingThreadは終了するはず
+    ::CloseHandle(m_hWorkingThread); // スレッドハンドルを閉じる
+    m_hWorkingThread = nullptr; // 念のため
+#endif
+
     // MImageViewExの終了処理
     m_imageView.OnDestroy(hwnd);
 
     // WM_QUITメッセージを投函し、メッセージループを終了
-    PostQuitMessage(0);
+    ::PostQuitMessage(0);
 }
 
 // タイマーを開始または停止
@@ -2499,6 +2510,25 @@ bool VskWin32App::do_save(HWND hwnd, const char *file, bool protect)
     return false; // 未実装
 }
 
+// 仮想マシンをリセットする関数
+void vsk_reset(VskMachineMode mode)
+{
+    // スレッドが違うかもしれないので、PostMessage経由でリセットする
+    ::PostMessage(VSK_APP()->m_hWnd, MYWM_RESET, mode, 0);
+}
+
+// 仮想マシンをリセットする関数（本物）
+void VskWin32App::reset_real(VskMachineMode mode)
+{
+    auto *state = vsk_machine->m_state;
+    auto *settings = vsk_machine->m_settings;
+    vsk_connect_machine(state, settings, false);
+    wait_for_working_thread();
+    settings->m_machine_mode = mode;
+    vsk_connect_machine(state, settings, true);
+    restart_working_thread();
+}
+
 // WM_COMMAND
 // コマンドを実行する
 void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -2509,21 +2539,13 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         ::DestroyWindow(hwnd);
         break;
     case ID_RESET: // リセット
-        vsk_connect_machine(&m_state, &m_settings, false);
-        vsk_connect_machine(&m_state, &m_settings, true);
-        restart_working_thread();
+        vsk_reset(VSK_SETTINGS()->m_machine_mode);
         break;
     case ID_MACHINE_8801: // 8801モード
-        vsk_connect_machine(&m_state, &m_settings, false);
-        m_settings.m_machine_mode = VSK_MACHINE_MODE_8801;
-        vsk_connect_machine(&m_state, &m_settings, true);
-        restart_working_thread();
+        vsk_reset(VSK_MACHINE_MODE_8801);
         break;
     case ID_MACHINE_9801: // 9801モード
-        vsk_connect_machine(&m_state, &m_settings, false);
-        m_settings.m_machine_mode = VSK_MACHINE_MODE_9801;
-        vsk_connect_machine(&m_state, &m_settings, true);
-        restart_working_thread();
+        vsk_reset(VSK_MACHINE_MODE_9801);
         break;
     case ID_DRIVE1_OPEN_FOLDER:
         OnOpenDriveFolder(hwnd, 1);
@@ -2981,8 +3003,6 @@ bool vsk_save_screenshot_real(bool text, bool graphics, bool half)
     }
 }
 
-#define MYWM_SCREENSHOT (WM_USER + 101)
-
 // スクリーンショットを保存する
 bool vsk_save_screenshot(bool text, bool graphics, bool half)
 {
@@ -2994,7 +3014,7 @@ bool vsk_save_screenshot(bool text, bool graphics, bool half)
     flags |= !!text;
     flags |= (graphics << 1);
     flags |= (half << 2);
-    ::PostMessage(vsk_pMainWnd->m_hWnd, MYWM_SCREENSHOT, flags, 0);
+    ::PostMessage(VSK_APP()->m_hWnd, MYWM_SCREENSHOT, flags, 0);
     return true;
 }
 
@@ -3455,6 +3475,9 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case MYWM_SCREENSHOT:
         vsk_save_screenshot_real((wParam & 1), (wParam & 2), (wParam & 4));
+        break;
+    case MYWM_RESET:
+        reset_real((VskMachineMode)wParam);
         break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);

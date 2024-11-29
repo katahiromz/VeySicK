@@ -878,3 +878,5 @@ VskString vsk_getcwd(void);
 void vsk_beep(int number = -1);
 // 文字列から数値を読み取る
 bool vsk_scan_number(VskString& str, const char *ptr, bool *minus = nullptr, char **dot = nullptr, char **exp = nullptr, char **endptr = nullptr);
+// マシンをリセットする
+void vsk_reset(VskMachineMode mode);

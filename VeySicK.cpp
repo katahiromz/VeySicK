@@ -2693,11 +2693,7 @@ void vsk_process_comment(VskString text)
 
     if (old_machine_mode != new_machine_mode)
     {
-        auto* state = VSK_STATE();
-        auto* settings = VSK_SETTINGS();
-        vsk_connect_machine(state, settings, false);
-        settings->m_machine_mode = new_machine_mode;
-        vsk_connect_machine(state, settings, true);
+        vsk_reset(new_machine_mode);
     }
 
     VSK_SETTINGS()->m_unlimited_mode = unlimited_mode;
