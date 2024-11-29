@@ -2691,6 +2691,12 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case chx3:
             PropSheet_Changed(::GetParent(hwnd), hwnd);
             break;
+        case edt1:
+            if (HIWORD(wParam) == EN_CHANGE)
+            {
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+            }
+            break;
         }
         break;
     case WM_NOTIFY:
