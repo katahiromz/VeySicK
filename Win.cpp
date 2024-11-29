@@ -2761,6 +2761,7 @@ DipSwitches_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         {
             auto hbm = (HBITMAP)::SendDlgItemMessage(hwnd, stc1, STM_GETIMAGE, IMAGE_BITMAP, 0);
+            ::SendDlgItemMessage(hwnd, stc1, STM_SETIMAGE, IMAGE_BITMAP, 0);
             ::DeleteObject(hbm);
         }
         break;
