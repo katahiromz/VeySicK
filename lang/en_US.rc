@@ -27,13 +27,6 @@ IDR_MAINMENU MENU
             MENUITEM "SJIS mode", ID_SJIS_MODE
         }
         MENUITEM SEPARATOR
-        MENUITEM "LOAD...", ID_LOAD
-        MENUITEM "LOAD and RUN...", ID_LOAD_RUN
-        MENUITEM "SAVE", ID_SAVE
-        MENUITEM "SAVE as...", ID_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "New disk...", ID_NEW_DISK
-        MENUITEM SEPARATOR
         MENUITEM "Settings...", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "Exit\tAlt+F4", ID_EXIT

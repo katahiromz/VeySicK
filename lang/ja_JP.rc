@@ -27,13 +27,6 @@ IDR_MAINMENU MENU
             MENUITEM "SJIS モード", ID_SJIS_MODE
         }
         MENUITEM SEPARATOR
-        MENUITEM "読み込み...", ID_LOAD
-        MENUITEM "読み込み実行...", ID_LOAD_RUN
-        MENUITEM "保存", ID_SAVE
-        MENUITEM "名前を付けて保存...", ID_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "新しいディスク...", ID_NEW_DISK
-        MENUITEM SEPARATOR
         MENUITEM "設定...", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "VeySicK の終了\tAlt+F4", ID_EXIT

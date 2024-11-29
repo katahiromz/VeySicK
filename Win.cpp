@@ -1816,9 +1816,6 @@ protected:
     void OnContextMenu(HWND hwnd, HWND hwndContext, UINT xPos, UINT yPos);
     void OnZoom(HWND hwnd, INT nZoom);
     void OnAbout(HWND hwnd);
-    bool OnLoad(HWND hwnd, bool do_run);
-    bool OnSave(HWND hwnd);
-    bool OnSaveAs(HWND hwnd);
     void OnOpenDriveFolder(HWND hwnd, int number);
 
     void OnCopy(HWND hwnd);
@@ -2398,39 +2395,6 @@ void VskWin32App::OnOpenDriveFolder(HWND hwnd, int number)
     ::ShellExecuteA(hwnd, nullptr, path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
-// ID_LOAD / ID_LOAD_RUN
-bool VskWin32App::OnLoad(HWND hwnd, bool do_run)
-{
-    // ファイルパス名
-    char szFile[MAX_PATH];
-    szFile[0] = 0;
-
-    // ユーザーにファイルの場所を問い合わせる準備をする
-    OPENFILENAMEA ofn = { sizeof(ofn), hwnd };
-    ofn.lpstrFilter = "BASIC Files (*.bas)\0*.bas\0Text Files (*.txt)\0*.txt\0";
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = _countof(szFile);
-    ofn.lpstrTitle = "LOAD";
-    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST |
-                OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
-    ofn.lpstrDefExt = ".bas";
-
-    // 初期ディレクトリを指定
-    char szDir[MAX_PATH];
-    ::GetModuleFileNameA(nullptr, szDir, _countof(szDir));
-    ::PathRemoveFileSpecA(szDir);
-    ::PathAppendA(szDir, "FILES");
-    if (!::PathIsDirectoryA(szDir))
-        ::PathRemoveFileSpecA(szDir);
-    ofn.lpstrInitialDir = szDir;
-
-    // 問い合わせる
-    if (!::GetOpenFileNameA(&ofn))
-        return false;
-
-    return do_load(hwnd, szFile, do_run);
-}
-
 bool VskWin32App::do_load(HWND hwnd, const char *file, bool do_run)
 {
     lstrcpynA(m_filename, file, _countof(m_filename));
@@ -2441,47 +2405,6 @@ bool VskWin32App::do_save(HWND hwnd, const char *file, bool protect)
 {
     lstrcpynA(m_filename, file, _countof(m_filename));
     return false; // 未実装
-}
-
-// ID_SAVE
-bool VskWin32App::OnSave(HWND hwnd)
-{
-    if (!m_filename[0])
-        return OnSaveAs(hwnd);
-    return do_save(hwnd, m_filename, false);
-}
-
-// ID_SAVE_AS
-bool VskWin32App::OnSaveAs(HWND hwnd)
-{
-    // ファイルパス名
-    char szFile[MAX_PATH];
-    szFile[0] = 0;
-
-    // ユーザーにファイルの場所を問い合わせる準備をする
-    OPENFILENAMEA ofn = { sizeof(ofn), hwnd };
-    ofn.lpstrFilter = "BASIC Files (*.bas)\0*.bas\0";
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = _countof(szFile);
-    ofn.lpstrTitle = "SAVE";
-    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST |
-                OFN_PATHMUSTEXIST | OFN_ENABLESIZING | OFN_OVERWRITEPROMPT;
-    ofn.lpstrDefExt = ".bas";
-
-    // 初期ディレクトリを指定
-    char szDir[MAX_PATH];
-    ::GetModuleFileNameA(nullptr, szDir, _countof(szDir));
-    ::PathRemoveFileSpecA(szDir);
-    ::PathAppendA(szDir, "FILES");
-    if (!::PathIsDirectoryA(szDir))
-        ::PathRemoveFileSpecA(szDir);
-    ofn.lpstrInitialDir = szDir;
-
-    // 問い合わせる
-    if (!::GetSaveFileNameA(&ofn))
-        return false;
-
-    return do_save(hwnd, szFile, false);
 }
 
 // WM_COMMAND
@@ -2510,18 +2433,6 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         vsk_connect_machine(&m_state, &m_settings, true);
         vsk_machine->test_pattern(0);
         break;
-    case ID_LOAD: // 読み込む
-        OnLoad(hwnd, false);
-        break;
-    case ID_LOAD_RUN: // 読み込んで実行
-        OnLoad(hwnd, true);
-        break;
-    case ID_SAVE: // 保存
-        OnSave(hwnd);
-        break;
-    case ID_SAVE_AS: // 名前を付けて保存
-        OnSaveAs(hwnd);
-        break;
     case ID_DRIVE1_OPEN_FOLDER:
         OnOpenDriveFolder(hwnd, 1);
         break;
@@ -2533,9 +2444,6 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_DRIVE4_OPEN_FOLDER:
         OnOpenDriveFolder(hwnd, 4);
-        break;
-    case ID_NEW_DISK:
-        assert(0); // 未実装
         break;
     case ID_ABOUT: // このアプリについて
         OnAbout(hwnd);

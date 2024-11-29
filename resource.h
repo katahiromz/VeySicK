@@ -19,9 +19,6 @@
 
 #define ID_EXIT                             100
 #define ID_RESET                            101
-#define ID_LOAD                             102
-#define ID_LOAD_RUN                         103
-#define ID_SAVE                             104
 #define ID_DRIVE1_INFO                      109
 #define ID_DRIVE2_INFO                      110
 #define ID_DRIVE3_INFO                      111
@@ -38,10 +35,8 @@
 #define ID_OPEN_README                      122
 #define ID_MACHINE_8801                     123
 #define ID_MACHINE_9801                     124
-#define ID_SAVE_AS                          126
 #define ID_COPY_SCREENSHOT                  127
 #define ID_MAXIMIZE                         128
-#define ID_NEW_DISK                         129
 #define ID_SETTINGS                         131
 #define ID_PASTE_TEXT                       132
 #define ID_COPY_TEXT                        133
