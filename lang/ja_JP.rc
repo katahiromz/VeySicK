@@ -35,25 +35,25 @@ IDR_MAINMENU MENU
     {
         MENUITEM "フォルダを開く", ID_DRIVE1_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
+        MENUITEM "(なし)", ID_DRIVE1_INFO, GRAYED
     }
     POPUP "ドライブ 2"
     {
         MENUITEM "フォルダを開く", ID_DRIVE2_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
+        MENUITEM "(なし)", ID_DRIVE2_INFO, GRAYED
     }
     POPUP "ドライブ 3"
     {
         MENUITEM "フォルダを開く", ID_DRIVE3_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
+        MENUITEM "(なし)", ID_DRIVE3_INFO, GRAYED
     }
     POPUP "ドライブ 4"
     {
         MENUITEM "フォルダを開く", ID_DRIVE4_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
+        MENUITEM "(なし)", ID_DRIVE4_INFO, GRAYED
     }
     POPUP "画面"
     {
