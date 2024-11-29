@@ -1814,6 +1814,7 @@ protected:
     bool save_settings();
     void ime_on_off_real(bool on);
     void update_caret_position();
+    void restart_working_thread();
 
 protected:
     // メッセージ ハンドラ
@@ -1926,9 +1927,6 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     if (!vsk_connect_machine(&m_state, &m_settings, true))
         return FALSE; // 失敗
 
-    // テストパターンを表示。
-    vsk_machine->test_pattern(0);
-
     // IMEを一時的に無効化する。
     HIMC hIMC = ::ImmGetContext(hwnd);
     ::ImmAssociateContext(hwnd, nullptr);
@@ -1943,12 +1941,21 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
     if (::PathIsDirectoryA(path.c_str()))
         ::SetCurrentDirectoryA(path.c_str());
 
+    restart_working_thread();
+
+    return TRUE; // 成功
+}
+
+void VskWin32App::restart_working_thread()
+{
 #ifndef VSK_SINGLE_THREAD
+    if (m_hWorkingThread && m_hWorkingThread != INVALID_HANDLE_VALUE)
+    {
+        ::CloseHandle(m_hWorkingThread);
+    }
     // 別スレッドで処理
     m_hWorkingThread = ::CreateThread(nullptr, 0, vsk_working_thread, this, 0, nullptr);
 #endif
-
-    return TRUE; // 成功
 }
 
 #define MYWM_IME_ON_OFF (WM_USER + 100)
@@ -2443,19 +2450,19 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case ID_RESET: // リセット
         vsk_connect_machine(&m_state, &m_settings, false);
         vsk_connect_machine(&m_state, &m_settings, true);
-        vsk_machine->test_pattern(0);
+        restart_working_thread();
         break;
     case ID_MACHINE_8801: // 8801モード
         vsk_connect_machine(&m_state, &m_settings, false);
         m_settings.m_machine_mode = VSK_MACHINE_MODE_8801;
         vsk_connect_machine(&m_state, &m_settings, true);
-        vsk_machine->test_pattern(0);
+        restart_working_thread();
         break;
     case ID_MACHINE_9801: // 9801モード
         vsk_connect_machine(&m_state, &m_settings, false);
         m_settings.m_machine_mode = VSK_MACHINE_MODE_9801;
         vsk_connect_machine(&m_state, &m_settings, true);
-        vsk_machine->test_pattern(0);
+        restart_working_thread();
         break;
     case ID_DRIVE1_OPEN_FOLDER:
         OnOpenDriveFolder(hwnd, 1);

@@ -2107,13 +2107,6 @@ bool VskMachine::put_image(int x0, int y0, const void *ptr, size_t size, int M, 
 // テストパターン
 void VskMachine::test_pattern(int type)
 {
-    clear_graphic();
-    clear_text();
-    reset_palette();
-    reset_text();
-    reset_graphics();
-    move_to_top();
-
     switch (type)
     {
     case -1:

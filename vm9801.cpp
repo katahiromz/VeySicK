@@ -1366,6 +1366,19 @@ void Vsk9801Machine::reset()
     reset_palette();
     reset_text();
     reset_graphics();
+
+    m_state->m_color_text   = false;
+    m_state->m_text_attr.reset();
+    m_state->m_text_color   = 7;
+    m_state->m_fore_color   = 7;
+    m_state->m_back_color   = 0;
+    m_state->m_border_color = -1;
+
+    clear_graphic();
+    clear_text();
+    move_to_top();
+
+    test_pattern(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
