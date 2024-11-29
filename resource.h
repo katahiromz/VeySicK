@@ -52,12 +52,13 @@
 #define ID_GRPH_MODE                        134
 #define ID_SJIS_MODE                        135
 #define ID_JIS_MODE                         136
+#define ID_UNLIMITED_MODE                   137
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS
         #define _APS_NO_MFC                 1
         #define _APS_NEXT_RESOURCE_VALUE    102
-        #define _APS_NEXT_COMMAND_VALUE     137
+        #define _APS_NEXT_COMMAND_VALUE     138
         #define _APS_NEXT_CONTROL_VALUE     1000
         #define _APS_NEXT_SYMED_VALUE       300
     #endif

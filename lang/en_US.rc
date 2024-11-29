@@ -18,12 +18,13 @@ IDR_MAINMENU MENU
         {
             MENUITEM "8801 mode", ID_MACHINE_8801
             MENUITEM "9801 mode", ID_MACHINE_9801
+            MENUITEM SEPARATOR
+            MENUITEM "Unlimited mode", ID_UNLIMITED_MODE
         }
         POPUP "Text Mode"
         {
             MENUITEM "GRPH mode", ID_GRPH_MODE
             MENUITEM "SJIS mode", ID_SJIS_MODE
-            MENUITEM "JIS mode", ID_JIS_MODE
         }
         MENUITEM SEPARATOR
         MENUITEM "LOAD...", ID_LOAD

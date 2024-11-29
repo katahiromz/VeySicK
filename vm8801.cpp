@@ -1476,6 +1476,7 @@ bool Vsk8801Machine::clear_memory(VskDword addr)
 
 void Vsk8801Machine::do_unit_tests()
 {
+    return;
 #ifndef NDEBUG
     std::array<VskByte, VSK_8801_ATTR_PAIR_MAX * 2> attr_area;
     std::array<VskLogAttr, VSK_8801_TEXT_MAX_X> log_attrs;

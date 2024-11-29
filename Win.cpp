@@ -2305,20 +2305,34 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     {
         bool bCheck8801 = vsk_machine->is_8801_mode();
         bool bCheck9801 = vsk_machine->is_9801_mode();
-        ::CheckMenuItem(hMenu, ID_MACHINE_8801, (bCheck8801 ? MF_CHECKED : MF_UNCHECKED));
-        ::CheckMenuItem(hMenu, ID_MACHINE_9801, (bCheck9801 ? MF_CHECKED : MF_UNCHECKED));
+        if (bCheck8801)
+        {
+            assert(!bCheck9801);
+            ::CheckMenuRadioItem(hMenu, ID_MACHINE_8801, ID_MACHINE_9801, ID_MACHINE_8801, MF_BYCOMMAND);
+        }
+        else
+        {
+            assert(bCheck9801);
+            ::CheckMenuRadioItem(hMenu, ID_MACHINE_8801, ID_MACHINE_9801, ID_MACHINE_9801, MF_BYCOMMAND);
+        }
+        bool bCheckUnlimited = VSK_SETTINGS()->m_unlimited_mode;
+        ::CheckMenuItem(hMenu, ID_UNLIMITED_MODE, (bCheckUnlimited ? MF_CHECKED : MF_UNCHECKED));
     }
 
-    // 必要ならば、メニュー項目のID_GRPH_MODE, ID_SJIS_MODE, ID_JIS_MODEのいずれかにチェックを付ける
+    // 必要ならば、メニュー項目のID_GRPH_MODE, ID_SJIS_MODEのいずれかにチェックを付ける
     {
         bool bCheckGRPH = vsk_machine->is_grph_mode();
         bool bCheckSJIS = vsk_machine->is_sjis_mode();
-        bool bCheckJIS = vsk_machine->is_jis_mode();
-        ::CheckMenuItem(hMenu, ID_GRPH_MODE, (bCheckGRPH ? MF_CHECKED : MF_UNCHECKED));
-        ::CheckMenuItem(hMenu, ID_SJIS_MODE, (bCheckSJIS ? MF_CHECKED : MF_UNCHECKED));
-        ::CheckMenuItem(hMenu, ID_JIS_MODE, (bCheckJIS ? MF_CHECKED : MF_UNCHECKED));
-        bool bEnableJIS = !vsk_machine->is_8801_mode();
-        ::EnableMenuItem(hMenu, ID_JIS_MODE, (bEnableJIS ? MF_ENABLED : MF_GRAYED));
+        if (bCheckGRPH)
+        {
+            assert(!bCheckSJIS);
+            ::CheckMenuRadioItem(hMenu, ID_GRPH_MODE, ID_SJIS_MODE, ID_GRPH_MODE, MF_BYCOMMAND);
+        }
+        else
+        {
+            assert(bCheckSJIS);
+            ::CheckMenuRadioItem(hMenu, ID_GRPH_MODE, ID_SJIS_MODE, ID_SJIS_MODE, MF_BYCOMMAND);
+        }
     }
 
     // 必要ならば、メニュー項目ID_ZOOM_X1、ID_ZOOM_X2、ID_ZOOM_X3のいずれかにチェックを付ける
@@ -2709,6 +2723,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_JIS_MODE:
         VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_JIS;
+        break;
+    case ID_UNLIMITED_MODE:
+        VSK_SETTINGS()->m_unlimited_mode = !VSK_SETTINGS()->m_unlimited_mode;
         break;
     }
 }

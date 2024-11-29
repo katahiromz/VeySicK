@@ -2682,6 +2682,7 @@ void vsk_process_comment(VskString text)
 
     VskMachineMode old_machine_mode = VSK_SETTINGS()->m_machine_mode;
     VskMachineMode new_machine_mode = old_machine_mode;
+    bool unlimited_mode = VSK_SETTINGS()->m_unlimited_mode;
 
     // (VeySicK拡張)
     if (text.find("{GRPH}") != text.npos)
@@ -2694,6 +2695,10 @@ void vsk_process_comment(VskString text)
         new_machine_mode = VSK_MACHINE_MODE_8801;
     if (text.find("{9801}") != text.npos)
         new_machine_mode = VSK_MACHINE_MODE_9801;
+    if (text.find("{UNLIMIT}") != text.npos)
+        unlimited_mode = true;
+    if (text.find("{LIMIT}") != text.npos)
+        unlimited_mode = false;
 
     if (old_machine_mode != new_machine_mode)
     {
@@ -2703,6 +2708,8 @@ void vsk_process_comment(VskString text)
         settings->m_machine_mode = new_machine_mode;
         vsk_connect_machine(state, settings, true);
     }
+
+    VSK_SETTINGS()->m_unlimited_mode = unlimited_mode;
 
     assert(vsk_machine);
     assert(VSK_STATE());

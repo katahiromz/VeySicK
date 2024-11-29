@@ -18,12 +18,13 @@ IDR_MAINMENU MENU
         {
             MENUITEM "8801 モード", ID_MACHINE_8801
             MENUITEM "9801 モード", ID_MACHINE_9801
+            MENUITEM SEPARATOR
+            MENUITEM "無制限モード", ID_UNLIMITED_MODE
         }
         POPUP "テキスト モード"
         {
             MENUITEM "GRPH モード", ID_GRPH_MODE
             MENUITEM "SJIS モード", ID_SJIS_MODE
-            MENUITEM "JIS モード", ID_JIS_MODE
         }
         MENUITEM SEPARATOR
         MENUITEM "読み込み...", ID_LOAD
