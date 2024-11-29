@@ -109,6 +109,7 @@ CAPTION "ディップ スイッチ"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS UI Gothic"
 {
+    LTEXT "※ 取扱説明書の「ディップスイッチ」を参照", -1, 5, 5, 180, 25
     RTEXT "SW1:", -1, 5, 40, 35, 10
     AUTOCHECKBOX "", chx8, 55, 35, 10, 15
     AUTOCHECKBOX "", chx7, 70, 35, 10, 15
