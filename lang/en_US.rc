@@ -27,7 +27,7 @@ IDR_MAINMENU MENU
             MENUITEM "SJIS mode", ID_SJIS_MODE
         }
         MENUITEM SEPARATOR
-        MENUITEM "Settings...", ID_SETTINGS
+        MENUITEM "Settings...\tAlt+Enter", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "Exit\tAlt+F4", ID_EXIT
     }
@@ -146,6 +146,14 @@ FONT 9, "MS Shell Dlg"
     CTEXT "1", -1, 145, 105, 10, 10
     CTEXT "0", -1, 160, 105, 10, 10
     PUSHBUTTON "Reset", psh2, 180, 95, 45, 20
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// RT_ACCELERATOR
+
+IDR_MAINACCEL ACCELERATORS
+{
+    VK_RETURN, ID_SETTINGS, ALT, VIRTKEY
 }
 
 //////////////////////////////////////////////////////////////////////////////

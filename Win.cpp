@@ -96,14 +96,18 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("TextMode"), NULL, NULL, (BYTE*)&m_text_mode, &cbValue);
         cbValue = sizeof(m_field_width);
         ::RegQueryValueEx(hKey, TEXT("FieldWidth"), NULL, NULL, (BYTE*)&m_field_width, &cbValue);
+#ifdef ENABLE_PC8801
         cbValue = sizeof(m_8801_sw1);
         ::RegQueryValueEx(hKey, TEXT("PC8801SW1"), NULL, NULL, (BYTE*)&m_8801_sw1, &cbValue);
         cbValue = sizeof(m_8801_sw2);
         ::RegQueryValueEx(hKey, TEXT("PC8801SW2"), NULL, NULL, (BYTE*)&m_8801_sw2, &cbValue);
+#endif
+#ifdef ENABLE_PC9801
         cbValue = sizeof(m_9801_sw1);
         ::RegQueryValueEx(hKey, TEXT("PC9801SW1"), NULL, NULL, (BYTE*)&m_9801_sw1, &cbValue);
         cbValue = sizeof(m_9801_sw2);
         ::RegQueryValueEx(hKey, TEXT("PC9801SW2"), NULL, NULL, (BYTE*)&m_9801_sw2, &cbValue);
+#endif
     }
 
     ::RegCloseKey(hKey);
@@ -147,14 +151,18 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("TextMode"), 0, REG_DWORD, (BYTE*)&m_text_mode, cbValue);
         cbValue = sizeof(m_field_width);
         ::RegSetValueEx(hKey, TEXT("FieldWidth"), 0, REG_DWORD, (BYTE*)&m_field_width, cbValue);
+#ifdef ENABLE_PC8801
         cbValue = sizeof(m_8801_sw1);
         ::RegSetValueEx(hKey, TEXT("PC8801SW1"), 0, REG_DWORD, (BYTE*)&m_8801_sw1, cbValue);
         cbValue = sizeof(m_8801_sw2);
         ::RegSetValueEx(hKey, TEXT("PC8801SW2"), 0, REG_DWORD, (BYTE*)&m_8801_sw2, cbValue);
+#endif
+#ifdef ENABLE_PC9801
         cbValue = sizeof(m_9801_sw1);
         ::RegSetValueEx(hKey, TEXT("PC9801SW1"), 0, REG_DWORD, (BYTE*)&m_9801_sw1, cbValue);
         cbValue = sizeof(m_9801_sw2);
         ::RegSetValueEx(hKey, TEXT("PC9801SW2"), 0, REG_DWORD, (BYTE*)&m_9801_sw2, cbValue);
+#endif
     }
 
     ::RegCloseKey(hKey);
@@ -2742,6 +2750,7 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.hInstance = m_hInst;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 
+#ifdef ENABLE_PC8801
     TCHAR sz8801Switch[128];
     ::LoadString(m_hInst, IDS_8801_SW, sz8801Switch, _countof(sz8801Switch));
 
@@ -2753,7 +2762,9 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.pszTitle = sz8801Switch;
     psp.lParam = (LPARAM)&dip_sw_8801;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
+#endif
 
+#ifdef ENABLE_PC9801
     TCHAR sz9801Switch[128];
     ::LoadString(m_hInst, IDS_9801_SW, sz9801Switch, _countof(sz9801Switch));
 
@@ -2765,6 +2776,7 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.pszTitle = sz9801Switch;
     psp.lParam = (LPARAM)&dip_sw_9801;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
+#endif
 
     assert(iPage <= _countof(hpsp));
     assert(nStartPage < _countof(hpsp));
@@ -3444,6 +3456,8 @@ bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
 // アプリを走らせる
 int VskWin32App::run()
 {
+    HACCEL hAccel = ::LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_MAINACCEL));
+
     MSG msg;
     for (;;)
     {
@@ -3461,6 +3475,9 @@ int VskWin32App::run()
         if (!::GetMessage(&msg, nullptr, 0, 0))
             break;
 
+        if (::TranslateAccelerator(m_hWnd, hAccel, &msg))
+            continue;
+
         // VK_PROCESSKEYの処理前の仮想キーコードを取得する
         if (msg.message == WM_KEYDOWN)
             vsk_vkey = ::ImmGetVirtualKey(m_hWnd);
@@ -3468,6 +3485,9 @@ int VskWin32App::run()
         ::TranslateMessage(&msg);
         ::DispatchMessage(&msg);
     }
+
+    ::DestroyAcceleratorTable(hAccel);
+
     return (int)msg.wParam;
 }
 
