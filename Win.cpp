@@ -96,6 +96,14 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("TextMode"), NULL, NULL, (BYTE*)&m_text_mode, &cbValue);
         cbValue = sizeof(m_field_width);
         ::RegQueryValueEx(hKey, TEXT("FieldWidth"), NULL, NULL, (BYTE*)&m_field_width, &cbValue);
+        cbValue = sizeof(m_8801_sw1);
+        ::RegQueryValueEx(hKey, TEXT("PC8801SW1"), NULL, NULL, (BYTE*)&m_8801_sw1, &cbValue);
+        cbValue = sizeof(m_8801_sw2);
+        ::RegQueryValueEx(hKey, TEXT("PC8801SW2"), NULL, NULL, (BYTE*)&m_8801_sw2, &cbValue);
+        cbValue = sizeof(m_9801_sw1);
+        ::RegQueryValueEx(hKey, TEXT("PC9801SW1"), NULL, NULL, (BYTE*)&m_9801_sw1, &cbValue);
+        cbValue = sizeof(m_9801_sw2);
+        ::RegQueryValueEx(hKey, TEXT("PC9801SW2"), NULL, NULL, (BYTE*)&m_9801_sw2, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -139,6 +147,14 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("TextMode"), 0, REG_DWORD, (BYTE*)&m_text_mode, cbValue);
         cbValue = sizeof(m_field_width);
         ::RegSetValueEx(hKey, TEXT("FieldWidth"), 0, REG_DWORD, (BYTE*)&m_field_width, cbValue);
+        cbValue = sizeof(m_8801_sw1);
+        ::RegSetValueEx(hKey, TEXT("PC8801SW1"), 0, REG_DWORD, (BYTE*)&m_8801_sw1, cbValue);
+        cbValue = sizeof(m_8801_sw2);
+        ::RegSetValueEx(hKey, TEXT("PC8801SW2"), 0, REG_DWORD, (BYTE*)&m_8801_sw2, cbValue);
+        cbValue = sizeof(m_9801_sw1);
+        ::RegSetValueEx(hKey, TEXT("PC9801SW1"), 0, REG_DWORD, (BYTE*)&m_9801_sw1, cbValue);
+        cbValue = sizeof(m_9801_sw2);
+        ::RegSetValueEx(hKey, TEXT("PC9801SW2"), 0, REG_DWORD, (BYTE*)&m_9801_sw2, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -2619,12 +2635,104 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+struct DIP_SW
+{
+    BOOL is_8801;
+    VskDword *m_sw1;
+    VskDword *m_sw2;
+};
+
+void DipSwitches_Init(HWND hwnd, DIP_SW* sw, INT flags)
+{
+    if (flags & 1)
+    {
+        for (INT i = 0; i < 8; ++i)
+        {
+            ::CheckDlgButton(hwnd, chx1 + i, ((*sw->m_sw1 & (1 << i)) ? BST_CHECKED : BST_UNCHECKED));
+        }
+    }
+    if (flags & 2)
+    {
+        for (INT i = 0; i < 8; ++i)
+        {
+            ::CheckDlgButton(hwnd, chx9 + i, ((*sw->m_sw2 & (1 << i)) ? BST_CHECKED : BST_UNCHECKED));
+        }
+    }
+}
+
+
+INT_PTR CALLBACK
+DipSwitches_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_INITDIALOG:
+        {
+            auto *page = reinterpret_cast<PROPSHEETPAGE *>(lParam);
+            auto *sw = reinterpret_cast<DIP_SW *>(page->lParam);
+            DipSwitches_Init(hwnd, sw, 3);
+            SetWindowLongPtr(hwnd, DWLP_USER, (LPARAM)sw);
+        }
+        return TRUE;
+    case WM_COMMAND:
+        if (chx1 <= LOWORD(wParam) && LOWORD(wParam) <= chx16)
+        {
+            PropSheet_Changed(::GetParent(hwnd), hwnd);
+            break;
+        }
+        else
+        {
+            DIP_SW* sw = (DIP_SW*)GetWindowLongPtr(hwnd, DWLP_USER);
+            switch (LOWORD(wParam))
+            {
+            case psh1:
+                *sw->m_sw1 = (sw->is_8801 ? VSK_8801_SW1_DEFAULT : VSK_9801_SW1_DEFAULT);
+                DipSwitches_Init(hwnd, sw, 1);
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+                break;
+            case psh2:
+                *sw->m_sw2 = (sw->is_8801 ? VSK_8801_SW2_DEFAULT : VSK_9801_SW2_DEFAULT);
+                DipSwitches_Init(hwnd, sw, 2);
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+                break;
+            }
+        }
+        break;
+    case WM_NOTIFY:
+        {
+            auto pnmhdr = reinterpret_cast<NMHDR *>(lParam);
+            switch (pnmhdr->code)
+            {
+            case PSN_APPLY: // 適用
+                DIP_SW *sw = (DIP_SW *)GetWindowLongPtr(hwnd, DWLP_USER);
+
+                *sw->m_sw1 = 0;
+                for (INT i = 0; i < 8; ++i)
+                {
+                    if (::IsDlgButtonChecked(hwnd, chx1 + i) == BST_CHECKED)
+                        *sw->m_sw1 |= (1 << i);
+                }
+
+                *sw->m_sw2 = 0;
+                for (INT i = 0; i < 8; ++i)
+                {
+                    if (::IsDlgButtonChecked(hwnd, chx9 + i) == BST_CHECKED)
+                        *sw->m_sw2 |= (1 << i);
+                }
+                break;
+            }
+        }
+        break;
+    }
+    return 0;
+}
+
 // ID_SETTINGS
 // 設定
 void VskWin32App::OnSettings(HWND hwnd)
 {
     PROPSHEETPAGE psp = { sizeof(psp) };
-    HPROPSHEETPAGE hpsp[1];
+    HPROPSHEETPAGE hpsp[3];
     INT iPage = 0, nStartPage = 0;
 
     // ページを追加する
@@ -2632,6 +2740,30 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.pfnDlgProc = Settings_DlgProc;
     psp.dwFlags = PSP_DEFAULT;
     psp.hInstance = m_hInst;
+    hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
+
+    TCHAR sz8801Switch[128];
+    ::LoadString(m_hInst, IDS_8801_SW, sz8801Switch, _countof(sz8801Switch));
+
+    DIP_SW dip_sw_8801 = { TRUE, &VSK_SETTINGS()->m_8801_sw1, &VSK_SETTINGS()->m_8801_sw2 };
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_DIP_SWITCHES);
+    psp.pfnDlgProc = DipSwitches_DlgProc;
+    psp.dwFlags = PSP_DEFAULT | PSP_USETITLE;
+    psp.hInstance = m_hInst;
+    psp.pszTitle = sz8801Switch;
+    psp.lParam = (LPARAM)&dip_sw_8801;
+    hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
+
+    TCHAR sz9801Switch[128];
+    ::LoadString(m_hInst, IDS_9801_SW, sz9801Switch, _countof(sz9801Switch));
+
+    DIP_SW dip_sw_9801 = { FALSE, &VSK_SETTINGS()->m_9801_sw1, &VSK_SETTINGS()->m_9801_sw2 };
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_DIP_SWITCHES);
+    psp.pfnDlgProc = DipSwitches_DlgProc;
+    psp.dwFlags = PSP_DEFAULT | PSP_USETITLE;
+    psp.hInstance = m_hInst;
+    psp.pszTitle = sz9801Switch;
+    psp.lParam = (LPARAM)&dip_sw_9801;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 
     assert(iPage <= _countof(hpsp));

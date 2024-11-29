@@ -35,25 +35,25 @@ IDR_MAINMENU MENU
     {
         MENUITEM "フォルダを開く", ID_DRIVE1_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "", ID_DRIVE1_INFO, GRAYED
+        MENUITEM SEPARATOR
     }
     POPUP "ドライブ 2"
     {
         MENUITEM "フォルダを開く", ID_DRIVE2_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "", ID_DRIVE2_INFO, GRAYED
+        MENUITEM SEPARATOR
     }
     POPUP "ドライブ 3"
     {
         MENUITEM "フォルダを開く", ID_DRIVE3_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "", ID_DRIVE3_INFO, GRAYED
+        MENUITEM SEPARATOR
     }
     POPUP "ドライブ 4"
     {
         MENUITEM "フォルダを開く", ID_DRIVE4_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "", ID_DRIVE4_INFO, GRAYED
+        MENUITEM SEPARATOR
     }
     POPUP "画面"
     {
@@ -104,6 +104,50 @@ FONT 9, "MS UI Gothic"
     LTEXT "※ -1ならば最小幅", -1, 145, 90, 75, 10
 }
 
+IDD_DIP_SWITCHES DIALOG 0, 0, 235, 135
+CAPTION "ディップ スイッチ"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "MS UI Gothic"
+{
+    LTEXT "ディップスイッチは、再起動またはリセット後に有効になります。", -1, 5, 5, 220, 25
+    RTEXT "SW1:", -1, 5, 40, 35, 10
+    AUTOCHECKBOX "", chx8, 55, 35, 10, 15
+    AUTOCHECKBOX "", chx7, 70, 35, 10, 15
+    AUTOCHECKBOX "", chx6, 85, 35, 10, 15
+    AUTOCHECKBOX "", chx5, 100, 35, 10, 15
+    AUTOCHECKBOX "", chx4, 115, 35, 10, 15
+    AUTOCHECKBOX "", chx3, 130, 35, 10, 15
+    AUTOCHECKBOX "", chx2, 145, 35, 10, 15
+    AUTOCHECKBOX "", chx1, 160, 35, 10, 15
+    CTEXT "7", -1, 55, 50, 10, 10
+    CTEXT "6", -1, 70, 50, 10, 10
+    CTEXT "5", -1, 85, 50, 10, 10
+    CTEXT "4", -1, 100, 50, 10, 10
+    CTEXT "3", -1, 115, 50, 10, 10
+    CTEXT "2", -1, 130, 50, 10, 10
+    CTEXT "1", -1, 145, 50, 10, 10
+    CTEXT "0", -1, 160, 50, 10, 10
+    PUSHBUTTON "リセット", psh1, 180, 40, 45, 20
+    RTEXT "SW2:", -1, 5, 90, 35, 10
+    AUTOCHECKBOX "", chx16, 55, 90, 10, 15
+    AUTOCHECKBOX "", chx15, 70, 90, 10, 15
+    AUTOCHECKBOX "", chx14, 85, 90, 10, 15
+    AUTOCHECKBOX "", chx13, 100, 90, 10, 15
+    AUTOCHECKBOX "", chx12, 115, 90, 10, 15
+    AUTOCHECKBOX "", chx11, 130, 90, 10, 15
+    AUTOCHECKBOX "", chx10, 145, 90, 10, 15
+    AUTOCHECKBOX "", chx9, 160, 90, 10, 15
+    CTEXT "7", -1, 55, 105, 10, 10
+    CTEXT "6", -1, 70, 105, 10, 10
+    CTEXT "5", -1, 85, 105, 10, 10
+    CTEXT "4", -1, 100, 105, 10, 10
+    CTEXT "3", -1, 115, 105, 10, 10
+    CTEXT "2", -1, 130, 105, 10, 10
+    CTEXT "1", -1, 145, 105, 10, 10
+    CTEXT "0", -1, 160, 105, 10, 10
+    PUSHBUTTON "リセット", psh2, 180, 95, 45, 20
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // RT_STRING
 
@@ -115,6 +159,8 @@ STRINGTABLE
     IDS_SCREENSHOT, "スクリーンショット"
     IDS_SAVESHOTTITLE, "スクリーンショットを画像ファイルとして保存する"
     IDS_SETTINGS, "設定"
+    IDS_8801_SW, "8801 SW"
+    IDS_9801_SW, "9801 SW"
 }
 
 //////////////////////////////////////////////////////////////////////////////

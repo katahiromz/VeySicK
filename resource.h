@@ -4,6 +4,7 @@
 // VeySicK_res.rc
 
 #define IDD_SETTINGS                        100
+#define IDD_DIP_SWITCHES                    101
 
 #define IDI_MAINICON                        100
 
@@ -16,6 +17,8 @@
 #define IDS_SCREENSHOT                      103
 #define IDS_SAVESHOTTITLE                   104
 #define IDS_SETTINGS                        105
+#define IDS_8801_SW                         106
+#define IDS_9801_SW                         107
 
 #define ID_EXIT                             100
 #define ID_RESET                            101
