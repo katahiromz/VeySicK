@@ -109,7 +109,8 @@ CAPTION "Dip switches"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS Shell Dlg"
 {
-    LTEXT "* See ""DIP switches"" in the manual", -1, 5, 5, 180, 25
+    LTEXT "The switch faces up when on and down when off. See ""DIP switches"" in the manual.", -1, 5, 5, 165, 26
+    CONTROL "", stc1, "STATIC", SS_BITMAP | WS_GROUP, 185, 5, 45, 25
     RTEXT "SW1:", -1, 5, 40, 35, 10
     AUTOCHECKBOX "", chx8, 55, 35, 10, 15
     AUTOCHECKBOX "", chx7, 70, 35, 10, 15

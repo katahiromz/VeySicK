@@ -2753,9 +2753,17 @@ DipSwitches_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             auto *page = reinterpret_cast<PROPSHEETPAGE *>(lParam);
             auto *sw = reinterpret_cast<DIP_SW *>(page->lParam);
             DipSwitches_Init(hwnd, sw, 3);
-            SetWindowLongPtr(hwnd, DWLP_USER, (LPARAM)sw);
+            HBITMAP hbm = ::LoadBitmap(::GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_SWITCHES));
+            ::SendDlgItemMessage(hwnd, stc1, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbm);
+            ::SetWindowLongPtr(hwnd, DWLP_USER, (LPARAM)sw);
         }
         return TRUE;
+    case WM_DESTROY:
+        {
+            auto hbm = (HBITMAP)::SendDlgItemMessage(hwnd, stc1, STM_GETIMAGE, IMAGE_BITMAP, 0);
+            ::DeleteObject(hbm);
+        }
+        break;
     case WM_COMMAND:
         if (chx1 <= LOWORD(wParam) && LOWORD(wParam) <= chx16)
         {
