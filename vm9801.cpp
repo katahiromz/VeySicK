@@ -879,7 +879,7 @@ void Vsk9801Machine::render_ank(int x, int y, VskByte ch, const VskLogAttr& log_
     // リバースかつ20文字の高さのときに、反転している文字の下部を描画する
     if (reverse && longer)
     {
-        vsk_fill_box(putter, x0, y0 + char_height - 4, x0 + char_width - 1, y0 + char_height - 1, &m_state->m_viewport);
+        vsk_fill_box(putter, x0, y0 + char_height - 4, x0 + char_width - 1, y0 + char_height - 1);
     }
 }
 
@@ -942,8 +942,8 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     // リバースかつ20文字の高さのときに、反転している文字の下部を描画する
     if (reverse && longer)
     {
-        vsk_fill_box(putter, x0, y0 + char_height - 4, x0 + char_width - 1, y0 + char_height - 1, &m_state->m_viewport);
-        vsk_fill_box(putter, x1, y1 + char_height - 4, x1 + char_width - 1, y1 + char_height - 1, &m_state->m_viewport);
+        vsk_fill_box(putter, x0, y0 + char_height - 4, x0 + char_width - 1, y0 + char_height - 1);
+        vsk_fill_box(putter, x1, y1 + char_height - 4, x1 + char_width - 1, y1 + char_height - 1);
     }
 #endif
 }
@@ -1360,15 +1360,8 @@ void Vsk9801Machine::reset()
     auto sw1 = VSK_SETTINGS()->m_9801_sw1;
     auto sw2 = VSK_SETTINGS()->m_9801_sw2;
 
-    if (sw2 & 0x20)
-        m_state->m_text_width = 80;
-    else
-        m_state->m_text_width = 40;
-
-    if (sw2 & 0x10)
-        m_state->m_text_height = 25;
-    else
-        m_state->m_text_height = 20;
+    m_state->m_text_width = (sw2 & 0x20) ? 80 : 40;
+    m_state->m_text_height = (sw2 & 0x10) ? 25 : 20;
 
     reset_palette();
     reset_text();
