@@ -457,11 +457,11 @@ VskMachine::~VskMachine()
 // マシンを作成する
 VskMachinePtr VskMachine::create_machine(VskMachineState *state, VskSettings *settings)
 {
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     if (settings->m_machine_mode == VSK_MACHINE_MODE_8801)
         return vsk_create_8801_machine(state, settings);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     if (settings->m_machine_mode == VSK_MACHINE_MODE_9801)
         return vsk_create_9801_machine(state, settings);
 #endif

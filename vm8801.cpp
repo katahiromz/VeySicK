@@ -1,5 +1,5 @@
 // 8801 Virtual Machine
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
 
 #include "VeySicK.h"            // VeySicK
 #include "draw_algorithm.h"     // 描画アルゴリズム
@@ -1610,4 +1610,4 @@ void Vsk8801Machine::do_unit_tests()
 #endif
 }
 
-#endif  // def ENABLE_PC8801
+#endif  // def ENABLE_VM8801

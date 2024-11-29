@@ -96,13 +96,13 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("TextMode"), NULL, NULL, (BYTE*)&m_text_mode, &cbValue);
         cbValue = sizeof(m_field_width);
         ::RegQueryValueEx(hKey, TEXT("FieldWidth"), NULL, NULL, (BYTE*)&m_field_width, &cbValue);
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
         cbValue = sizeof(m_8801_sw1);
         ::RegQueryValueEx(hKey, TEXT("PC8801SW1"), NULL, NULL, (BYTE*)&m_8801_sw1, &cbValue);
         cbValue = sizeof(m_8801_sw2);
         ::RegQueryValueEx(hKey, TEXT("PC8801SW2"), NULL, NULL, (BYTE*)&m_8801_sw2, &cbValue);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
         cbValue = sizeof(m_9801_sw1);
         ::RegQueryValueEx(hKey, TEXT("PC9801SW1"), NULL, NULL, (BYTE*)&m_9801_sw1, &cbValue);
         cbValue = sizeof(m_9801_sw2);
@@ -151,13 +151,13 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("TextMode"), 0, REG_DWORD, (BYTE*)&m_text_mode, cbValue);
         cbValue = sizeof(m_field_width);
         ::RegSetValueEx(hKey, TEXT("FieldWidth"), 0, REG_DWORD, (BYTE*)&m_field_width, cbValue);
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
         cbValue = sizeof(m_8801_sw1);
         ::RegSetValueEx(hKey, TEXT("PC8801SW1"), 0, REG_DWORD, (BYTE*)&m_8801_sw1, cbValue);
         cbValue = sizeof(m_8801_sw2);
         ::RegSetValueEx(hKey, TEXT("PC8801SW2"), 0, REG_DWORD, (BYTE*)&m_8801_sw2, cbValue);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
         cbValue = sizeof(m_9801_sw1);
         ::RegSetValueEx(hKey, TEXT("PC9801SW1"), 0, REG_DWORD, (BYTE*)&m_9801_sw1, cbValue);
         cbValue = sizeof(m_9801_sw2);
@@ -2833,7 +2833,7 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.hInstance = m_hInst;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     TCHAR sz8801Switch[128];
     ::LoadString(m_hInst, IDS_8801_SW, sz8801Switch, _countof(sz8801Switch));
 
@@ -2847,7 +2847,7 @@ void VskWin32App::OnSettings(HWND hwnd)
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 #endif
 
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     TCHAR sz9801Switch[128];
     ::LoadString(m_hInst, IDS_9801_SW, sz9801Switch, _countof(sz9801Switch));
 

@@ -18,11 +18,11 @@ struct VskSettings
     VskMachineMode m_machine_mode = VSK_MACHINE_MODE_9801;  // マシンモード
     VskTextMode m_text_mode = VSK_TEXT_MODE_GRPH;       // テキストモード
     int m_field_width = 256;                            // フィールド幅
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     VskDword m_8801_sw1 = VSK_8801_SW1_DEFAULT;         // 8801 ディップスイッチ SW1
     VskDword m_8801_sw2 = VSK_8801_SW2_DEFAULT;         // 8801 ディップスイッチ SW2
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     VskDword m_9801_sw1 = VSK_9801_SW1_DEFAULT;         // 9801 ディップスイッチ SW1
     VskDword m_9801_sw2 = VSK_9801_SW2_DEFAULT;         // 9801 ディップスイッチ SW2
 #endif

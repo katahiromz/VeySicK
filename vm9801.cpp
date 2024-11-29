@@ -1,5 +1,5 @@
 // 9801 Virtual Machine
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
 
 #include "VeySicK.h"            // VeySicK
 #include "draw_algorithm.h"     // 描画アルゴリズム
@@ -1417,4 +1417,4 @@ bool Vsk9801Machine::clear_memory(VskDword addr)
     return true;
 }
 
-#endif  // def ENABLE_PC9801
+#endif  // def ENABLE_VM9801

@@ -3212,11 +3212,11 @@ static VskAstPtr vsk_COLOR_9801(const VskAstList& args)
 // INSN_COLOR (COLOR) @implemented
 static VskAstPtr VSKAPI vsk_COLOR(VskAstPtr self, const VskAstList& args)
 {
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     if (vsk_machine->is_8801_mode())
         return vsk_COLOR_8801(args);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     if (vsk_machine->is_9801_mode())
         return vsk_COLOR_9801(args);
 #endif
@@ -4849,11 +4849,11 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
 static VskAstPtr VSKAPI vsk_SCREEN(VskAstPtr self, const VskAstList& args)
 {
     vsk_targeting(self);
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     if (vsk_machine->is_8801_mode())
         return vsk_SCREEN_GENERIC(args, false);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     if (vsk_machine->is_9801_mode())
         return vsk_SCREEN_GENERIC(args, true);
 #endif

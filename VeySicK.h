@@ -768,10 +768,10 @@ extern VskMachinePtr vsk_machine;
 #define VSK_SETTINGS() (vsk_machine->m_settings)
 
 // マシンを作成する関数
-#ifdef ENABLE_PC8801
+#ifdef ENABLE_VM8801
     std::shared_ptr<VskMachine> vsk_create_8801_machine(VskMachineState *state, VskSettings *settings);
 #endif
-#ifdef ENABLE_PC9801
+#ifdef ENABLE_VM9801
     std::shared_ptr<VskMachine> vsk_create_9801_machine(VskMachineState *state, VskSettings *settings);
 #endif
 
