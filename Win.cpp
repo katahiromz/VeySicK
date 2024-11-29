@@ -2301,7 +2301,7 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     // 貼り付け可能か？
     ::EnableMenuItem(hMenu, ID_PASTE_TEXT, (IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED));
 
-    // 必要ならば、メニュー項目ID_MACHINE_8801, ID_MACHINE_9801のいずれかにチェックを付ける
+    // メニュー項目ID_MACHINE_8801, ID_MACHINE_9801のいずれかにチェックを付ける
     {
         bool bCheck8801 = vsk_machine->is_8801_mode();
         bool bCheck9801 = vsk_machine->is_9801_mode();
@@ -2315,11 +2315,13 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
             assert(bCheck9801);
             ::CheckMenuRadioItem(hMenu, ID_MACHINE_8801, ID_MACHINE_9801, ID_MACHINE_9801, MF_BYCOMMAND);
         }
-        bool bCheckUnlimited = VSK_SETTINGS()->m_unlimited_mode;
-        ::CheckMenuItem(hMenu, ID_UNLIMITED_MODE, (bCheckUnlimited ? MF_CHECKED : MF_UNCHECKED));
     }
 
-    // 必要ならば、メニュー項目のID_GRPH_MODE, ID_SJIS_MODEのいずれかにチェックを付ける
+    // 無制限モードにチェックを付ける
+    bool bCheckUnlimited = VSK_SETTINGS()->m_unlimited_mode;
+    ::CheckMenuItem(hMenu, ID_UNLIMITED_MODE, (bCheckUnlimited ? MF_CHECKED : MF_UNCHECKED));
+
+    // メニュー項目のID_GRPH_MODE, ID_SJIS_MODEのいずれかにチェックを付ける
     {
         bool bCheckGRPH = vsk_machine->is_grph_mode();
         bool bCheckSJIS = vsk_machine->is_sjis_mode();
@@ -2335,7 +2337,7 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
         }
     }
 
-    // 必要ならば、メニュー項目ID_ZOOM_X1、ID_ZOOM_X2、ID_ZOOM_X3のいずれかにチェックを付ける
+    // メニュー項目ID_ZOOM_X1、ID_ZOOM_X2、ID_ZOOM_X3のいずれかにチェックを付ける
     {
         RECT rc;
         ::GetClientRect(hwnd, &rc);
@@ -2347,7 +2349,7 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
         ::CheckMenuItem(hMenu, ID_ZOOM_X3, (bCheckX3 ? MF_CHECKED : MF_UNCHECKED));
     }
 
-    // 必要ならば、メニュー項目ID_MAXIMIZEにチェックを付ける
+    // メニュー項目ID_MAXIMIZEにチェックを付ける
     ::CheckMenuItem(hMenu, ID_MAXIMIZE, (IsZoomed(hwnd) ? MF_CHECKED : MF_UNCHECKED));
 
     // メニュー項目ID_ZOOM_X2, ID_ZOOM_X3 を有効化または無効化する
