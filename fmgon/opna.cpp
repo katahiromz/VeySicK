@@ -1138,11 +1138,14 @@ bool OPNA::LoadRhythmSample(const char* path) {
         FileIO file;
         uint32_t fsize;
         char buf[MAX_PATH] = "";
+
+        // バッファオーバーフローに注意
         if (path)
-            strncpy(buf, path, MAX_PATH);
-        strncat(buf, "2608_", MAX_PATH);
-        strncat(buf, rhythmname[i], MAX_PATH);
-        strncat(buf, ".WAV", MAX_PATH);
+            strncpy(buf, path, MAX_PATH - 1);
+        strncat(buf, "2608_", MAX_PATH - 1);
+        strncat(buf, rhythmname[i], MAX_PATH - 1);
+        strncat(buf, ".WAV", MAX_PATH - 1);
+        buf[MAX_PATH - 1] = 0;
 
         if (!file.Open(buf, "rb")) {
             if (i != 5)

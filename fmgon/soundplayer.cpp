@@ -326,8 +326,7 @@ void VskPhrase::realize(VskSoundPlayer *player) {
                         int(lc.m_adj_v[2]), int(lc.m_adj_v[3]),
                     };
                     ym.set_volume(ch, int(note.m_volume), adj);
-                    ym.set_pitch(ch, note.m_octave, note.m_key, 
-                                 int(lc.m_adj_p));
+                    ym.set_pitch(ch, note.m_octave, note.m_key, int(lc.m_adj_p));
                 }
                 nsamples -= unit;
             }
@@ -387,8 +386,7 @@ void VskPhrase::realize(VskSoundPlayer *player) {
     // generate an OpenAL buffer
     alGenBuffers(1, &m_buffer);
     assert(m_buffer != ALuint(-1));
-    alBufferData(m_buffer, AL_FORMAT_STEREO16, &data[0],
-        sizeof(FM_SAMPLETYPE) * size, SAMPLERATE);
+    alBufferData(m_buffer, AL_FORMAT_STEREO16, &data[0], sizeof(FM_SAMPLETYPE) * size, SAMPLERATE);
 
     // generate an OpenAL source
     alGenSources(1, &m_source);
