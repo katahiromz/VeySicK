@@ -220,7 +220,7 @@
                     is_floating_ = true;
                     fix_floating();
                 }
-                explicit auto_duration(_ratio_intmax_t r) : rep_(r), period_() {
+                explicit auto_duration(_ratio_intmax_t r) : rep_(_auto_duration_rep(r)), period_() {
                     is_floating_ = false;
                     fix_floating();
                 }
