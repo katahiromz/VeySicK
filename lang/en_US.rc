@@ -109,7 +109,6 @@ CAPTION "Dip switches"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS Shell Dlg"
 {
-    LTEXT "The DIP switches will only take effect after a reboot or reset.", -1, 5, 5, 220, 25
     RTEXT "SW1:", -1, 5, 40, 35, 10
     AUTOCHECKBOX "", chx8, 55, 35, 10, 15
     AUTOCHECKBOX "", chx7, 70, 35, 10, 15

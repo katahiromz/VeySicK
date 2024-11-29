@@ -1,12 +1,10 @@
 #pragma once
 
-// TODO:
-#define VSK_8801_SW1_DEFAULT  0
-#define VSK_8801_SW2_DEFAULT  0
+#define VSK_8801_SW1_DEFAULT  0x69
+#define VSK_8801_SW2_DEFAULT  0x62
 
-// TODO:
-#define VSK_9801_SW1_DEFAULT  0
-#define VSK_9801_SW2_DEFAULT  0
+#define VSK_9801_SW1_DEFAULT  0x48
+#define VSK_9801_SW2_DEFAULT  0x05
 
 // VeySicKの設定
 struct VskSettings
