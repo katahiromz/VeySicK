@@ -40,31 +40,27 @@ IDR_MAINMENU MENU
     }
     POPUP "Drive 1"
     {
-        MENUITEM "Open Image...", ID_DRIVE1_IMAGE
-        MENUITEM "Folder...", ID_DRIVE1_FOLDER
+        MENUITEM "Open Folder", ID_DRIVE1_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "Eject", ID_DRIVE1_EJECT
+        MENUITEM "", ID_DRIVE1_INFO, GRAYED
     }
     POPUP "Drive 2"
     {
-        MENUITEM "Open Image...", ID_DRIVE2_IMAGE
-        MENUITEM "Folder...", ID_DRIVE2_FOLDER
+        MENUITEM "Open Folder", ID_DRIVE2_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "Eject", ID_DRIVE2_EJECT
+        MENUITEM "", ID_DRIVE2_INFO, GRAYED
     }
     POPUP "Drive 3"
     {
-        MENUITEM "Open Image...", ID_DRIVE3_IMAGE
-        MENUITEM "Folder...", ID_DRIVE3_FOLDER
+        MENUITEM "Open Folder", ID_DRIVE3_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "Eject", ID_DRIVE3_EJECT
+        MENUITEM "", ID_DRIVE3_INFO, GRAYED
     }
     POPUP "Drive 4"
     {
-        MENUITEM "Open Image...", ID_DRIVE4_IMAGE
-        MENUITEM "Folder...", ID_DRIVE4_FOLDER
+        MENUITEM "Open Folder", ID_DRIVE4_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "Eject", ID_DRIVE4_EJECT
+        MENUITEM "", ID_DRIVE4_INFO, GRAYED
     }
     POPUP "Screen"
     {

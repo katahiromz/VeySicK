@@ -1784,8 +1784,6 @@ protected:
     bool do_save(HWND hwnd, const char *file, bool protect);
     void show_popup_menu(HWND hwnd, INT iSubMenu);
     void start_stop_timers(HWND hwnd, bool do_start);
-    VskString get_disk_image(HWND hwnd, int number);
-    VskString get_drive_folder(HWND hwnd, int number);
     VskString load_string(int id);
     void reset_settings();
     bool load_settings();
@@ -1821,9 +1819,7 @@ protected:
     bool OnLoad(HWND hwnd, bool do_run);
     bool OnSave(HWND hwnd);
     bool OnSaveAs(HWND hwnd);
-    void OnEjectDisk(HWND hwnd, int number);
-    void OnDiskImage(HWND hwnd, int number);
-    void OnDriveFolder(HWND hwnd, int number);
+    void OnOpenDriveFolder(HWND hwnd, int number);
 
     void OnCopy(HWND hwnd);
     void OnPaste(HWND hwnd);
@@ -2374,79 +2370,16 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     }
 
     MENUITEMINFOA mii = { sizeof(mii), MIIM_TYPE, MFT_STRING };
-    VskString filename;
-    VskString str;
-
     // ディスクイメージ名・フォルダー名をセットする
     {
-        int ids0[] = { ID_DRIVE1_IMAGE, ID_DRIVE2_IMAGE, ID_DRIVE3_IMAGE, ID_DRIVE4_IMAGE };
-        int ids1[] = { ID_DRIVE1_FOLDER, ID_DRIVE2_FOLDER, ID_DRIVE3_FOLDER, ID_DRIVE4_FOLDER };
-        assert(_countof(ids0) == _countof(ids1));
-        for (int iDrive = 0; iDrive < _countof(ids0); ++iDrive)
+        std::vector<UINT> ids = { ID_DRIVE1_INFO, ID_DRIVE2_INFO, ID_DRIVE3_INFO, ID_DRIVE4_INFO };
+        for (int i = 0; i < 4; ++i)
         {
-            // イメージ名をセットする。ついでにチェックを付けるか外す
-            filename = get_disk_image(hwnd, iDrive + 1);
-            if (PathIsDirectoryA(filename.c_str()))
-            {
-                str = load_string(IDS_OPEN_IMAGE) + " (";
-                str += PathFindFileNameA(filename.c_str());
-                str += ")";
-                ::CheckMenuItem(hMenu, ids0[iDrive], MF_CHECKED);
-            }
-            else
-            {
-                str = load_string(IDS_OPEN_IMAGE);
-                ::CheckMenuItem(hMenu, ids0[iDrive], MF_UNCHECKED);
-            }
-            mii.dwTypeData = const_cast<char *>(str.data());
-            ::SetMenuItemInfoA(hMenu, ids0[iDrive], FALSE, &mii);
-
-            // フォルダー名をセットする。ついでにチェックを付けるか外す
-            filename = get_drive_folder(hwnd, iDrive + 1);
-            if (PathIsDirectoryA(filename.c_str()))
-            {
-                str = load_string(IDS_FOLDER) + " (";
-                str += PathFindFileNameA(filename.c_str());
-                str += ")";
-                ::CheckMenuItem(hMenu, ids1[iDrive], MF_CHECKED);
-            }
-            else
-            {
-                str = load_string(IDS_FOLDER);
-                ::CheckMenuItem(hMenu, ids1[iDrive], MF_UNCHECKED);
-            }
-            mii.dwTypeData = const_cast<char *>(str.data());
-            ::SetMenuItemInfoA(hMenu, ids1[iDrive], FALSE, &mii);
+            auto path = vsk_get_drive_path(i + 1);
+            mii.dwTypeData = &path[0];
+            ::SetMenuItemInfoA(hMenu, ids.at(i), FALSE, &mii);
         }
     }
-}
-
-// ドライブ番号のディスク イメージのパスファイル名を取得
-VskString VskWin32App::get_disk_image(HWND hwnd, int number)
-{
-    int iDrive = number - 1;
-    assert(0 <= iDrive && iDrive < _countof(m_disk_images));
-    if (m_disk_images[iDrive][0])
-        return m_disk_images[iDrive];
-    return "";
-}
-
-// ドライブ フォルダのパスファイル名を取得
-VskString VskWin32App::get_drive_folder(HWND hwnd, int number)
-{
-    int iDrive = number - 1;
-    assert(0 <= iDrive && iDrive < _countof(m_disk_images));
-    if (m_disk_images[iDrive][0])
-        return "";
-    assert(0 <= iDrive && iDrive < _countof(m_disk_folders));
-    auto filename = m_disk_folders[iDrive];
-    if (filename[0] && PathIsDirectoryA(filename))
-        return filename;
-    char szPath[MAX_PATH];
-    ::GetModuleFileNameA(nullptr, szPath, _countof(szPath));
-    ::PathRemoveFileSpecA(szPath);
-    ::PathRemoveBackslashA(szPath);
-    return VskString(szPath) + "\\Drive" + std::to_string(iDrive + 1);
 }
 
 VskString VskWin32App::load_string(int id)
@@ -2457,68 +2390,12 @@ VskString VskWin32App::load_string(int id)
     return VskString(szText);
 }
 
-// ID_DRIVE1_EJECT, ID_DRIVE2_EJECT, ID_DRIVE3_EJECT, ID_DRIVE4_EJECT
-void VskWin32App::OnEjectDisk(HWND hwnd, int number)
+// ID_DRIVE1_OPEN_FOLDER, ID_DRIVE2_OPEN_FOLDER, ...
+void VskWin32App::OnOpenDriveFolder(HWND hwnd, int number)
 {
-    int iDrive = number - 1;
-    assert(0 <= iDrive && iDrive < _countof(m_disk_images));
-    assert(0 <= iDrive && iDrive < _countof(m_disk_folders));
-    m_disk_images[iDrive][0] = 0;
-    m_disk_folders[iDrive][0] = 0;
-}
+    auto path = vsk_get_drive_path(number);
 
-// ID_DRIVE1_IMAGE, ID_DRIVE2_IMAGE, ID_DRIVE3_IMAGE, ID_DRIVE4_IMAGE
-void VskWin32App::OnDiskImage(HWND hwnd, int number)
-{
-    // ファイルパス名
-    char szFile[MAX_PATH];
-    szFile[0] = 0;
-
-    // ユーザーにファイルの場所を問い合わせる準備をする
-    OPENFILENAMEA ofn = { sizeof(ofn), hwnd };
-    ofn.lpstrFilter = "D88 Files (*.d88)\0*.d88\0\0";
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = _countof(szFile);
-    ofn.lpstrTitle = "Load D88 disk image";
-    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST |
-                OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
-    ofn.lpstrDefExt = ".d88";
-
-    // 初期ディレクトリを指定
-    char szDir[MAX_PATH];
-    ::GetModuleFileNameA(nullptr, szDir, _countof(szDir));
-    ::PathRemoveFileSpecA(szDir);
-    ::PathAppendA(szDir, "FILES");
-    if (!::PathIsDirectoryA(szDir))
-        ::PathRemoveFileSpecA(szDir);
-    ofn.lpstrInitialDir = szDir;
-
-    // 問い合わせる
-    if (!::GetOpenFileNameA(&ofn))
-        return;
-
-    // TODO:
-}
-
-// ID_DRIVE1_FOLDER, ID_DRIVE2_FOLDER, ID_DRIVE3_FOLDER, ID_DRIVE4_FOLDER
-void VskWin32App::OnDriveFolder(HWND hwnd, int number)
-{
-    INT iDrive = number - 1;
-    assert(0 <= iDrive && iDrive < _countof(m_disk_folders));
-
-    // TODO: 初期位置を指定
-    BROWSEINFOA bi = { hwnd };
-    bi.ulFlags = BIF_RETURNONLYFSDIRS;
-    auto pidlRet = SHBrowseForFolderA(&bi);
-    if (!pidlRet)
-        return;
-
-    // ディスクを取り出す
-    OnEjectDisk(hwnd, number);
-    // ドライブ フォルダのパスファイル名を取得
-    SHGetPathFromIDListA(pidlRet, m_disk_folders[iDrive]);
-    // 後始末
-    ILFree(pidlRet);
+    ::ShellExecuteA(hwnd, nullptr, path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 }
 
 // ID_LOAD / ID_LOAD_RUN
@@ -2645,41 +2522,17 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case ID_SAVE_AS: // 名前を付けて保存
         OnSaveAs(hwnd);
         break;
-    case ID_DRIVE1_EJECT: // ドライブを取り出す
-        OnEjectDisk(hwnd, 1);
+    case ID_DRIVE1_OPEN_FOLDER:
+        OnOpenDriveFolder(hwnd, 1);
         break;
-    case ID_DRIVE2_EJECT: // ドライブを取り出す
-        OnEjectDisk(hwnd, 2);
+    case ID_DRIVE2_OPEN_FOLDER:
+        OnOpenDriveFolder(hwnd, 2);
         break;
-    case ID_DRIVE3_EJECT: // ドライブを取り出す
-        OnEjectDisk(hwnd, 3);
+    case ID_DRIVE3_OPEN_FOLDER:
+        OnOpenDriveFolder(hwnd, 3);
         break;
-    case ID_DRIVE4_EJECT: // ドライブを取り出す
-        OnEjectDisk(hwnd, 4);
-        break;
-    case ID_DRIVE1_FOLDER: // ドライブフォルダをセット
-        OnDriveFolder(hwnd, 1);
-        break;
-    case ID_DRIVE2_FOLDER: // ドライブフォルダをセット
-        OnDriveFolder(hwnd, 2);
-        break;
-    case ID_DRIVE3_FOLDER: // ドライブフォルダをセット
-        OnDriveFolder(hwnd, 3);
-        break;
-    case ID_DRIVE4_FOLDER: // ドライブフォルダをセット
-        OnDriveFolder(hwnd, 4);
-        break;
-    case ID_DRIVE1_IMAGE: // イメージを開く
-        OnDiskImage(hwnd, 1);
-        break;
-    case ID_DRIVE2_IMAGE: // イメージを開く
-        OnDiskImage(hwnd, 2);
-        break;
-    case ID_DRIVE3_IMAGE: // イメージを開く
-        OnDiskImage(hwnd, 3);
-        break;
-    case ID_DRIVE4_IMAGE: // イメージを開く
-        OnDiskImage(hwnd, 4);
+    case ID_DRIVE4_OPEN_FOLDER:
+        OnOpenDriveFolder(hwnd, 4);
         break;
     case ID_NEW_DISK:
         assert(0); // 未実装

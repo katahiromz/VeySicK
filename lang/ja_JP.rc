@@ -40,31 +40,27 @@ IDR_MAINMENU MENU
     }
     POPUP "ドライブ 1"
     {
-        MENUITEM "イメージを開く...", ID_DRIVE1_IMAGE
-        MENUITEM "フォルダ...", ID_DRIVE1_FOLDER
+        MENUITEM "フォルダを開く", ID_DRIVE1_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "取り出し", ID_DRIVE1_EJECT
+        MENUITEM "", ID_DRIVE1_INFO, GRAYED
     }
     POPUP "ドライブ 2"
     {
-        MENUITEM "イメージを開く...", ID_DRIVE2_IMAGE
-        MENUITEM "フォルダ...", ID_DRIVE2_FOLDER
+        MENUITEM "フォルダを開く", ID_DRIVE2_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "取り出し", ID_DRIVE2_EJECT
+        MENUITEM "", ID_DRIVE2_INFO, GRAYED
     }
     POPUP "ドライブ 3"
     {
-        MENUITEM "イメージを開く...", ID_DRIVE3_IMAGE
-        MENUITEM "フォルダ...", ID_DRIVE3_FOLDER
+        MENUITEM "フォルダを開く", ID_DRIVE3_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "取り出し", ID_DRIVE3_EJECT
+        MENUITEM "", ID_DRIVE3_INFO, GRAYED
     }
     POPUP "ドライブ 4"
     {
-        MENUITEM "イメージを開く...", ID_DRIVE4_IMAGE
-        MENUITEM "フォルダ...", ID_DRIVE4_FOLDER
+        MENUITEM "フォルダを開く", ID_DRIVE4_OPEN_FOLDER
         MENUITEM SEPARATOR
-        MENUITEM "取り出し", ID_DRIVE4_EJECT
+        MENUITEM "", ID_DRIVE4_INFO, GRAYED
     }
     POPUP "画面"
     {
