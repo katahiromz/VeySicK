@@ -2656,13 +2656,11 @@ bool VskMachine::connect(bool do_connect)
 {
     if (do_connect) // 接続する
     {
-        if (VSK_SETTINGS()->m_machine_mode == VSK_MACHINE_MODE_8801)
-            m_state->m_segment = 0;
-
         vsk_vars_block = std::make_shared<VskVarMemoryBlock>(m_state);
         vsk_str_block = std::make_shared<VskStrMemoryBlock>(m_state);
         m_state->m_memory->add_block(vsk_vars_block.get());
         m_state->m_memory->add_block(vsk_str_block.get());
+        reset();
     }
     else // 接続を切断する
     {

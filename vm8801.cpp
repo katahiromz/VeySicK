@@ -526,6 +526,8 @@ struct Vsk8801Machine : VskMachine
     // 特殊なメモリー読み込み
     bool special_memory_read(VskByte *ptr, VskAddr addr) override;
 
+    // システムのリセット
+    void reset() override;
     // パレットのリセット
     void reset_palette() override;
     // テキスト画面のリセット
@@ -894,9 +896,6 @@ Vsk8801Machine::Vsk8801Machine(VskMachineState *state, VskSettings *settings)
     : VskMachine(state, settings)
     , m_screen_image(VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT)
 {
-    reset_palette();
-    reset_text();
-    reset_graphics();
 }
 
 // パレットのリセット
@@ -1472,6 +1471,28 @@ bool Vsk8801Machine::clear_memory(VskDword addr)
 
     m_free_area->clear();
     return true;
+}
+
+void Vsk8801Machine::reset()
+{
+    m_state->m_segment = 0;
+
+    auto sw1 = VSK_SETTINGS()->m_8801_sw1;
+    auto sw2 = VSK_SETTINGS()->m_8801_sw2;
+
+    if (sw1 & 0x40)
+        m_state->m_text_width = 80;
+    else
+        m_state->m_text_width = 40;
+
+    if (sw1 & 0x20)
+        m_state->m_text_height = 25;
+    else
+        m_state->m_text_height = 20;
+
+    reset_palette();
+    reset_text();
+    reset_graphics();
 }
 
 void Vsk8801Machine::do_unit_tests()

@@ -617,6 +617,7 @@ struct VskMachine : VskObject
     bool binary_load_with_header(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr);
     bool binary_save_with_header(const char *filename, VskAddr addr, VskDword size);
 
+    virtual void reset() { }
     virtual void reset_palette() { }
     virtual void reset_border_color() { vsk_reset_border_color(m_state->m_border_color); }
     virtual void reset_text() { }

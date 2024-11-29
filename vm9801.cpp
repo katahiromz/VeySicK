@@ -304,6 +304,8 @@ struct Vsk9801Machine : VskMachine
     // 特殊なメモリー読み込み
     bool special_memory_read(VskByte *ptr, VskAddr addr) override;
 
+    // システムのリセット
+    void reset() override;
     // パレットのリセット
     void reset_palette() override;
     // テキスト画面のリセット
@@ -672,7 +674,6 @@ struct Vsk9801Machine : VskMachine
             m_state->m_memory->add_block(m_graph_vram.get());
             m_state->m_memory->add_block(m_free_area.get());
             VskMachine::connect(true);
-            clear_text();
         }
         else
         {
@@ -704,9 +705,6 @@ Vsk9801Machine::Vsk9801Machine(VskMachineState *state, VskSettings *settings)
     : VskMachine(state, settings)
     , m_screen_image(VSK_SCREEN_WIDTH, VSK_SCREEN_HEIGHT)
 {
-    reset_palette();
-    reset_text();
-    reset_graphics();
 }
 
 // テキスト画面の消去
@@ -1352,6 +1350,29 @@ void Vsk9801Machine::clear_planes(bool blue, bool red, bool green, bool intensit
     {
         std::memset(planes[3], 0, m_state->m_screen_width * m_state->m_screen_height / CHAR_BIT);
     }
+}
+
+// システムのリセット
+void Vsk9801Machine::reset()
+{
+    m_state->m_segment = 0;
+
+    auto sw1 = VSK_SETTINGS()->m_9801_sw1;
+    auto sw2 = VSK_SETTINGS()->m_9801_sw2;
+
+    if (sw2 & 0x20)
+        m_state->m_text_width = 80;
+    else
+        m_state->m_text_width = 40;
+
+    if (sw2 & 0x10)
+        m_state->m_text_height = 25;
+    else
+        m_state->m_text_height = 20;
+
+    reset_palette();
+    reset_text();
+    reset_graphics();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
