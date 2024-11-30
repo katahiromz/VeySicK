@@ -1265,6 +1265,7 @@ void VskMachine::control_code(VskByte ch)
         if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT)
             return;
         forward_word();
+        set_insert_mode(false);
         break;
     case 'G': // BEL
         if (VSK_STATE()->m_wait_for == VSK_NO_WAIT)
