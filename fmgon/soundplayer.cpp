@@ -434,6 +434,7 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                 m_play_lock.lock();
                 if (m_melody_line.empty()) {
                     m_play_lock.unlock();
+                    stop();
                     m_stopping_event.pulse();
                     break;
                 }
