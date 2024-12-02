@@ -1320,12 +1320,11 @@ cmd_name
     ;
 
 cmd_parameter_list
-    : TK_ON                                             { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
-    | TK_OFF                                            { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
-    | TK_COPY                                           { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
-    | expression                                        { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
-    | cmd_parameter_list TK_COMMA expression            { $$ = $1; $$->push_back($2); }
-    | file_number        TK_COMMA cmd_parameter_list    { $$ = $3; $$->insert($$->begin(), $1); }
+    : TK_ON                                        { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | TK_OFF                                       { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | TK_COPY                                      { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
+    | trailing_parameter_list                      { $$ = $1; }
+    | file_number TK_COMMA trailing_parameter_list { $$ = $3; $$->insert($$->begin(), $1); }
     ;
 
 line
