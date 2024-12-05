@@ -955,9 +955,9 @@ void vsk_draw_kanji(T_PUTTER& putter, T_GETTER& getter, VskWord jis, int x0, int
             for (int dx = 0, x = x0; dx < 16; ++x, ++dx) {
                 int palette = getter(x, y);
                 if (kanji_getter(xSrc + dx, ySrc + dy))
-                    palette = back_color;
+                    palette = fore_color ^ 0xF;
                 else
-                    palette = fore_color;
+                    palette = back_color ^ 0xF;
                 putter.set_color(palette);
                 putter(x, y);
             }
