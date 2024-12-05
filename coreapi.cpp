@@ -6907,6 +6907,7 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
             }
         }
 
+        // 必要なバイト数を計算する
         int cx = v2 - v0 + 1, cy = v3 - v1 + 1;
         VskMemSize required_bytes = (cx + 7) / 8 * cy * M + 4;
 
@@ -6920,7 +6921,6 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
         auto var_desc = vsk_var_find(name);
         if (!var_desc || !vsk_var_is_array(name))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
-
         auto type = vsk_var_get_type(name);
         if (type == VSK_TYPE_STRING)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr); // 文字列は使えない
@@ -6960,18 +6960,27 @@ static VskAstPtr VSKAPI vsk_GET_at_STEP(VskAstPtr self, const VskAstList& args)
     return vsk_GET_at_helper(args, true);
 }
 
-// INSN_PUT_at
+// INSN_PUT_at (PUT@)
 static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
 {
-    if (!vsk_arity_in_range(args, 3, 4))
+    if (!vsk_arity_in_range(args, 3, 6))
         return nullptr;
 
     VskInt v0, v1;
     VskString v3;
+    VskInt v4, v5;
+    auto arg4 = vsk_arg(args, 4);
+    auto arg5 = vsk_arg(args, 5);
     if (vsk_int(v0, args[0]) &&
         vsk_int(v1, args[1]) &&
-        (args.size() <= 3 || vsk_str(v3, args[3])))
+        (args.size() <= 3 || vsk_str(v3, args[3])) &&
+        (!arg4 || vsk_int(v4, arg4)) &&
+        (!arg5 || vsk_int(v5, arg5)))
     {
+        // 前景色と背景色を指定するなら、同時に指定しないといけない
+        if (!arg4 != !arg5)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
         // プレーンの数
         int M = 1;
         if (VSK_STATE()->m_color_graphics)
@@ -6998,7 +7007,6 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
         auto var_desc = vsk_var_find(name);
         if (!var_desc || !vsk_var_is_array(name))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
-
         auto type = vsk_var_get_type(name);
         if (type == VSK_TYPE_STRING)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr); // 文字列は使えない
@@ -7016,15 +7024,28 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
         if (!ptr)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
-        // 画像を取得
-        if (!vsk_machine->put_image(v0, v1, ptr, remainder, M, v3))
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
+        if (arg4)
+        {
+            // カラーが正しいか？
+            if (!vsk_machine->is_valid_color(v4) || !vsk_machine->is_valid_color(v5))
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 不正な色
+
+            // 画像をセット
+            if (!vsk_machine->put_image(v0, v1, ptr, remainder, M, v3, v4, v5))
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+        else
+        {
+            // 画像をセット
+            if (!vsk_machine->put_image(v0, v1, ptr, remainder, M, v3))
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
     }
 
     return nullptr;
 }
 
-// INSN_PUT_at_KANJI
+// INSN_PUT_at_KANJI (PUT@ KANJI)
 static VskAstPtr VSKAPI vsk_PUT_at_KANJI(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 3, 6))

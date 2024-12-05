@@ -1024,7 +1024,7 @@ bool vsk_get_image(T_GETTER& getter, int x0, int y0, int cx, int cy, uint8_t *pt
         {
             int palette = getter(x, y);
             if (palette == -1)
-                continue;
+                return false;
             getter2(x - x0, y - y0, palette);
         }
     }
@@ -1126,6 +1126,89 @@ bool vsk_put_image(T_PUTTER& putter, T_GETTER& getter, int x0, int y0, const uin
             for (int x = x0; x < x0 + cx; ++x) {
                 int palette = getter(x, y);
                 palette = putter2(x - x0, y - y0) ^ 0xF;
+                putter.set_color(palette);
+                putter(x, y);
+            }
+        }
+    }
+
+    return true;
+}
+
+template <typename T_PUTTER, typename T_GETTER>
+bool vsk_put_image(T_PUTTER& putter, T_GETTER& getter, int x0, int y0, const uint8_t *ptr, size_t size, size_t M, const VskString& op, int fore_color, int back_color)
+{
+    if (size < 4)
+        return false;
+
+    const uint16_t cx = ((uint16_t*)ptr)[0];
+    const uint16_t cy = ((uint16_t*)ptr)[1];
+    ptr += 4;
+    size -= 4;
+
+    auto pitch = (cx + 7) / 8;
+    size_t plane_size = pitch * cy;
+    if (1 * plane_size > size)
+        return false;
+
+    VskImagePutter putter2(ptr, pitch, plane_size, 1);
+
+    if (op == "XOR" || op.empty()) {
+        for (int y = y0; y < y0 + cy; ++y) {
+            for (int x = x0; x < x0 + cx; ++x) {
+                int palette = getter(x, y);
+                if (putter2(x - x0, y - y0))
+                    palette ^= fore_color;
+                else
+                    palette ^= back_color;
+                putter.set_color(palette);
+                putter(x, y);
+            }
+        }
+    } else if (op == "OR") {
+        for (int y = y0; y < y0 + cy; ++y) {
+            for (int x = x0; x < x0 + cx; ++x) {
+                int palette = getter(x, y);
+                if (putter2(x - x0, y - y0))
+                    palette |= fore_color;
+                else
+                    palette |= back_color;
+                putter.set_color(palette);
+                putter(x, y);
+            }
+        }
+    } else if (op == "AND") {
+        for (int y = y0; y < y0 + cy; ++y) {
+            for (int x = x0; x < x0 + cx; ++x) {
+                int palette = getter(x, y);
+                if (putter2(x - x0, y - y0))
+                    palette &= fore_color;
+                else
+                    palette &= back_color;
+                putter.set_color(palette);
+                putter(x, y);
+            }
+        }
+    } else if (op == "PSET") {
+        for (int y = y0; y < y0 + cy; ++y) {
+            for (int x = x0; x < x0 + cx; ++x) {
+                int palette = getter(x, y);
+                if (putter2(x - x0, y - y0))
+                    palette = fore_color;
+                else
+                    palette = back_color;
+                putter.set_color(palette);
+                putter(x, y);
+            }
+        }
+    } else if (op == "PRESET") {
+        for (int y = y0; y < y0 + cy; ++y) {
+            for (int x = x0; x < x0 + cx; ++x) {
+                int palette = getter(x, y);
+                if (putter2(x - x0, y - y0))
+                    palette = fore_color ^ 0xF;
+                else
+                    palette = back_color ^ 0xF;
                 putter.set_color(palette);
                 putter(x, y);
             }

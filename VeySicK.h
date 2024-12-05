@@ -745,6 +745,7 @@ struct VskMachine : VskObject
     void draw_kanji(int x, int y, VskWord jis, const VskString& op, int fore_color, int back_color, bool is_9801);
     bool get_image(int x0, int y0, int cx, int cy, void *ptr, size_t size, int M);
     bool put_image(int x0, int y0, const void *ptr, size_t size, int M, const VskString& op);
+    bool put_image(int x0, int y0, const void *ptr, size_t size, int M, const VskString& op, int fore_color, int back_color);
 
     static std::shared_ptr<VskMachine> create_machine(VskMachineState *state, VskSettings *settings);
     void test_pattern(int type);

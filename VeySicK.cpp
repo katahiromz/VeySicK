@@ -2105,6 +2105,19 @@ bool VskMachine::put_image(int x0, int y0, const void *ptr, size_t size, int M, 
     return false;
 }
 
+// イメージを描画する
+bool VskMachine::put_image(int x0, int y0, const void *ptr, size_t size, int M, const VskString& op, int fore_color, int back_color)
+{
+    if (auto getter = get_color_getter(nullptr))
+    {
+        if (auto putter = get_color_putter(7, nullptr))
+        {
+            return vsk_put_image(*putter, *getter, x0, y0, (const uint8_t *)ptr, size, M, op, fore_color, back_color);
+        }
+    }
+    return false;
+}
+
 // テストパターン
 void VskMachine::test_pattern(int type)
 {

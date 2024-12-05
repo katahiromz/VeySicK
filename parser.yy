@@ -788,6 +788,10 @@ primary_statement
         vsk_targeting($1);
         $$ = vsk_ast(INSN_PUT_at_KANJI, { $3, $5, $10 });
     }
+    | put_at TK_L_PAREN expression TK_COMMA expression TK_R_PAREN TK_COMMA lvalue TK_COMMA put_operation TK_COMMA expression TK_COMMA expression {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_PUT_at, { $3, $5, $8, $10, $12, $14 });
+    }
     | put_at TK_L_PAREN expression TK_COMMA expression TK_R_PAREN TK_COMMA lvalue TK_COMMA put_operation {
         vsk_targeting($1);
         $$ = vsk_ast(INSN_PUT_at, { $3, $5, $8, $10 });
