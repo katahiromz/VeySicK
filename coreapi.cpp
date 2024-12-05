@@ -8677,10 +8677,64 @@ static VskAstPtr VSKAPI vsk_INP(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_INPUT_dollar (INPUT$)
+// INSN_INPUT_dollar (INPUT$) @implemented
 static VskAstPtr VSKAPI vsk_INPUT_dollar(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 2))
+        return nullptr;
+
+    VskInt v0, v1;
+    auto arg1 = vsk_arg(args, 1);
+    if (vsk_int(v0, args[0]) &&
+        (!arg1 || vsk_file_number(v1, arg1)))
+    {
+        // 256文字以上は失敗
+        if (v0 >= 256)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (arg1) // ファイル番号の指定があれば
+        {
+            // ファイル番号からファイルを取得
+            auto file = vsk_get_file_manager()->assoc(v1);
+            if (!file)
+                VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+            // ファイルから読み込む
+            char buf[256];
+            if (auto error = file->read_bin(buf, v0))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+
+            // 文字列を返す
+            return vsk_ast_str(buf);
+        }
+        else // ファイル番号の指定がなければ
+        {
+            // キーボードから読み込む準備をする
+            VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT_dollar;
+            VSK_STATE()->m_input_dollar_length = v0;
+            VSK_STATE()->m_input_dollar_string.clear();
+
+            // ロックを解除
+            vsk_unlock();
+            while (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_dollar) // INPUT$が解除されるまで待つ
+            {
+                // 少し待つ
+                vsk_sleep(80);
+            }
+            // ロックする
+            vsk_lock();
+
+            // 指定文字数の文字列が入力されていれば
+            if (int(VSK_STATE()->m_input_dollar_string.size()) >= v0)
+            {
+                // 文字列を返す
+                auto str = VSK_STATE()->m_input_dollar_string;
+                VSK_STATE()->m_input_dollar_string.clear();
+                return vsk_ast_str(str);
+            }
+        }
+    }
+
     return nullptr;
 }
 

@@ -362,6 +362,8 @@ primary_expression
     | TK_LOC TK_L_PAREN file_number TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_LOC, { $3 }); }
     | TK_FPOS TK_L_PAREN file_number TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_FPOS, { $3 }); }
     | TK_FPOS TK_L_PAREN expression  TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_FPOS, { $3 }); }
+    | TK_INPUT_dollar TK_L_PAREN expression TK_COMMA file_number TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_INPUT_dollar, { $3, $5 }); }
+    | TK_INPUT_dollar TK_L_PAREN expression TK_R_PAREN { vsk_targeting($1); $$ = vsk_ast(INSN_INPUT_dollar, { $3 }); }
     ;
 
 parameter_list
@@ -408,7 +410,6 @@ function_name
     | TK_FRE              { vsk_targeting($1); $$ = vsk_ast(INSN_FRE); }
     | TK_HEX_dollar       { vsk_targeting($1); $$ = vsk_ast(INSN_HEX_dollar); }
     | TK_INP              { vsk_targeting($1); $$ = vsk_ast(INSN_INP); }
-    | TK_INPUT_dollar     { vsk_targeting($1); $$ = vsk_ast(INSN_INPUT_dollar); }
     | TK_INSTR            { vsk_targeting($1); $$ = vsk_ast(INSN_INSTR); }
     | TK_INT              { vsk_targeting($1); $$ = vsk_ast(INSN_INT); }
     | TK_JIS_dollar       { vsk_targeting($1); $$ = vsk_ast(INSN_JIS_dollar); }

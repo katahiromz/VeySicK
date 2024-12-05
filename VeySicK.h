@@ -446,6 +446,7 @@ enum VskWaitFor
     VSK_WAIT_FOR_COMMAND,
     VSK_WAIT_FOR_INPORT,
     VSK_WAIT_FOR_INPUT,
+    VSK_WAIT_FOR_INPUT_dollar,
     VSK_WAIT_FOR_DRAW,
     VSK_WAIT_FOR_TURTLE,
     VSK_WAIT_FOR_PLAY,
@@ -472,6 +473,8 @@ struct VskMachineState
     int m_console_cy0                       = 25;                       // コンソールのスクロール範囲の行数
     VskLogAttr m_text_attr                  = { 7 };                    // テキスト画面のテキスト属性
     VskByte m_line_link[25]                 = { 0 };                    // 行リンク（次の行とつながっているか？）
+    int m_input_dollar_length               = 0;                        // INPUT$の長さ
+    VskString m_input_dollar_string         = "";                       // INPUT$のバッファ
 
     // graphic screen
     int m_screen_mode                       = 0;            // スクリーンモード

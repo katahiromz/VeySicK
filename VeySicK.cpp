@@ -1183,6 +1183,12 @@ void VskMachine::keyboard_ch(VskWord ch)
     case VSK_WAIT_FOR_COMMAND:
     case VSK_WAIT_FOR_INPUT:
         break;
+    case VSK_WAIT_FOR_INPUT_dollar:
+        // INPUT$の処理
+        VSK_STATE()->m_input_dollar_string += (char)ch;
+        if (int(VSK_STATE()->m_input_dollar_string.size()) >= VSK_STATE()->m_input_dollar_length)
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        return;
     case VSK_NO_WAIT:
     case VSK_WAIT_FOR_INPORT:
     case VSK_WAIT_FOR_DRAW:
@@ -1224,6 +1230,20 @@ void VskMachine::control_code(VskByte ch)
     // WAIT文待ちのときは入力を受け付けない
     if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPORT)
         return;
+
+    // INPUT$の処理
+    if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_dollar)
+    {
+        if (ch == 'C') // Ctrl+C (STOP)は特別
+        {
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        }
+
+        VSK_STATE()->m_input_dollar_string += char(ch - '@');
+        if (int(VSK_STATE()->m_input_dollar_string.size()) >= VSK_STATE()->m_input_dollar_length)
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        return;
+    }
 
     switch (ch)
     {
