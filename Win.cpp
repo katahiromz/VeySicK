@@ -3255,20 +3255,30 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
     case VK_LEFT: // ←
         if (vsk_is_ctrl_pressed())
             vsk_machine->control_code('B');
+        else if (vsk_is_shift_pressed())
+            vsk_machine->control_code('\\');
         else
             vsk_machine->control_code(']');
         break;
     case VK_UP: // ↑
-        vsk_machine->print_control('^');
+        if (vsk_is_shift_pressed())
+            vsk_machine->control_code('_');
+        else
+            vsk_machine->print_control('^');
         break;
     case VK_RIGHT: // →
         if (vsk_is_ctrl_pressed())
             vsk_machine->control_code('F');
+        else if (vsk_is_shift_pressed())
+            vsk_machine->control_code(']');
         else
             vsk_machine->control_code('\\');
         break;
     case VK_DOWN: // ↓
-        vsk_machine->control_code('_');
+        if (vsk_is_shift_pressed())
+            vsk_machine->print_control('^');
+        else
+            vsk_machine->control_code('_');
         break;
     case VK_RETURN: // Enterキー
         vsk_machine->control_code('M');
