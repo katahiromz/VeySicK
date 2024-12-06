@@ -52,12 +52,14 @@
 #define ID_SJIS_MODE                        135
 #define ID_JIS_MODE                         136
 #define ID_UNLIMITED_MODE                   137
+#define ID_DRIVE5_INFO                      138
+#define ID_DRIVE5_OPEN_FOLDER               139
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS
         #define _APS_NO_MFC                 1
         #define _APS_NEXT_RESOURCE_VALUE    103
-        #define _APS_NEXT_COMMAND_VALUE     138
+        #define _APS_NEXT_COMMAND_VALUE     140
         #define _APS_NEXT_CONTROL_VALUE     1000
         #define _APS_NEXT_SYMED_VALUE       300
     #endif

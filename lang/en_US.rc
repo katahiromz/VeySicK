@@ -55,6 +55,12 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "(None)", ID_DRIVE4_INFO, GRAYED
     }
+    POPUP "Drive 5"
+    {
+        MENUITEM "Open Folder", ID_DRIVE5_OPEN_FOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "(None)", ID_DRIVE5_INFO, GRAYED
+    }
     POPUP "Screen"
     {
         MENUITEM "Zoom x1", ID_ZOOM_X1

@@ -2524,8 +2524,8 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     MENUITEMINFOA mii = { sizeof(mii), MIIM_TYPE, MFT_STRING };
     // ディスクイメージ名・フォルダー名をセットする
     {
-        std::vector<UINT> ids = { ID_DRIVE1_INFO, ID_DRIVE2_INFO, ID_DRIVE3_INFO, ID_DRIVE4_INFO };
-        for (int i = 0; i < 4; ++i)
+        std::vector<UINT> ids = { ID_DRIVE1_INFO, ID_DRIVE2_INFO, ID_DRIVE3_INFO, ID_DRIVE4_INFO, ID_DRIVE5_INFO };
+        for (size_t i = 0; i < ids.size(); ++i)
         {
             auto path = vsk_get_drive_path(i + 1);
             mii.dwTypeData = &path[0];
@@ -2610,6 +2610,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_DRIVE4_OPEN_FOLDER:
         OnOpenDriveFolder(hwnd, 4);
+        break;
+    case ID_DRIVE5_OPEN_FOLDER:
+        OnOpenDriveFolder(hwnd, 5);
         break;
     case ID_ABOUT: // このアプリについて
         OnAbout(hwnd);
