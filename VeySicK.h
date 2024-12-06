@@ -619,10 +619,10 @@ struct VskMachine : VskObject
     {
         return (addr - (m_state->m_segment << 4)) & 0x0FFF;
     }
-    bool binary_load(const char *filename, VskAddr addr, VskDword& size);
-    bool binary_save(const char *filename, VskAddr addr, VskDword size);
-    bool binary_load_with_header(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr);
-    bool binary_save_with_header(const char *filename, VskAddr addr, VskDword size);
+    VskError binary_load(const char *filename, VskAddr addr, VskDword& size);
+    VskError binary_save(const char *filename, VskAddr addr, VskDword size);
+    VskError binary_load_with_header(const char *filename, VskAddr addr, VskDword& size, VskAddr& call_addr);
+    VskError binary_save_with_header(const char *filename, VskAddr addr, VskDword size);
 
     virtual void reset() { }
     virtual void reset_palette() { }

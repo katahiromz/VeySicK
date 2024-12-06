@@ -4986,13 +4986,19 @@ static VskAstPtr VSKAPI vsk_BLOAD(VskAstPtr self, const VskAstList& args)
         VskAddr call_addr = addr;
         if (vsk_machine->is_8801_mode())
         {
-            if (!vsk_machine->binary_load_with_header(v0.c_str(), addr, size, call_addr))
+            if (auto error = vsk_machine->binary_load_with_header(v0.c_str(), addr, size, call_addr))
+            {
+                vsk_error(error);
                 return nullptr;
+            }
         }
         else
         {
-            if (!vsk_machine->binary_load(v0.c_str(), addr, size))
+            if (auto error = vsk_machine->binary_load(v0.c_str(), addr, size))
+            {
+                vsk_error(error);
                 return nullptr;
+            }
         }
 
         if (v2 == "R")
@@ -5017,11 +5023,13 @@ static VskAstPtr VSKAPI vsk_BSAVE(VskAstPtr self, const VskAstList& args)
         VskAddr addr = v1, size = v2;
         if (vsk_machine->is_8801_mode())
         {
-            vsk_machine->binary_save_with_header(v0.c_str(), addr, size);
+            if (auto error = vsk_machine->binary_save_with_header(v0.c_str(), addr, size))
+                VSK_ERROR_AND_RETURN(error, nullptr);
         }
         else
         {
-            vsk_machine->binary_save(v0.c_str(), addr, size);
+            if (auto error = vsk_machine->binary_save(v0.c_str(), addr, size))
+                VSK_ERROR_AND_RETURN(error, nullptr);
         }
     }
 
