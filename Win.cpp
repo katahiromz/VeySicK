@@ -2117,9 +2117,14 @@ void VskWin32App::ime_on_off_real(bool on)
 // ウィンドウの破棄前の処理
 void VskWin32App::OnDestroy(HWND hwnd)
 {
+    // もう待たない
+    vsk_lock();
+    m_state.m_wait_for = VSK_NO_WAIT;
+    vsk_unlock();
+
     // 行儀よくIMEの後始末。
     ::ImmAssociateContext(hwnd, nullptr);
-    ImmDestroyContext(m_hIMC);
+    ::ImmDestroyContext(m_hIMC);
     m_hIMC = nullptr;
 
     // タイマーを破棄

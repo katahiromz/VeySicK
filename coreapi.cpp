@@ -8723,18 +8723,23 @@ static VskAstPtr VSKAPI vsk_INPUT_dollar(VskAstPtr self, const VskAstList& args)
         VSK_STATE()->m_input_dollar_length = v0;
         VSK_STATE()->m_input_string.clear();
 
-        // ロックを解除
         vsk_unlock();
-        while (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_dollar) // INPUT$が解除されるまで待つ
+        for (;;)
         {
+            vsk_lock();
+            bool alive = vsk_machine && VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_dollar;
+            vsk_unlock();
+        
+            if (!alive)
+                break;
+
             // 少し待つ
             vsk_sleep(80);
         }
-        // ロックする
         vsk_lock();
 
-        // 指定文字数の文字列が入力されていれば
-        if (int(VSK_STATE()->m_input_string.size()) >= v0)
+        // マシンが生きていて、指定文字数の文字列が入力されていれば
+        if (vsk_machine && int(VSK_STATE()->m_input_string.size()) >= v0)
         {
             // 文字列を返す
             auto str = VSK_STATE()->m_input_string;
@@ -9098,20 +9103,27 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT_sharp(VskAstPtr self, const VskAstList& a
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT_sharp;
         VSK_STATE()->m_input_string.clear();
 
-        // ロックを解除
         vsk_unlock();
-        while (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp) // INPUT#が解除されるまで待つ
+        for (;;)
         {
+            vsk_lock();
+            bool alive = (vsk_machine && VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp);
+            vsk_unlock();
+
+            if (!alive)
+                break;
             // 少し待つ
             vsk_sleep(80);
         }
-        // ロックする
         vsk_lock();
 
-        // 文字列を格納
-        VskString line = VSK_STATE()->m_input_string;
-        VSK_STATE()->m_input_string.clear();
-        vsk_var_assign(arg1, vsk_ast_str(line));
+        if (vsk_machine) // マシンが生きていれば
+        {
+            // 文字列を格納
+            VskString line = VSK_STATE()->m_input_string;
+            VSK_STATE()->m_input_string.clear();
+            vsk_var_assign(arg1, vsk_ast_str(line));
+        }
     }
 
     return nullptr;
@@ -9342,7 +9354,7 @@ static VskAstPtr VSKAPI vsk_INPUT_sharp(VskAstPtr self, const VskAstList& args)
 
         // ロックを解除
         vsk_unlock();
-        while (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp) // INPUT#が解除されるまで待つ
+        while (VSK_STATE() && VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp) // INPUT#が解除されるまで待つ
         {
             // 少し待つ
             vsk_sleep(80);
