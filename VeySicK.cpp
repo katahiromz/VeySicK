@@ -1243,6 +1243,7 @@ void VskMachine::control_code(VskByte ch)
         if (ch == 'C') // Ctrl+C (STOP)は特別
         {
             VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+            vsk_stop();
             return;
         }
 
@@ -1262,6 +1263,7 @@ void VskMachine::control_code(VskByte ch)
         if (ch == 'C') // Ctrl+C (STOP)は特別
         {
             VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+            vsk_stop();
             return;
         }
         if (ch == 'M') // Ctrl+M (carriage return) も特別
