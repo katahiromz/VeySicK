@@ -334,6 +334,8 @@ Source: "drive2\SAISEI.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SHOOT.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SHOOT.TXT"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SLOT.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
+Source: "drive2\BINGO.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
+Source: "drive2\BINGO.TXT"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive3\S39.BAS"; DestDir: "{app}\drive3"; Flags: ignoreversion
 Source: "drive3\00README.txt"; DestDir: "{app}\drive3"; Flags: ignoreversion
 Source: "drive3\S01.BAS"; DestDir: "{app}\drive3"; Flags: ignoreversion
@@ -417,8 +419,6 @@ Source: "drive4\a4.bas"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\a5.bas"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive5\WORDTEST.TXT"; DestDir: "{app}\drive5"; Flags: ignoreversion
 Source: "drive5\00README.txt"; DestDir: "{app}\drive5"; Flags: ignoreversion
-Source: "drive5\BINGO.BAS"; DestDir: "{app}\drive5"; Flags: ignoreversion
-Source: "drive5\BINGO.TXT"; DestDir: "{app}\drive5"; Flags: ignoreversion
 Source: "drive5\MUSIC-C2.BAS"; DestDir: "{app}\drive5"; Flags: ignoreversion
 Source: "drive5\MUSIC-C2.TXT"; DestDir: "{app}\drive5"; Flags: ignoreversion
 Source: "drive5\MUSIC-C2.UTY"; DestDir: "{app}\drive5"; Flags: ignoreversion
