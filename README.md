@@ -1,4 +1,4 @@
-(Japanese, UTF-8)
+﻿(Japanese, UTF-8)
 
 # VeySicK - 仮想BASIC環境「ヴェイシック マテン」
 

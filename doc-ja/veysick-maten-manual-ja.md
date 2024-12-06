@@ -14,7 +14,6 @@ Copyright 2016-2024 Katayama Hirofumi MZ. All Rights Reserved.
 ### VeySicKとは？
 
 VeySicK(ヴェイシック)は、昔のパソコンのようなBASIC環境を実現するソフトウェアです。WindowsやLinuxなどで昔ながらのBASIC環境を体験できます。
-VeySicK は、Very Sick BASIC Environment (マジでヤバいBASIC環境)の略です。日本語のベーシックに似たような発音で勝手に造語しました。
 
 ### VeySicKの特徴
 
