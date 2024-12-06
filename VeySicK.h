@@ -485,7 +485,6 @@ struct VskMachineState
     int m_active_page                       = 0;            // 描画ページ
     int m_display_pages                     = 1;            // 表示ページ
     bool m_show_graphics                    = true;         // グラフィック画面を表示するか？
-    bool m_odd_line                         = false;        // グラフィック画面の奇数ラインを描画するか？
     VskPointS m_last_point_in_world         = { 0, 0 };     // LP (Last referenced Point) ワールド座標
     int m_vram_bank                         = 0;            // VRAMのバンク番号
     int m_display_pages_flags               = 0;            // 表示ページのフラグ

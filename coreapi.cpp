@@ -10077,11 +10077,11 @@ static VskAstPtr VSKAPI vsk_OUT(VskAstPtr self, const VskAstList& args)
                     break;
                 case 0x08:
                     // 奇数ラスタの表示
-                    VSK_STATE()->m_odd_line = true;
+                    VSK_SETTINGS()->m_draw_odd_lines = true;
                     break;
                 case 0x09:
                     // 奇数ラスタの非表示
-                    VSK_STATE()->m_odd_line = false;
+                    VSK_SETTINGS()->m_draw_odd_lines = false;
                     break;
                 case 0x0E:
                     // 画面の非表示

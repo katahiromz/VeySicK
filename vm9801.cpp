@@ -1152,7 +1152,7 @@ void Vsk9801Machine::render_color_graphics()
                     VskByte byte = (b0 | (b1 << 1) | (b2 << 2) | (b3 << 3));
                     auto sys_color = vsk_fix_color(m_state->palette_to_web_color(byte));
                     m_screen_image.set_pixel(x + i, y * 2, sys_color);
-                    if (m_state->m_odd_line)
+                    if (VSK_SETTINGS()->m_draw_odd_lines)
                         m_screen_image.set_pixel(x + i, y * 2 + 1, sys_color);
                 }
             }

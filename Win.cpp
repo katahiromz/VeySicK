@@ -112,6 +112,8 @@ bool VskSettings::load()
         cbValue = sizeof(m_9801_sw2);
         ::RegQueryValueEx(hKey, TEXT("PC9801SW2"), NULL, NULL, (BYTE*)&m_9801_sw2, &cbValue);
 #endif
+        cbValue = sizeof(m_draw_odd_lines);
+        ::RegQueryValueEx(hKey, TEXT("m_draw_odd_lines"), NULL, NULL, (BYTE*)&m_draw_odd_lines, &cbValue);
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegQueryValueEx(hKey, TEXT("m_com_default_port"), NULL, NULL, (BYTE*)&m_com.m_com_default_port, &cbValue);
         cbValue = sizeof(m_com.m_com_speed);
@@ -181,6 +183,8 @@ bool VskSettings::save() const
         cbValue = sizeof(m_9801_sw2);
         ::RegSetValueEx(hKey, TEXT("PC9801SW2"), 0, REG_DWORD, (BYTE*)&m_9801_sw2, cbValue);
 #endif
+        cbValue = sizeof(m_draw_odd_lines);
+        ::RegSetValueEx(hKey, TEXT("m_draw_odd_lines"), 0, REG_DWORD, (BYTE*)&m_draw_odd_lines, cbValue);
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegSetValueEx(hKey, TEXT("m_com_default_port"), 0, REG_DWORD, (BYTE*)&m_com.m_com_default_port, cbValue);
         cbValue = sizeof(m_com.m_com_speed);
@@ -2748,6 +2752,7 @@ BOOL Settings_OnOK(HWND hwnd)
     VSK_SETTINGS()->m_remember_window_pos = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
     VSK_SETTINGS()->m_unlimited_mode = (IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED);
     VSK_SETTINGS()->m_field_width = GetDlgItemInt(hwnd, edt1, nullptr, TRUE);
+    VSK_SETTINGS()->m_draw_odd_lines = (IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED);
     return TRUE;
 }
 
@@ -2764,6 +2769,8 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::CheckDlgButton(hwnd, chx2, BST_CHECKED);
         if (VSK_SETTINGS()->m_unlimited_mode)
             ::CheckDlgButton(hwnd, chx3, BST_CHECKED);
+        if (VSK_SETTINGS()->m_draw_odd_lines)
+            ::CheckDlgButton(hwnd, chx4, BST_CHECKED);
         ::SetDlgItemInt(hwnd, edt1, VSK_SETTINGS()->m_field_width, TRUE);
         ::SendDlgItemMessage(hwnd, scr1, UDM_SETRANGE, 0, MAKELONG(1024, -1));
         return TRUE; // オートフォーカス
@@ -2773,7 +2780,11 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case chx1:
         case chx2:
         case chx3:
-            PropSheet_Changed(::GetParent(hwnd), hwnd);
+        case chx4:
+            if (HIWORD(wParam) == BN_CLICKED)
+            {
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+            }
             break;
         case edt1:
             if (HIWORD(wParam) == EN_CHANGE)
