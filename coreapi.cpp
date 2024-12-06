@@ -5379,7 +5379,7 @@ static VskAstPtr VSKAPI vsk_VAL(VskAstPtr self, const VskAstList& args)
     VSK_TYPE type;
     auto value = vsk_parse_number(v0.c_str(), nullptr, type);
     if (!value)
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        return vsk_ast_int(0);
 
     return value;
 }
