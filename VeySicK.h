@@ -310,6 +310,7 @@ struct VskFileManager : VskObject
     VskError open(VskFilePtr& file, VskString descriptor, VskFile::MODE mode = VskFile::MODE_DEFAULT);
     VskError open_host_file(VskFilePtr& file, const VskString& raw_path, VskFile::MODE mode = VskFile::MODE_DEFAULT, VskFile::TYPE type = VskFile::TYPE_HOST_FILE);
     VskError open_screen(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
+    VskError open_keyboard(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
     VskError open_line_printer(VskFilePtr& file, VskFile::MODE mode = VskFile::MODE_DEFAULT);
     VskError open_com_file(VskFilePtr& file, VskString device, const VskString& params);
 
@@ -447,6 +448,7 @@ enum VskWaitFor
     VSK_WAIT_FOR_INPORT,
     VSK_WAIT_FOR_INPUT,
     VSK_WAIT_FOR_INPUT_dollar,
+    VSK_WAIT_FOR_INPUT_sharp,
     VSK_WAIT_FOR_DRAW,
     VSK_WAIT_FOR_TURTLE,
     VSK_WAIT_FOR_PLAY,
@@ -474,7 +476,7 @@ struct VskMachineState
     VskLogAttr m_text_attr                  = { 7 };                    // テキスト画面のテキスト属性
     VskByte m_line_link[25]                 = { 0 };                    // 行リンク（次の行とつながっているか？）
     int m_input_dollar_length               = 0;                        // INPUT$の長さ
-    VskString m_input_dollar_string         = "";                       // INPUT$のバッファ
+    VskString m_input_string                = "";                       // INPUT$/INPUT#のバッファ
 
     // graphic screen
     int m_screen_mode                       = 0;            // スクリーンモード
@@ -556,6 +558,7 @@ struct VskMachineState
     int m_wait_inport_data1                 = 0;            // インポート待ちのデータ1
     int m_wait_inport_data2                 = 0;            // インポート待ちのデータ2
     VskFilePtr m_screen_device;
+    VskFilePtr m_keyboard_device;
     VskFilePtr m_line_printer;
     std::shared_ptr<VskFileManager> m_file_manager;
 
@@ -574,6 +577,7 @@ struct VskMachineState
 
 std::shared_ptr<VskFileManager> vsk_get_file_manager(void);
 VskFilePtr vsk_get_screen_device(void);
+VskFilePtr vsk_get_keyboard_device(void);
 VskFilePtr vsk_get_line_printer(void);
 
 // ボーダーカラーをセット

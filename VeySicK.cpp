@@ -155,6 +155,8 @@ bool VskMachineState::is_caret_blinking() const
         break;
     case VSK_WAIT_FOR_COMMAND:
     case VSK_WAIT_FOR_INPUT:
+    case VSK_WAIT_FOR_INPUT_dollar:
+    case VSK_WAIT_FOR_INPUT_sharp:
         return true;
     }
     return false;
@@ -1185,9 +1187,13 @@ void VskMachine::keyboard_ch(VskWord ch)
         break;
     case VSK_WAIT_FOR_INPUT_dollar:
         // INPUT$の処理
-        VSK_STATE()->m_input_dollar_string += (char)ch;
-        if (int(VSK_STATE()->m_input_dollar_string.size()) >= VSK_STATE()->m_input_dollar_length)
+        VSK_STATE()->m_input_string += (char)ch;
+        if (int(VSK_STATE()->m_input_string.size()) >= VSK_STATE()->m_input_dollar_length)
             VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        return;
+    case VSK_WAIT_FOR_INPUT_sharp:
+        // INPUT#の処理
+        VSK_STATE()->m_input_string += (char)ch;
         return;
     case VSK_NO_WAIT:
     case VSK_WAIT_FOR_INPORT:
@@ -1236,12 +1242,36 @@ void VskMachine::control_code(VskByte ch)
     {
         if (ch == 'C') // Ctrl+C (STOP)は特別
         {
-            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+            return;
         }
 
-        VSK_STATE()->m_input_dollar_string += char(ch - '@');
-        if (int(VSK_STATE()->m_input_dollar_string.size()) >= VSK_STATE()->m_input_dollar_length)
-            VSK_STATE()->m_wait_for = VSK_NO_WAIT;
+        // 一文字追加
+        VSK_STATE()->m_input_string += char(ch - '@');
+
+        // 文字数をチェック
+        if (int(VSK_STATE()->m_input_string.size()) >= VSK_STATE()->m_input_dollar_length)
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+
+        return;
+    }
+
+    // INPUT#の処理
+    if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp)
+    {
+        if (ch == 'C') // Ctrl+C (STOP)は特別
+        {
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+            return;
+        }
+        if (ch == 'M') // Ctrl+M (carriage return) も特別
+        {
+            VSK_STATE()->m_wait_for = VSK_NO_WAIT; // 実行に戻る
+            return;
+        }
+
+        // 一文字追加
+        VSK_STATE()->m_input_string += char(ch - '@');
         return;
     }
 
@@ -2531,7 +2561,7 @@ struct VskScreenPrinter : VskFile
     }
 };
 
-// 画面出力用
+// 画面印字を取得
 VskFilePtr vsk_get_screen_device(void)
 {
     auto& device = VSK_STATE()->m_screen_device;
@@ -2546,6 +2576,47 @@ VskError VskFileManager::open_screen(VskFilePtr& file, VskFile::MODE mode)
     if (mode == VskFile::MODE_OUTPUT || mode == VskFile::MODE_DEFAULT)
     {
         file = vsk_get_screen_device();
+        return VSK_NO_ERROR;
+    }
+    return VSK_ERR_BAD_CALL;
+}
+
+// キーボード入力
+struct VskKeyboardInput : VskFile
+{
+    VskKeyboardInput() : VskFile(TYPE_KEYBOARD, MODE_INPUT) { }
+
+    int  get_x() const override {
+        return VSK_STATE()->m_caret_x;
+    }
+    void set_x(int x) {
+        VSK_STATE()->m_caret_x = x;
+        vsk_machine->fix_caret_pos(false);
+    }
+
+    int  line_width() const override    { return VSK_STATE()->m_text_width; }
+    bool line_width(int value) override { return false; }
+
+    // ダミー入力(フックしないといけない)
+    VskError read_bin(void *ptr, VskDword size) override { assert(0); return VSK_NO_ERROR; }
+    VskError read_line(std::string& data)       override { assert(0); return VSK_NO_ERROR; }
+};
+
+// キーボード入力を取得
+VskFilePtr vsk_get_keyboard_device(void)
+{
+    auto& device = VSK_STATE()->m_keyboard_device;
+    if (!device)
+        device = std::make_shared<VskKeyboardInput>();
+    return device;
+}
+
+// キーボード入力を開く
+VskError VskFileManager::open_keyboard(VskFilePtr& file, VskFile::MODE mode)
+{
+    if (mode == VskFile::MODE_INPUT || mode == VskFile::MODE_DEFAULT)
+    {
+        file = vsk_get_keyboard_device();
         return VSK_NO_ERROR;
     }
     return VSK_ERR_BAD_CALL;
@@ -2568,6 +2639,8 @@ VskError VskFileManager::open(VskFilePtr& file, VskString descriptor, VskFile::M
         error = open_screen(file, mode);
         break;
     case VskFile::TYPE_KEYBOARD:
+        error = open_keyboard(file, mode);
+        break;
     case VskFile::TYPE_CASETTE:
         return VSK_ERR_NO_FEATURE;
     case VskFile::TYPE_COM:

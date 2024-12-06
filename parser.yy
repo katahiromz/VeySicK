@@ -665,19 +665,19 @@ primary_statement
     }
     | TK_LINE TK_INPUT expression semicolon_or_comma lvalue {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_LINE_INPUT, { $3, $5 });
+        $$ = vsk_ast(INSN_LINE_INPUT, { nullptr, $3, $5 });
     }
     | TK_LINE TK_INPUT lvalue {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_LINE_INPUT, { nullptr, $3 });
+        $$ = vsk_ast(INSN_LINE_INPUT, { nullptr, nullptr, $3 });
     }
     | TK_LINE TK_INPUT file_number TK_COMMA lvalue {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_LINE_INPUT, { $3, $5 });
+        $$ = vsk_ast(INSN_LINE_INPUT, { $3, nullptr, $5 });
     }
     | TK_LINE TK_INPUT_sharp TK_DIGITS TK_COMMA lvalue {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_LINE_INPUT, { $3, $5 });
+        $$ = vsk_ast(INSN_LINE_INPUT, { $3, nullptr, $5 });
     }
     | TK_KINPUT lvalue {
         vsk_targeting($1); $$ = vsk_ast(INSN_KINPUT, { $2 });
