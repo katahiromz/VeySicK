@@ -114,6 +114,9 @@ bool VskSettings::load()
 #endif
         cbValue = sizeof(m_draw_odd_lines);
         ::RegQueryValueEx(hKey, TEXT("m_draw_odd_lines"), NULL, NULL, (BYTE*)&m_draw_odd_lines, &cbValue);
+        cbValue = sizeof(m_empty_loop_wait);
+        ::RegQueryValueEx(hKey, TEXT("m_empty_loop_wait"), NULL, NULL, (BYTE*)&m_empty_loop_wait, &cbValue);
+
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegQueryValueEx(hKey, TEXT("m_com_default_port"), NULL, NULL, (BYTE*)&m_com.m_com_default_port, &cbValue);
         cbValue = sizeof(m_com.m_com_speed);
@@ -185,6 +188,9 @@ bool VskSettings::save() const
 #endif
         cbValue = sizeof(m_draw_odd_lines);
         ::RegSetValueEx(hKey, TEXT("m_draw_odd_lines"), 0, REG_DWORD, (BYTE*)&m_draw_odd_lines, cbValue);
+        cbValue = sizeof(m_empty_loop_wait);
+        ::RegSetValueEx(hKey, TEXT("m_empty_loop_wait"), 0, REG_DWORD, (BYTE*)&m_empty_loop_wait, cbValue);
+
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegSetValueEx(hKey, TEXT("m_com_default_port"), 0, REG_DWORD, (BYTE*)&m_com.m_com_default_port, cbValue);
         cbValue = sizeof(m_com.m_com_speed);
@@ -2753,6 +2759,7 @@ BOOL Settings_OnOK(HWND hwnd)
     VSK_SETTINGS()->m_unlimited_mode = (IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED);
     VSK_SETTINGS()->m_field_width = GetDlgItemInt(hwnd, edt1, nullptr, TRUE);
     VSK_SETTINGS()->m_draw_odd_lines = (IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED);
+    VSK_SETTINGS()->m_empty_loop_wait = GetDlgItemInt(hwnd, edt2, nullptr, FALSE);
     return TRUE;
 }
 
@@ -2772,7 +2779,9 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (VSK_SETTINGS()->m_draw_odd_lines)
             ::CheckDlgButton(hwnd, chx4, BST_CHECKED);
         ::SetDlgItemInt(hwnd, edt1, VSK_SETTINGS()->m_field_width, TRUE);
+        ::SetDlgItemInt(hwnd, edt2, VSK_SETTINGS()->m_empty_loop_wait, FALSE);
         ::SendDlgItemMessage(hwnd, scr1, UDM_SETRANGE, 0, MAKELONG(1024, -1));
+        ::SendDlgItemMessage(hwnd, scr2, UDM_SETRANGE, 0, MAKELONG(1024, 0));
         return TRUE; // オートフォーカス
     case WM_COMMAND:
         switch (LOWORD(wParam))
@@ -2787,6 +2796,7 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         case edt1:
+        case edt2:
             if (HIWORD(wParam) == EN_CHANGE)
             {
                 PropSheet_Changed(::GetParent(hwnd), hwnd);

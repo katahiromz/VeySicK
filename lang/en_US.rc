@@ -96,7 +96,7 @@ IDR_POPUPMENU MENU
 //////////////////////////////////////////////////////////////////////////////
 // RT_DIALOG
 
-IDD_SETTINGS DIALOG 0, 0, 235, 135
+IDD_SETTINGS DIALOG 0, 0, 235, 160
 CAPTION "Settings"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS Shell Dlg"
@@ -109,6 +109,10 @@ FONT 9, "MS Shell Dlg"
     CONTROL "", scr1, "msctls_updown32", UDS_NOTHOUSANDS | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_SETBUDDYINT, 170, 107, 12, 20
     LTEXT "* Minimum width if -1", -1, 145, 90, 75, 10
     AUTOCHECKBOX "Draw odd lines", chx4, 5, 110, 175, 15
+    RTEXT "Empty loop wait:", -1, 5, 135, 75, 10
+    EDITTEXT edt2, 85, 135, 60, 15
+    CONTROL "", scr2, "msctls_updown32", UDS_NOTHOUSANDS | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_SETBUDDYINT, 175, 112, 12, 20
+    LTEXT "(0～1024)", -1, 155, 140, 45, 10
 }
 
 IDD_DIP_SWITCHES DIALOG 0, 0, 235, 135

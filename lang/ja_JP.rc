@@ -96,7 +96,7 @@ IDR_POPUPMENU MENU
 //////////////////////////////////////////////////////////////////////////////
 // RT_DIALOG
 
-IDD_SETTINGS DIALOG 0, 0, 235, 135
+IDD_SETTINGS DIALOG 0, 0, 235, 160
 CAPTION "設定"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "MS UI Gothic"
@@ -104,11 +104,15 @@ FONT 9, "MS UI Gothic"
     AUTOCHECKBOX "マウスクリックでキャレット位置を移動する", chx1, 5, 10, 175, 15
     AUTOCHECKBOX "ウィンドウの位置とサイズを記憶する", chx2, 5, 35, 175, 15
     AUTOCHECKBOX "無制限モード（実機の制限を乗り越える）", chx3, 5, 60, 175, 15
-    LTEXT "フィールド幅:", -1, 5, 85, 70, 10
+    RTEXT "フィールド幅:", -1, 5, 85, 70, 10
     EDITTEXT edt1, 80, 85, 60, 15
     CONTROL "", scr1, "msctls_updown32", UDS_NOTHOUSANDS | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_SETBUDDYINT, 170, 107, 12, 20
     LTEXT "※ -1ならば最小幅", -1, 145, 90, 75, 10
     AUTOCHECKBOX "奇数ラインを描画する", chx4, 5, 110, 175, 15
+    RTEXT "空ループ待ち:", -1, 5, 135, 75, 10
+    EDITTEXT edt2, 85, 135, 60, 15
+    CONTROL "", scr2, "msctls_updown32", UDS_NOTHOUSANDS | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_SETBUDDYINT, 175, 112, 12, 20
+    LTEXT "(0～1024)", -1, 155, 140, 45, 10
 }
 
 IDD_DIP_SWITCHES DIALOG 0, 0, 235, 135
