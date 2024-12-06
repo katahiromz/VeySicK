@@ -3561,6 +3561,9 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
     case VK_INSERT: // Insertキー
         vsk_machine->control_code('R');
         break;
+    case VK_ESCAPE: // Escキー
+        vsk_machine->control_code('[');
+        break;
     case VK_PRINT: // Printキー
         assert(0); // 未実装
         break;

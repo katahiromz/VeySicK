@@ -4854,7 +4854,7 @@ JISコードの表やシフトJISの表などについては、インターネ�
 |`SHIFT+INS/DEL` |`Insert` (`Ins`)     |
 |`HOMECLR`       |`Home`               |
 |`カナ`          |`カタカナ／ひらがな` |
-|`GRPH`          |`Escape` (`Esc`)     |
+|`GRPH`          |`Alt`                |
 |`ROLLUP`        |`PageUp` (`PgUp`)    |
 |`ROLLDOWN`      |`PageDown` (`PgDn`)  |
 
