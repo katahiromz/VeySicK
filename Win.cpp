@@ -112,6 +112,20 @@ bool VskSettings::load()
         cbValue = sizeof(m_9801_sw2);
         ::RegQueryValueEx(hKey, TEXT("PC9801SW2"), NULL, NULL, (BYTE*)&m_9801_sw2, &cbValue);
 #endif
+        cbValue = sizeof(m_com.m_com_default_port);
+        ::RegQueryValueEx(hKey, TEXT("m_com_default_port"), NULL, NULL, (BYTE*)&m_com.m_com_default_port, &cbValue);
+        cbValue = sizeof(m_com.m_com_speed);
+        ::RegQueryValueEx(hKey, TEXT("m_com_speed"), NULL, NULL, (BYTE*)&m_com.m_com_speed, &cbValue);
+        cbValue = sizeof(m_com.m_com_byte_size);
+        ::RegQueryValueEx(hKey, TEXT("m_com_byte_size"), NULL, NULL, (BYTE*)&m_com.m_com_byte_size, &cbValue);
+        cbValue = sizeof(m_com.m_com_stop_bits);
+        ::RegQueryValueEx(hKey, TEXT("m_com_stop_bits"), NULL, NULL, (BYTE*)&m_com.m_com_stop_bits, &cbValue);
+        cbValue = sizeof(m_com.m_com_parity);
+        ::RegQueryValueEx(hKey, TEXT("m_com_parity"), NULL, NULL, (BYTE*)&m_com.m_com_parity, &cbValue);
+        cbValue = sizeof(m_com.m_com_xon_xoff);
+        ::RegQueryValueEx(hKey, TEXT("m_com_xon_xoff"), NULL, NULL, (BYTE*)&m_com.m_com_xon_xoff, &cbValue);
+        cbValue = sizeof(m_com.m_com_si_so);
+        ::RegQueryValueEx(hKey, TEXT("m_com_si_so"), NULL, NULL, (BYTE*)&m_com.m_com_si_so, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -167,6 +181,20 @@ bool VskSettings::save() const
         cbValue = sizeof(m_9801_sw2);
         ::RegSetValueEx(hKey, TEXT("PC9801SW2"), 0, REG_DWORD, (BYTE*)&m_9801_sw2, cbValue);
 #endif
+        cbValue = sizeof(m_com.m_com_default_port);
+        ::RegSetValueEx(hKey, TEXT("m_com_default_port"), 0, REG_DWORD, (BYTE*)&m_com.m_com_default_port, cbValue);
+        cbValue = sizeof(m_com.m_com_speed);
+        ::RegSetValueEx(hKey, TEXT("m_com_speed"), 0, REG_DWORD, (BYTE*)&m_com.m_com_speed, cbValue);
+        cbValue = sizeof(m_com.m_com_byte_size);
+        ::RegSetValueEx(hKey, TEXT("m_com_byte_size"), 0, REG_DWORD, (BYTE*)&m_com.m_com_byte_size, cbValue);
+        cbValue = sizeof(m_com.m_com_stop_bits);
+        ::RegSetValueEx(hKey, TEXT("m_com_stop_bits"), 0, REG_DWORD, (BYTE*)&m_com.m_com_stop_bits, cbValue);
+        cbValue = sizeof(m_com.m_com_parity);
+        ::RegSetValueEx(hKey, TEXT("m_com_parity"), 0, REG_DWORD, (BYTE*)&m_com.m_com_parity, cbValue);
+        cbValue = sizeof(m_com.m_com_xon_xoff);
+        ::RegSetValueEx(hKey, TEXT("m_com_xon_xoff"), 0, REG_DWORD, (BYTE*)&m_com.m_com_xon_xoff, cbValue);
+        cbValue = sizeof(m_com.m_com_si_so);
+        ::RegSetValueEx(hKey, TEXT("m_com_si_so"), 0, REG_DWORD, (BYTE*)&m_com.m_com_si_so, cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -296,12 +324,24 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
     return VSK_NO_ERROR;
 }
 
+VskString vsk_get_default_com_port(void)
+{
+    switch (VSK_SETTINGS()->m_com.m_com_default_port)
+    {
+    default:
+    case 1: return "COM1";
+    case 2: return "COM2";
+    case 3: return "COM3";
+    case 4: return "COM4";
+    }
+}
+
 VskError VskFileManager::open_com_file(VskFilePtr& file, VskString device, const VskString& params)
 {
     vsk_upper(device);
 
     if (device == "COM")
-        device = "COM1";
+        device = vsk_get_default_com_port();
 
     // RS-232C 通信ファイルを開く
     // NOTE: 管理者権限が必要かもしれません
@@ -339,10 +379,22 @@ bool VskWin32File::set_com_params(VskString params)
     }
 
     // COMポートの設定
-    config.BaudRate = CBR_1200;      // ボーレート
-    config.ByteSize = 7;             // データビット
-    config.Parity   = ODDPARITY;     // パリティ
-    config.StopBits = ONESTOPBIT;    // ストップビット
+    config.BaudRate = VSK_SETTINGS()->m_com.m_com_speed;      // ボーレート
+    config.ByteSize = VSK_SETTINGS()->m_com.m_com_byte_size;  // データビット
+    switch (VSK_SETTINGS()->m_com.m_com_parity)
+    {
+    case 0: config.Parity = NOPARITY; break;
+    case 1: config.Parity = ODDPARITY; break;
+    case 2: config.Parity = EVENPARITY; break;
+    default: assert(0);
+    }
+    switch (VSK_SETTINGS()->m_com.m_com_stop_bits)
+    {
+    case 1: config.StopBits = ONESTOPBIT; break;
+    case 15: config.StopBits = ONE5STOPBITS; break;
+    case 2: config.StopBits = TWOSTOPBITS; break;
+    default: assert(0);
+    }
 
     // パラメータを取得する
     size_t ich = 0;
@@ -881,9 +933,9 @@ bool vsk_parse_file_descriptor(VskString descriptor, VskFile::TYPE& type, VskStr
     }
 
     if (device == "COM")
-        device = "COM1";
+        device = vsk_get_default_com_port();
 
-    if (device == "COM1" || device == "COM2" || device == "COM3") // RS-232C 通信ファイル
+    if (device == "COM1" || device == "COM2" || device == "COM3" || device == "COM4") // RS-232C 通信ファイル
     {
         type = VskFile::TYPE_COM;
         return true;
@@ -2840,12 +2892,166 @@ DipSwitches_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+void ComSettings_Init(HWND hwnd)
+{
+    HWND hCmb1 = GetDlgItem(hwnd, cmb1);
+    if (ComboBox_GetCount(hCmb1) == 0)
+    {
+        ComboBox_AddString(hCmb1, TEXT("COM1"));
+        ComboBox_AddString(hCmb1, TEXT("COM2"));
+        ComboBox_AddString(hCmb1, TEXT("COM3"));
+        ComboBox_AddString(hCmb1, TEXT("COM4"));
+    }
+    ComboBox_SetCurSel(hCmb1, VSK_SETTINGS()->m_com.m_com_default_port - 1);
+
+    HWND hCmb2 = GetDlgItem(hwnd, cmb2);
+    if (ComboBox_GetCount(hCmb2) == 0)
+    {
+#define DEFINE_COM_SPEED(speed, index, BaudRate) ComboBox_AddString(hCmb2, TEXT(#speed));
+#include "com_speed.h"
+#undef DEFINE_COM_SPEED
+    }
+
+    if (0)
+        ;
+#define DEFINE_COM_SPEED(speed, index, BaudRate) \
+    else if (VSK_SETTINGS()->m_com.m_com_speed == speed) \
+        ComboBox_SetCurSel(hCmb2, index);
+#include "com_speed.h"
+#undef DEFINE_COM_SPEED
+
+    switch (VSK_SETTINGS()->m_com.m_com_speed)
+    {
+#define DEFINE_COM_SPEED(speed, index, BaudRate) case speed: ComboBox_SetCurSel(hCmb1, index); break;
+#include "com_speed.h"
+#undef DEFINE_COM_SPEED
+    default: assert(0);
+    }
+
+    switch (VSK_SETTINGS()->m_com.m_com_byte_size)
+    {
+    case 8: CheckRadioButton(hwnd, rad1, rad2, rad1); break;
+    case 7: CheckRadioButton(hwnd, rad1, rad2, rad2); break;
+    default: assert(0);
+    }
+
+    switch (VSK_SETTINGS()->m_com.m_com_stop_bits)
+    {
+    case 1: CheckRadioButton(hwnd, rad3, rad5, rad3); break;
+    case 15: CheckRadioButton(hwnd, rad3, rad5, rad4); break;
+    case 2: CheckRadioButton(hwnd, rad3, rad5, rad5); break;
+    default: assert(0);
+    }
+
+    switch (VSK_SETTINGS()->m_com.m_com_parity)
+    {
+    case 0: CheckRadioButton(hwnd, rad6, rad8, rad6); break;
+    case 2: CheckRadioButton(hwnd, rad6, rad8, rad7); break;
+    case 1: CheckRadioButton(hwnd, rad6, rad8, rad8); break;
+    default: assert(0);
+    };
+
+    if (VSK_SETTINGS()->m_com.m_com_xon_xoff)
+        CheckDlgButton(hwnd, chx1, BST_CHECKED);
+    else
+        CheckDlgButton(hwnd, chx1, BST_UNCHECKED);
+
+    if (VSK_SETTINGS()->m_com.m_com_si_so)
+        CheckDlgButton(hwnd, chx2, BST_CHECKED);
+    else
+        CheckDlgButton(hwnd, chx2, BST_UNCHECKED);
+}
+
+BOOL ComSettings_Apply(HWND hwnd)
+{
+    HWND hCmb1 = GetDlgItem(hwnd, cmb1);
+    VSK_SETTINGS()->m_com.m_com_default_port = ComboBox_GetCurSel(hCmb1) + 1;
+
+    HWND hCmb2 = GetDlgItem(hwnd, cmb2);
+    switch (ComboBox_GetCurSel(hCmb2))
+    {
+#define DEFINE_COM_SPEED(speed, index, BaudRate) case index: VSK_SETTINGS()->m_com.m_com_speed = speed; break;
+#include "com_speed.h"
+#undef DEFINE_COM_SPEED
+    default: assert(0);
+    }
+
+    if (IsDlgButtonChecked(hwnd, rad1) == BST_CHECKED)
+        VSK_SETTINGS()->m_com.m_com_byte_size = 8;
+    else
+        VSK_SETTINGS()->m_com.m_com_byte_size = 7;
+
+    if (IsDlgButtonChecked(hwnd, rad3) == BST_CHECKED)
+        VSK_SETTINGS()->m_com.m_com_stop_bits = 1;
+    else if (IsDlgButtonChecked(hwnd, rad4) == BST_CHECKED)
+        VSK_SETTINGS()->m_com.m_com_stop_bits = 15;
+    else
+        VSK_SETTINGS()->m_com.m_com_stop_bits = 2;
+
+    if (IsDlgButtonChecked(hwnd, rad6) == BST_CHECKED)
+        VSK_SETTINGS()->m_com.m_com_parity = 0;
+    else if (IsDlgButtonChecked(hwnd, rad7) == BST_CHECKED)
+        VSK_SETTINGS()->m_com.m_com_parity = 2;
+    else
+        VSK_SETTINGS()->m_com.m_com_parity = 1;
+
+    VSK_SETTINGS()->m_com.m_com_xon_xoff = (IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED);
+    VSK_SETTINGS()->m_com.m_com_si_so = (IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED);
+
+    return TRUE;
+}
+
+// COM設定
+INT_PTR CALLBACK ComSettings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_INITDIALOG:
+        ComSettings_Init(hwnd);
+        return TRUE;
+    case WM_COMMAND:
+        if ((chx1 <= LOWORD(wParam) && LOWORD(wParam) <= chx2) ||
+            (rad1 <= LOWORD(wParam) && LOWORD(wParam) <= rad8))
+        {
+            if (HIWORD(wParam) == BN_CLICKED)
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+            break;
+        }
+        if (LOWORD(wParam) == cmb1 || LOWORD(wParam) == cmb2)
+        {
+            if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_SELENDOK)
+                PropSheet_Changed(::GetParent(hwnd), hwnd);
+            break;
+        }
+        if (LOWORD(wParam) == psh1 && HIWORD(wParam) == BN_CLICKED)
+        {
+            VSK_SETTINGS()->m_com = VskComSettings();
+            ComSettings_Init(hwnd);
+            PropSheet_Changed(::GetParent(hwnd), hwnd);
+            break;
+        }
+        break;
+    case WM_NOTIFY:
+        {
+            auto pnmhdr = reinterpret_cast<NMHDR *>(lParam);
+            switch (pnmhdr->code)
+            {
+            case PSN_APPLY: // 適用
+                ComSettings_Apply(hwnd);
+                break;
+            }
+        }
+        break;
+    }
+    return 0;
+}
+
 // ID_SETTINGS
 // 設定
 void VskWin32App::OnSettings(HWND hwnd)
 {
     PROPSHEETPAGE psp = { sizeof(psp) };
-    HPROPSHEETPAGE hpsp[3];
+    HPROPSHEETPAGE hpsp[4];
     INT iPage = 0, nStartPage = 0;
 
     // ページを追加する
@@ -2882,6 +3088,17 @@ void VskWin32App::OnSettings(HWND hwnd)
     psp.lParam = (LPARAM)&dip_sw_9801;
     hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 #endif
+
+    TCHAR szComSettings[128];
+    ::LoadString(m_hInst, IDS_COM_SETTINGS, szComSettings, _countof(szComSettings));
+
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_COMSETTINGS);
+    psp.pfnDlgProc = ComSettings_DlgProc;
+    psp.dwFlags = PSP_DEFAULT | PSP_USETITLE;
+    psp.hInstance = m_hInst;
+    psp.pszTitle = szComSettings;
+    psp.lParam = 0;
+    hpsp[iPage++] = ::CreatePropertySheetPage(&psp);
 
     assert(iPage <= _countof(hpsp));
     assert(nStartPage < _countof(hpsp));

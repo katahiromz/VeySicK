@@ -7,6 +7,7 @@
 
 #define IDD_SETTINGS                        100
 #define IDD_DIP_SWITCHES                    101
+#define IDD_COMSETTINGS                     102
 
 #define IDI_MAINICON                        100
 
@@ -22,6 +23,7 @@
 #define IDS_SETTINGS                        105
 #define IDS_8801_SW                         106
 #define IDS_9801_SW                         107
+#define IDS_COM_SETTINGS                    108
 
 #define ID_EXIT                             100
 #define ID_RESET                            101

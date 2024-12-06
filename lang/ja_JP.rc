@@ -149,6 +149,32 @@ FONT 9, "MS UI Gothic"
     PUSHBUTTON "リセット", psh2, 180, 95, 45, 20
 }
 
+IDD_COMSETTINGS DIALOG 0, 0, 172, 226
+CAPTION "通信設定"
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 9, "MS UI Gothic"
+{
+    LTEXT "通信ポート:", -1, 5, 5, 70, 10
+    COMBOBOX cmb1, 5, 20, 70, 300, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT "通信速度:", -1, 5, 40, 70, 10
+    COMBOBOX cmb2, 5, 55, 70, 300, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "バイトサイズ", -1, 5, 75, 65, 60
+    AUTORADIOBUTTON "8 ビット", rad1, 15, 90, 50, 15, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "7 ビット", rad2, 15, 110, 50, 15, WS_TABSTOP
+    GROUPBOX "ストップビット", -1, 5, 140, 65, 80
+    AUTORADIOBUTTON "1 ビット", rad3, 15, 155, 50, 15, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "1.5 ビット", rad4, 15, 175, 50, 15, WS_TABSTOP
+    AUTORADIOBUTTON "2 ビット", rad5, 15, 200, 50, 15, WS_TABSTOP
+    GROUPBOX "パリティ", -1, 85, 5, 80, 85
+    AUTORADIOBUTTON "なし", rad6, 95, 25, 50, 15, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "偶数", rad7, 95, 45, 50, 15, WS_TABSTOP
+    AUTORADIOBUTTON "奇数", rad8, 95, 65, 50, 15, WS_TABSTOP
+    GROUPBOX "フロー制御", -1, 85, 100, 80, 60
+    AUTOCHECKBOX "XON/XOFF", chx1, 90, 115, 65, 15
+    AUTOCHECKBOX "SI/SO", chx2, 90, 140, 65, 15
+    PUSHBUTTON "デフォルトの設定に\nリセットする", psh1, 85, 175, 80, 40, BS_MULTILINE
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // RT_ACCELERATOR
 
@@ -170,6 +196,7 @@ STRINGTABLE
     IDS_SETTINGS, "設定"
     IDS_8801_SW, "8801 SW"
     IDS_9801_SW, "9801 SW"
+    IDS_COM_SETTINGS, "COM"
 }
 
 //////////////////////////////////////////////////////////////////////////////

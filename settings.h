@@ -6,6 +6,18 @@
 #define VSK_9801_SW1_DEFAULT  0x00
 #define VSK_9801_SW2_DEFAULT  0x30
 
+// VeySicKのCOM設定
+struct VskComSettings
+{
+    VskDword m_com_default_port = 1;    // 1, 2, 3 or 4
+    VskDword m_com_speed = 1200;        // See "com_speed.h"
+    VskDword m_com_byte_size = 7;       // 8 or 7
+    VskDword m_com_stop_bits = 1;       // 1, 15 or 2
+    VskDword m_com_parity = 1;          // 0, 2 or 1
+    VskDword m_com_xon_xoff = 0;        // 0 or 1
+    VskDword m_com_si_so = 0;           // 0 or 1
+};
+
 // VeySicKの設定
 struct VskSettings
 {
@@ -26,6 +38,8 @@ struct VskSettings
     VskDword m_9801_sw1 = VSK_9801_SW1_DEFAULT;         // 9801 ディップスイッチ SW1
     VskDword m_9801_sw2 = VSK_9801_SW2_DEFAULT;         // 9801 ディップスイッチ SW2
 #endif
+    // COM設定
+    VskComSettings m_com;
 
     void reset()
     {
