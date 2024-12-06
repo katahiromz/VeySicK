@@ -4,10 +4,10 @@
 //////////////////////////////////////////////////////////////////////////////
 // VeySicK 基本情報
 
-#define VEYSICK_VER                  0x00500
-#define VEYSICK_TITLE                "VeySicK MATEN Version 0.5.1"
-#define VEYSICK_TITLE_FPS            "VeySicK MATEN Version 0.5.1 @ %u fps"
-#define VEYSICK_TITLE_FPS_WITH_FILE  "VeySicK MATEN Version 0.5.1 (%s) @ %u fps"
+#define VEYSICK_VER                  0x00502
+#define VEYSICK_TITLE                "VeySicK MATEN Version 0.5.2"
+#define VEYSICK_TITLE_FPS            "VeySicK MATEN Version 0.5.2 @ %u fps"
+#define VEYSICK_TITLE_FPS_WITH_FILE  "VeySicK MATEN Version 0.5.2 (%s) @ %u fps"
 #define VEYSICK_COPYRIGHT            "Copyright (C) 2015-2024 katahiromz"
 #define VEYSICK_CLASSNAME            "katahiromz's VeySicK"
 

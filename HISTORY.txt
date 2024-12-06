@@ -1,0 +1,5 @@
+﻿# VeySicK の開発履歴
+
+- 2016年「VeySicK Friend」正式リリース。
+- (一身上の都合で開発休止)
+- 2025年「VeySicK MATEN」正式リリース。
