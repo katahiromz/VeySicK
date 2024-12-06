@@ -9050,53 +9050,90 @@ static VskAstPtr VSKAPI vsk_LET(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LINE_INPUT (LINE INPUT) @implemented
-static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr self, const VskAstList& args)
+// INSN_LINE_INPUT_sharp (LINE INPUT#) @implemented
+static VskAstPtr VSKAPI vsk_LINE_INPUT_sharp(VskAstPtr self, const VskAstList& args)
 {
-    if (!vsk_arity_in_range(args, 3, 3))
+    if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
     VskInt v0;
     VskString v1;
     auto arg0 = vsk_arg(args, 0);
     auto arg1 = vsk_arg(args, 1);
-    auto arg2 = vsk_arg(args, 2);
-    if (!arg2)
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-
-    if ((!arg0 || vsk_file_number(v0, arg0)) &&
-        (!arg1 || vsk_str(v1, arg1)))
+    if (!arg0 || vsk_file_number(v0, arg0))
     {
-        if (arg0) // ファイル番号の指定があれば
-        {
-            // ファイル番号からファイルを取得
-            auto file = vsk_get_file_manager()->assoc(v0);
-            if (!file)
-                VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
-
-            if (!file->is_keyboard()) // キーボードファイルでなければ
-            {
-                // ファイルから読み込む
-                VskString line;
-                if (auto error = file->read_line(line))
-                    VSK_ERROR_AND_RETURN(error, nullptr);
-
-                // 文字列を格納
-                vsk_var_assign(arg2, vsk_ast_str(line));
-                return nullptr;
-            }
-        }
-
         // 左辺値（lvalue）から名前と次元を取得
         VskString name;
         VskIndexList dimension;
-        if (!vsk_dimension_from_lvalue(name, dimension, arg2, +(VSK_STATE()->m_option_base == 1)))
+        if (!vsk_dimension_from_lvalue(name, dimension, arg1, +(VSK_STATE()->m_option_base == 1)))
             VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
+        // 文字列変数でなければ失敗
         if (vsk_var_get_type(name) != VSK_TYPE_STRING)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        VSK_STATE()->m_input_prompt = v1;
+        // ファイル番号からファイルを取得
+        auto file = vsk_get_file_manager()->assoc(v0);
+        if (!file)
+            VSK_ERROR_AND_RETURN(VSK_ERR_FILE_NOT_OPEN, nullptr);
+
+        if (!file->is_keyboard()) // キーボードファイルでなければ
+        {
+            // ファイルから読み込む
+            VskString line;
+            if (auto error = file->read_line(line))
+                VSK_ERROR_AND_RETURN(error, nullptr);
+
+            // 文字列を格納
+            vsk_var_assign(arg1, vsk_ast_str(line));
+            return nullptr;
+        }
+
+        // キーボードから読み込む準備をする
+        VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT_sharp;
+        VSK_STATE()->m_input_string.clear();
+
+        // ロックを解除
+        vsk_unlock();
+        while (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT_sharp) // INPUT#が解除されるまで待つ
+        {
+            // 少し待つ
+            vsk_sleep(80);
+        }
+        // ロックする
+        vsk_lock();
+
+        // 文字列を格納
+        VskString line = VSK_STATE()->m_input_string;
+        VSK_STATE()->m_input_string.clear();
+        vsk_var_assign(arg1, vsk_ast_str(line));
+    }
+
+    return nullptr;
+}
+
+// INSN_LINE_INPUT (LINE INPUT) @implemented
+static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskString v0;
+    auto arg0 = vsk_arg(args, 0);
+    auto arg1 = vsk_arg(args, 1);
+    if (!arg0 || vsk_str(v0, arg0))
+    {
+        // 左辺値（lvalue）から名前と次元を取得
+        VskString name;
+        VskIndexList dimension;
+        if (!vsk_dimension_from_lvalue(name, dimension, arg1, +(VSK_STATE()->m_option_base == 1)))
+            VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+
+        // 文字列変数でなければ失敗
+        if (vsk_var_get_type(name) != VSK_TYPE_STRING)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        VSK_STATE()->m_input_prompt = v0;
         VSK_STATE()->m_wait_for = VSK_WAIT_FOR_INPUT;
 
         vsk_show_input_prompt();
@@ -11154,7 +11191,7 @@ void vsk_enter_input_text(const VskString& text)
     if (node->m_insn == INSN_LINE_INPUT)
     {
         // 変数に代入する
-        vsk_var_assign(node->at(2), vsk_ast_str(text));
+        vsk_var_assign(node->at(1), vsk_ast_str(text));
         // 次の文へ
         VSK_STATE()->m_wait_for = VSK_NO_WAIT;
         VSK_IMPL()->m_control_path = vsk_next_control_path(VSK_IMPL()->m_control_path);
