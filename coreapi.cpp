@@ -5057,11 +5057,8 @@ static VskAstPtr VSKAPI vsk_CONSOLE(VskAstPtr self, const VskAstList& args)
     {
         vsk_targeting(self);
 
-        if (v0 < 0 || v0 >= 25 || v1 <= 0 || v1 > 25 || v0 + v1 > 25)
-        {
-            vsk_machine->bad_call();
-            return nullptr;
-        }
+        if (v0 < 0 || v0 >= 25 || v1 <= 0 || v1 > 25)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         if (arg3 || arg2)
         {

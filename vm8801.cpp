@@ -910,8 +910,8 @@ void Vsk8801Machine::reset_text()
     m_state->m_text_wider = (m_state->m_text_width == 40);
     m_state->m_text_longer = (m_state->m_text_height == 20);
 
-    if (m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
-        m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys;
+    if (m_state->m_console_y0 + m_state->m_console_cy0 > m_state->m_text_height - m_state->m_show_function_keys)
+        m_state->m_console_cy0 = m_state->m_text_height - m_state->m_show_function_keys - m_state->m_console_y0;
 }
 
 static void vsk_reset_graphics_8801(VskMachineState *state, int width, int height, bool color)
