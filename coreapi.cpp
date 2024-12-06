@@ -2548,7 +2548,7 @@ void vsk_default_trap(VskTrapType type)
             // 必要ならば停止メッセージを表示
             if (!VSK_IMPL()->m_auto_mode && !VSK_STATE()->m_edit_mode)
             {
-                vsk_print("^C\nBreak\b"); // "\b"でBEEP音を鳴らす
+                vsk_print("^C\nBreak\a"); // "\a"でBEEP音を鳴らす
                 if (vsk_target_line != 0 && vsk_target_line != -1)
                     vsk_print(" at " + vsk_to_string(vsk_target_line));
             }
@@ -2572,7 +2572,7 @@ void vsk_default_trap(VskTrapType type)
         case VSK_WAIT_FOR_PLAY:
             vsk_sound_stop();
             {
-                vsk_print("^C\nBreak\b"); // "\b"でBEEP音を鳴らす
+                vsk_print("^C\nBreak\a"); // "\a"でBEEP音を鳴らす
                 if (vsk_target_line != 0 && vsk_target_line != -1)
                     vsk_print(" at " + vsk_to_string(vsk_target_line));
             }
