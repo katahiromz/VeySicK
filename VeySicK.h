@@ -771,11 +771,11 @@ typedef std::shared_ptr<VskMachine> VskMachinePtr;
 extern VskMachinePtr vsk_machine;
 
 // マシン状態へのポインタ
-#define VSK_STATE() (vsk_machine->m_state)
+#define VSK_STATE() (vsk_machine ? vsk_machine->m_state : nullptr)
 // マシンの実装へのポインタ
-#define VSK_IMPL() (vsk_machine->m_state->m_pimpl)
+#define VSK_IMPL() (vsk_machine ? vsk_machine->m_state->m_pimpl : nullptr)
 // 設定へのポインタ
-#define VSK_SETTINGS() (vsk_machine->m_settings)
+#define VSK_SETTINGS() (vsk_machine ? vsk_machine->m_settings : nullptr)
 
 // マシンを作成する関数
 #ifdef ENABLE_VM8801

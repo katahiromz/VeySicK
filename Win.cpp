@@ -2131,7 +2131,9 @@ void VskWin32App::OnDestroy(HWND hwnd)
     start_stop_timers(hwnd, false);
 
     // マシンとの接続を切断
+    vsk_lock();
     vsk_connect_machine(&m_state, &m_settings, false);
+    vsk_unlock();
 
 #ifndef VSK_SINGLE_THREAD
     assert(vsk_machine == nullptr); // 接続を切ったので、nullptrが代入されているはず
