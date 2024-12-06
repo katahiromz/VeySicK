@@ -9061,9 +9061,11 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT(VskAstPtr self, const VskAstList& args)
     auto arg0 = vsk_arg(args, 0);
     auto arg1 = vsk_arg(args, 1);
     auto arg2 = vsk_arg(args, 2);
+    if (!arg2)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
     if ((!arg0 || vsk_file_number(v0, arg0)) &&
-        (!arg1 || vsk_str(v1, arg1)) &&
-        arg2)
+        (!arg1 || vsk_str(v1, arg1)))
     {
         if (arg0) // ファイル番号の指定があれば
         {
