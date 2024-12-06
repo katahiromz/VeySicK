@@ -6947,8 +6947,11 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
         if (!ptr)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
+        // スクリーン座標からビューポート座標へ
+        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+
         // 画像を取得
-        if (!vsk_machine->get_image(v0, v1, cx, cy, ptr, required_bytes, M))
+        if (!vsk_machine->get_image(pt.m_x, pt.m_y, cx, cy, ptr, required_bytes, M))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
     }
 
@@ -7031,20 +7034,23 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
         if (!ptr)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
+        // スクリーン座標からビューポート座標へ
+        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+
         if (arg4)
         {
             // カラーが正しいか？
             if (!vsk_machine->is_valid_color(v4) || !vsk_machine->is_valid_color(v5))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 不正な色
 
-            // 画像をセット
-            if (!vsk_machine->put_image(v0, v1, ptr, remainder, M, v3, v4, v5))
+            // 画像を描画
+            if (!vsk_machine->put_image(pt.m_x, pt.m_y, ptr, remainder, M, v3, v4, v5))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
         else
         {
-            // 画像をセット
-            if (!vsk_machine->put_image(v0, v1, ptr, remainder, M, v3))
+            // 画像を描画
+            if (!vsk_machine->put_image(pt.m_x, pt.m_y, ptr, remainder, M, v3))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
     }
@@ -7081,7 +7087,11 @@ static VskAstPtr VSKAPI vsk_PUT_at_KANJI(VskAstPtr self, const VskAstList& args)
         if (arg5 && !vsk_int(v5, arg5))
             return nullptr;
 
-        vsk_machine->draw_kanji(v0, v1, v2, v3, v4, v5, !vsk_machine->is_8801_mode());
+        // スクリーン座標からビューポート座標へ
+        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+
+        // 漢字を描画
+        vsk_machine->draw_kanji(pt.m_x, pt.m_y, v2, v3, v4, v5, !vsk_machine->is_8801_mode());
     }
 
     return nullptr;

@@ -726,6 +726,8 @@ struct VskMachine : VskObject
 
     VskPointI world_to_view(const VskPointS& pt) const;
     VskPointS view_to_world(const VskPointI& pt) const;
+    VskPointI view_to_screen(const VskPointI& pt) const;
+    VskPointI screen_to_view(const VskPointI& pt) const;
     VskPointS world_to_client(const VskPointI& pt) const { return world_to_client(VskPointS{ VskSingle(pt.m_x), VskSingle(pt.m_y) }); }
     VskPointS world_to_client(const VskPointS& pt) const;
     VskPointS client_to_world(const VskPointI& pt) const;
