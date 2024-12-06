@@ -3368,8 +3368,8 @@ static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr self, const VskAstList& args)
 
     // 出力ファイルをセット
     VSK_IMPL()->m_printing_device = vsk_get_line_printer();
-
     assert(VSK_IMPL()->m_printing_device);
+
     VSK_IMPL()->m_printing_is_write = false; // WRITE文ではない
 
     return vsk_ast(INSN_DONT_GO_NEXT);

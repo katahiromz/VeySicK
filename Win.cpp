@@ -3453,7 +3453,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
 
     const bool caps = (::GetKeyState(VK_CAPITAL) < 0);
     bool shift = vsk_is_shift_pressed(), ctrl = vsk_is_ctrl_pressed();
-    if (!(vk == vsk_vk && shift == vsk_shift && ctrl == vsk_ctrl))
+    if (!vsk_inkey || !(vk == vsk_vk && shift == vsk_shift && ctrl == vsk_ctrl))
         vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
     vsk_vk = vk;
     vsk_shift = shift;

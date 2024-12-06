@@ -607,7 +607,7 @@ primary_statement
         $$ = vsk_ast(INSN_WRITE, { nullptr, nullptr });
     }
     // LPRINT USING
-    | TK_LPRINT TK_USING expression TK_SEMICOLON parameter_list {
+    | TK_LPRINT TK_USING expression TK_SEMICOLON printing_list_2 {
         vsk_targeting($1);
         $$ = vsk_ast(INSN_LPRINT_USING, { $3, $5 });
     }
@@ -1250,12 +1250,15 @@ matched_statement
         $$ = vsk_ast_multi($1, $3);
     }
     | TK_COLON matched_statement {
-        vsk_targeting($1); $$ = $2;
+        $$ = $2;
     }
     | matched_if_statement {
         $$ = $1;
     }
     | primary_statement {
+        $$ = $1;
+    }
+    | matched_statement TK_COLON {
         $$ = $1;
     }
     ;
@@ -1268,6 +1271,9 @@ unmatched_statement
         vsk_targeting($1); $$ = $2;
     }
     | unmatched_if_statement {
+        $$ = $1;
+    }
+    | unmatched_statement TK_COLON {
         $$ = $1;
     }
     ;
