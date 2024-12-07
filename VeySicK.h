@@ -757,7 +757,7 @@ struct VskMachine : VskObject
 
     static std::shared_ptr<VskMachine> create_machine(VskMachineState *state, VskSettings *settings);
     void test_pattern(int type);
-    void step();
+    bool step();
 
     VskError load(VskString filename, std::string& data);
     VskError save(VskString filename, const std::string& data);
@@ -770,11 +770,11 @@ typedef std::shared_ptr<VskMachine> VskMachinePtr;
 extern VskMachinePtr vsk_machine;
 
 // マシン状態へのポインタ
-#define VSK_STATE() (vsk_machine ? vsk_machine->m_state : nullptr)
+#define VSK_STATE() vsk_machine->m_state
 // マシンの実装へのポインタ
-#define VSK_IMPL() (vsk_machine ? vsk_machine->m_state->m_pimpl : nullptr)
+#define VSK_IMPL() vsk_machine->m_state->m_pimpl
 // 設定へのポインタ
-#define VSK_SETTINGS() (vsk_machine ? vsk_machine->m_settings : nullptr)
+#define VSK_SETTINGS() vsk_machine->m_settings
 
 // マシンを作成する関数
 #ifdef ENABLE_VM8801
@@ -797,7 +797,7 @@ bool vsk_is_pressed(int vk);
 // 直接実行
 void vsk_direct_execute(const VskString& text);
 // ステップ実行
-void vsk_step(void);
+bool vsk_step(void);
 // 入力ポートの値を取得
 VskInt vsk_inport_8801(VskInt port);
 // 入力ポートの値を取得

@@ -2921,8 +2921,8 @@ bool vsk_wait(void)
     return false; // 待たない
 }
 
-// ステップ実行
-void vsk_step(void)
+// ステップ実行。戻り値がtrueなら出力待ち
+bool vsk_step(void)
 {
 #ifndef NDEBUG
     // 必要なら単体テスト
@@ -2935,28 +2935,28 @@ void vsk_step(void)
 #endif
 
     if (!vsk_machine)
-        return;
+        return false;
 
     // トラップをチェックする
     if (vsk_check_trap())
-        return;
+        return false;
 
     // 必要なら待つ
     if (vsk_wait())
-        return;
+        return false;
 
     // コントロールパスを取得する
     auto& index_list = VSK_IMPL()->m_control_path;
 
     // 印字する項目があれば、印字する
     if (vsk_do_printing())
-        return;
+        return true;
 
     // 実行するものがなければコマンドレベルに入る
     if (index_list.empty())
     {
         vsk_enter_command_level();
-        return;
+        return false;
     }
 
     // コントロールパスを解決する
@@ -2965,7 +2965,7 @@ void vsk_step(void)
     if (!node)
     {
         vsk_enter_command_level();
-        return;
+        return false;
     }
 
     if (node->m_program_line != -1) // 行番号があるか？
@@ -2985,6 +2985,18 @@ void vsk_step(void)
     // 必要なら次のコントロールパスに移動
     if (!ret || ret->m_insn != INSN_DONT_GO_NEXT)
         index_list = vsk_next_control_path(index_list);
+
+    // 必要に応じて出力待ち
+    switch (node->m_insn)
+    {
+    case INSN_CIRCLE:
+    case INSN_CIRCLE_STEP:
+    case INSN_PAINT:
+    case INSN_PAINT_STEP:
+        return true;
+    default:
+        return false;
+    }
 }
 
 // 引数の個数（arity）が範囲内かチェックする

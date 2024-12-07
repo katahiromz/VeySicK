@@ -116,8 +116,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("m_draw_odd_lines"), NULL, NULL, (BYTE*)&m_draw_odd_lines, &cbValue);
         cbValue = sizeof(m_empty_loop_wait);
         ::RegQueryValueEx(hKey, TEXT("m_empty_loop_wait"), NULL, NULL, (BYTE*)&m_empty_loop_wait, &cbValue);
-        cbValue = sizeof(m_step_exec_wait);
-        ::RegQueryValueEx(hKey, TEXT("m_step_exec_wait"), NULL, NULL, (BYTE*)&m_step_exec_wait, &cbValue);
+        cbValue = sizeof(m_output_wait);
+        ::RegQueryValueEx(hKey, TEXT("m_output_wait"), NULL, NULL, (BYTE*)&m_output_wait, &cbValue);
 
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegQueryValueEx(hKey, TEXT("m_com_default_port"), NULL, NULL, (BYTE*)&m_com.m_com_default_port, &cbValue);
@@ -192,8 +192,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("m_draw_odd_lines"), 0, REG_DWORD, (BYTE*)&m_draw_odd_lines, cbValue);
         cbValue = sizeof(m_empty_loop_wait);
         ::RegSetValueEx(hKey, TEXT("m_empty_loop_wait"), 0, REG_DWORD, (BYTE*)&m_empty_loop_wait, cbValue);
-        cbValue = sizeof(m_step_exec_wait);
-        ::RegSetValueEx(hKey, TEXT("m_step_exec_wait"), 0, REG_DWORD, (BYTE*)&m_step_exec_wait, cbValue);
+        cbValue = sizeof(m_output_wait);
+        ::RegSetValueEx(hKey, TEXT("m_output_wait"), 0, REG_DWORD, (BYTE*)&m_output_wait, cbValue);
 
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegSetValueEx(hKey, TEXT("m_com_default_port"), 0, REG_DWORD, (BYTE*)&m_com.m_com_default_port, cbValue);
@@ -2035,13 +2035,15 @@ bool VskWin32App::save_settings()
 static DWORD WINAPI vsk_working_thread(LPVOID arg)
 {
     // ループ
+    bool output_flag;
     while (vsk_machine)
     {
         vsk_lock();
-        if (vsk_machine)
-            vsk_step();
+        output_flag = (vsk_machine ? vsk_step() : false);
         vsk_unlock();
-        vsk_sleep(VSK_SETTINGS()->m_step_exec_wait);
+
+        if (output_flag && vsk_machine && VSK_SETTINGS())
+            vsk_sleep(VSK_SETTINGS()->m_output_wait); // 出力待ち
     }
 
     return 0;
@@ -2766,7 +2768,7 @@ BOOL Settings_OnOK(HWND hwnd)
     VSK_SETTINGS()->m_field_width = GetDlgItemInt(hwnd, edt1, nullptr, TRUE);
     VSK_SETTINGS()->m_draw_odd_lines = (IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED);
     VSK_SETTINGS()->m_empty_loop_wait = GetDlgItemInt(hwnd, edt2, nullptr, FALSE);
-    VSK_SETTINGS()->m_step_exec_wait = GetDlgItemInt(hwnd, edt3, nullptr, FALSE);
+    VSK_SETTINGS()->m_output_wait = GetDlgItemInt(hwnd, edt3, nullptr, FALSE);
     return TRUE;
 }
 
@@ -2787,7 +2789,7 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::CheckDlgButton(hwnd, chx4, BST_CHECKED);
         ::SetDlgItemInt(hwnd, edt1, VSK_SETTINGS()->m_field_width, TRUE);
         ::SetDlgItemInt(hwnd, edt2, VSK_SETTINGS()->m_empty_loop_wait, FALSE);
-        ::SetDlgItemInt(hwnd, edt3, VSK_SETTINGS()->m_step_exec_wait, FALSE);
+        ::SetDlgItemInt(hwnd, edt3, VSK_SETTINGS()->m_output_wait, FALSE);
         ::SendDlgItemMessage(hwnd, scr1, UDM_SETRANGE, 0, MAKELONG(1024, -1));
         ::SendDlgItemMessage(hwnd, scr2, UDM_SETRANGE, 0, MAKELONG(1024, 0));
         ::SendDlgItemMessage(hwnd, scr3, UDM_SETRANGE, 0, MAKELONG(256, 0));

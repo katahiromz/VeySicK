@@ -981,10 +981,10 @@ void VskMachine::direct_execute(const VskString& text)
 }
 
 // ステップ実行を行う
-void VskMachine::step()
+bool VskMachine::step()
 {
     // ステップ実行を行う
-    vsk_step();
+    return vsk_step();
 }
 
 // エラーがあったか？
