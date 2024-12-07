@@ -1363,6 +1363,9 @@ void Vsk9801Machine::reset()
     m_state->m_text_width = (sw2 & 0x20) ? 80 : 40;
     m_state->m_text_height = (sw2 & 0x10) ? 25 : 20;
 
+    m_state->m_console_y0 = 0;
+    m_state->m_console_cy0 = 25;
+
     reset_palette();
     reset_text();
     reset_graphics();

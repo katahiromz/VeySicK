@@ -40,6 +40,7 @@ struct VskSettings
 #endif
     VskDword m_draw_odd_lines = 0;                      // 奇数ラインを描画するか？
     VskDword m_empty_loop_wait = 100;                   // 空ループ待ち
+    VskDword m_step_exec_wait = 50;                  // 命令実行待ち
     // COM設定
     VskComSettings m_com;
 

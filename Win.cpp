@@ -116,6 +116,8 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("m_draw_odd_lines"), NULL, NULL, (BYTE*)&m_draw_odd_lines, &cbValue);
         cbValue = sizeof(m_empty_loop_wait);
         ::RegQueryValueEx(hKey, TEXT("m_empty_loop_wait"), NULL, NULL, (BYTE*)&m_empty_loop_wait, &cbValue);
+        cbValue = sizeof(m_step_exec_wait);
+        ::RegQueryValueEx(hKey, TEXT("m_step_exec_wait"), NULL, NULL, (BYTE*)&m_step_exec_wait, &cbValue);
 
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegQueryValueEx(hKey, TEXT("m_com_default_port"), NULL, NULL, (BYTE*)&m_com.m_com_default_port, &cbValue);
@@ -190,6 +192,8 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("m_draw_odd_lines"), 0, REG_DWORD, (BYTE*)&m_draw_odd_lines, cbValue);
         cbValue = sizeof(m_empty_loop_wait);
         ::RegSetValueEx(hKey, TEXT("m_empty_loop_wait"), 0, REG_DWORD, (BYTE*)&m_empty_loop_wait, cbValue);
+        cbValue = sizeof(m_step_exec_wait);
+        ::RegSetValueEx(hKey, TEXT("m_step_exec_wait"), 0, REG_DWORD, (BYTE*)&m_step_exec_wait, cbValue);
 
         cbValue = sizeof(m_com.m_com_default_port);
         ::RegSetValueEx(hKey, TEXT("m_com_default_port"), 0, REG_DWORD, (BYTE*)&m_com.m_com_default_port, cbValue);
@@ -1105,6 +1109,7 @@ VskByte vsk_map_key_code(VskWord key, bool shift, bool ctrl, bool caps)
         case VK_MULTIPLY:       return 0x2A;
         case VK_DIVIDE:         return 0x2F;
         case VK_DECIMAL:        return 0x2E;
+        case VK_SPACE:          return 0x20;
         default:                return (VskByte)vsk_keyboard_info_1[shift][key];
         }
     }
@@ -2036,6 +2041,7 @@ static DWORD WINAPI vsk_working_thread(LPVOID arg)
         if (vsk_machine)
             vsk_step();
         vsk_unlock();
+        vsk_sleep(VSK_SETTINGS()->m_step_exec_wait);
     }
 
     return 0;
@@ -2760,6 +2766,7 @@ BOOL Settings_OnOK(HWND hwnd)
     VSK_SETTINGS()->m_field_width = GetDlgItemInt(hwnd, edt1, nullptr, TRUE);
     VSK_SETTINGS()->m_draw_odd_lines = (IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED);
     VSK_SETTINGS()->m_empty_loop_wait = GetDlgItemInt(hwnd, edt2, nullptr, FALSE);
+    VSK_SETTINGS()->m_step_exec_wait = GetDlgItemInt(hwnd, edt3, nullptr, FALSE);
     return TRUE;
 }
 
@@ -2780,8 +2787,10 @@ Settings_DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ::CheckDlgButton(hwnd, chx4, BST_CHECKED);
         ::SetDlgItemInt(hwnd, edt1, VSK_SETTINGS()->m_field_width, TRUE);
         ::SetDlgItemInt(hwnd, edt2, VSK_SETTINGS()->m_empty_loop_wait, FALSE);
+        ::SetDlgItemInt(hwnd, edt3, VSK_SETTINGS()->m_step_exec_wait, FALSE);
         ::SendDlgItemMessage(hwnd, scr1, UDM_SETRANGE, 0, MAKELONG(1024, -1));
         ::SendDlgItemMessage(hwnd, scr2, UDM_SETRANGE, 0, MAKELONG(1024, 0));
+        ::SendDlgItemMessage(hwnd, scr3, UDM_SETRANGE, 0, MAKELONG(256, 0));
         return TRUE; // オートフォーカス
     case WM_COMMAND:
         switch (LOWORD(wParam))
@@ -3436,6 +3445,7 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
 {
     if (!fDown)
     {
+        mdbg_traceA("OnKeyLocked: vsk_inkey: 0x%X\n", vsk_inkey);
         vsk_inkey = 0;
         if (vk == VK_F11) // F11 キー
         {
@@ -3445,8 +3455,6 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
         return;
     }
 
-    mdbg_traceA("OnKeyLocked: vk: 0x%X\n", vk);
-
     // Ctrlキーを押したらマウスクリッピングを解除
     if (vk == VK_CONTROL)
         ::ClipCursor(nullptr);
@@ -3454,7 +3462,10 @@ void VskWin32App::OnKeyLocked(HWND hwnd, UINT vk, BOOL fDown, int cRepeat, UINT 
     const bool caps = (::GetKeyState(VK_CAPITAL) < 0);
     bool shift = vsk_is_shift_pressed(), ctrl = vsk_is_ctrl_pressed();
     if (!vsk_inkey || !(vk == vsk_vk && shift == vsk_shift && ctrl == vsk_ctrl))
+    {
         vsk_inkey = vsk_map_key_code(vk, vsk_is_shift_pressed(), vsk_is_ctrl_pressed(), caps);
+        mdbg_traceA("OnKeyLocked: vk: 0x%X, vsk_inkey: 0x%X\n", vk, vsk_inkey);
+    }
     vsk_vk = vk;
     vsk_shift = shift;
     vsk_ctrl = ctrl;
