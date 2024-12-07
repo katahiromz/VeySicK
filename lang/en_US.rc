@@ -213,7 +213,7 @@ STRINGTABLE
     IDS_8801_SW, "8801 SW"
     IDS_9801_SW, "9801 SW"
     IDS_COM_SETTINGS, "COM"
-    IDS_RESETSETTINGS, "Are you want to reset settings?"
+    IDS_RESETSETTINGS, "Do you want to reset settings?"
     IDS_WARNING, "Warning"
 }
 
