@@ -1936,11 +1936,9 @@ struct VskWin32App : VskObject
 protected:
     void render();
     void OnIdle();
-    bool do_load(HWND hwnd, const char *file, bool do_run);
-    bool do_save(HWND hwnd, const char *file, bool protect);
     void show_popup_menu(HWND hwnd, INT iSubMenu);
     void start_stop_timers(HWND hwnd, bool do_start);
-    VskString load_string(int id);
+    VskString load_string_a(int id);
     VskWString load_string_w(int id);
     void reset_settings();
     bool load_settings();
@@ -2561,7 +2559,7 @@ void VskWin32App::OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSyste
     }
 }
 
-VskString VskWin32App::load_string(int id)
+VskString VskWin32App::load_string_a(int id)
 {
     char szText[512];
     szText[0] = 0;
@@ -2580,21 +2578,12 @@ VskWString VskWin32App::load_string_w(int id)
 // ID_DRIVE1_OPEN_FOLDER, ID_DRIVE2_OPEN_FOLDER, ...
 void VskWin32App::OnOpenDriveFolder(HWND hwnd, int number)
 {
+    // ドライブへのパス名を取得
     auto path = vsk_get_drive_path(number);
-
+    // (なければ)フォルダを作成する
+    ::CreateDirectoryA(path.c_str(), nullptr);
+    // Windowsで開く
     ::ShellExecuteA(hwnd, nullptr, path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-}
-
-bool VskWin32App::do_load(HWND hwnd, const char *file, bool do_run)
-{
-    lstrcpynA(m_filename, file, _countof(m_filename));
-    return false; // 未実装
-}
-
-bool VskWin32App::do_save(HWND hwnd, const char *file, bool protect)
-{
-    lstrcpynA(m_filename, file, _countof(m_filename));
-    return false; // 未実装
 }
 
 // 仮想マシンをリセットする関数
