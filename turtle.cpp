@@ -263,9 +263,9 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
             VskPointS pt0 = get_pos_in_screen();
             VskPointS pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = VskPointS{ pt0.m_x + d0 * vsk_cosf(radian) * 2, pt0.m_y - d0 * vsk_sinf(radian) };
+                pt1 = { pt0.m_x + d0 * vsk_cosf(radian) * 2, pt0.m_y - d0 * vsk_sinf(radian) };
             } else {
-                pt1 = VskPointS{ pt0.m_x + d0 * vsk_cosf(radian)    , pt0.m_y - d0 * vsk_sinf(radian) };
+                pt1 = { pt0.m_x + d0 * vsk_cosf(radian)    , pt0.m_y - d0 * vsk_sinf(radian) };
             }
             VskPointI pt0_in_view = vsk_machine->screen_to_view(pt0);
             VskPointI pt1_in_view = vsk_machine->screen_to_view(pt1);
@@ -282,9 +282,9 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
             VskPointS pt0 = get_pos_in_screen();
             VskPointS pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = VskPointS{ pt0.m_x - d0 * vsk_cosf(radian) * 2, pt0.m_y + d0 * vsk_sinf(radian) };
+                pt1 = { pt0.m_x - d0 * vsk_cosf(radian) * 2, pt0.m_y + d0 * vsk_sinf(radian) };
             } else {
-                pt1 = VskPointS{ pt0.m_x - d0 * vsk_cosf(radian)    , pt0.m_y + d0 * vsk_sinf(radian) };
+                pt1 = { pt0.m_x - d0 * vsk_cosf(radian)    , pt0.m_y + d0 * vsk_sinf(radian) };
             }
             VskPointI pt0_in_view = vsk_machine->screen_to_view(pt0);
             VskPointI pt1_in_view = vsk_machine->screen_to_view(pt1);
@@ -301,29 +301,29 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
                 return true;
             }
         }
-    } else if (item.m_subcommand == "SX") { // X方向に移動、向きは変わらない
+    } else if (item.m_subcommand == "SX") { // X方向にシフト、向きは変わらない(SHIFT X)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             update_LP({ ast0->to_sng(), m_last_point_in_screen.m_x });
             return true;
         }
-    } else if (item.m_subcommand == "SY") { // Y方向に移動、向きは変わらない
+    } else if (item.m_subcommand == "SY") { // Y方向にシフト、向きは変わらない(SHIFT Y)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             update_LP({ m_last_point_in_screen.m_x, ast0->to_sng() });
             return true;
         }
-    } else if (item.m_subcommand == "HD") { // タートルの向きをセット（単位は度）
+    } else if (item.m_subcommand == "HD") { // 頭の向きをセット（単位は度）(HEAD)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             m_direction_in_degree = ast0->to_sng();
             return true;
         }
-    } else if (item.m_subcommand == "LT") { // 現在の向きから左に自転する（単位は度）
+    } else if (item.m_subcommand == "LT") { // 現在の向きから左に自転する（単位は度）(LEFT TURN)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             m_direction_in_degree -= ast0->to_sng();
         } else {
             m_direction_in_degree -= 90;
         }
         return true;
-    } else if (item.m_subcommand == "RT") { // 現在の向きから右に自転する（単位は度）
+    } else if (item.m_subcommand == "RT") { // 現在の向きから右に自転する（単位は度）(RIGHT TURN)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             m_direction_in_degree += ast0->to_sng();
         } else {
@@ -341,13 +341,13 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
                 return true;
             }
         }
-    } else if (item.m_subcommand == "PD") { // タートルのペンを下げる
+    } else if (item.m_subcommand == "PD") { // タートルのペンを下げる(PEN DOWN)
         pen_down(true);
         return true;
-    } else if (item.m_subcommand == "PU") { // タートルのペンを上げる
+    } else if (item.m_subcommand == "PU") { // タートルのペンを上げる(PEN UP)
         pen_down(false);
         return true;
-    } else if (item.m_subcommand == "PC") { // タートルのペンの色
+    } else if (item.m_subcommand == "PC") { // タートルのペンの色(PEN COLOR)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto i0 = ast0->to_int();
             if (vsk_machine->is_valid_color(i0)) {
@@ -355,10 +355,10 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
                 return true;
             }
         }
-    } else if (item.m_subcommand == "HT") { // タートルを消す
+    } else if (item.m_subcommand == "HT") { // タートルを消す(HIDE TURTLE)
         show(false);
         return true;
-    } else if (item.m_subcommand == "ST") { // タートルを表示する
+    } else if (item.m_subcommand == "ST") { // タートルを表示する(SHOW TURTLE)
         show(true);
         return true;
     }
