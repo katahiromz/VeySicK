@@ -1866,6 +1866,11 @@ VskPointS VskMachine::screen_to_world(const VskPointI& pt) const
     return view_to_world(screen_to_view(pt));
 }
 
+VskPointS VskMachine::screen_to_world(const VskPointS& pt) const
+{
+    return view_to_world(screen_to_view(pt));
+}
+
 VskPointI VskMachine::world_to_screen(const VskPointS& pt) const
 {
     return view_to_screen(world_to_view(pt));
@@ -1881,6 +1886,12 @@ VskPointI VskMachine::screen_to_view(const VskPointI& pt) const
 {
     auto& view = m_state->m_viewport;
     return { pt.m_x + view.m_x0, pt.m_y + view.m_y0 };
+}
+
+VskPointI VskMachine::screen_to_view(const VskPointS& pt) const
+{
+    auto& view = m_state->m_viewport;
+    return { vsk_round(pt.m_x + view.m_x0), vsk_round(pt.m_y + view.m_y0) };
 }
 
 // ワールド座標をクライアント座標に

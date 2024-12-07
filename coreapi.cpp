@@ -313,7 +313,7 @@ bool vsk_turtle_shown(void)
 }
 
 // タートルの位置を返す
-VskPointI vsk_turtle_pos_in_screen(void)
+VskPointS vsk_turtle_pos_in_screen(void)
 {
     return VSK_IMPL()->m_turtle_engine.m_last_point_in_screen;
 }
@@ -6960,7 +6960,7 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
         // スクリーン座標からビューポート座標へ
-        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+        auto pt = vsk_machine->screen_to_view(VskPointI{ v0, v1 });
 
         // 画像を取得
         if (!vsk_machine->get_image(pt.m_x, pt.m_y, cx, cy, ptr, required_bytes, M))
@@ -7047,7 +7047,7 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
         // スクリーン座標からビューポート座標へ
-        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+        auto pt = vsk_machine->screen_to_view(VskPointI{ v0, v1 });
 
         if (arg4)
         {
@@ -7100,7 +7100,7 @@ static VskAstPtr VSKAPI vsk_PUT_at_KANJI(VskAstPtr self, const VskAstList& args)
             return nullptr;
 
         // スクリーン座標からビューポート座標へ
-        auto pt = vsk_machine->screen_to_view({ v0, v1 });
+        auto pt = vsk_machine->screen_to_view(VskPointI{ v0, v1 });
 
         // 漢字を描画
         vsk_machine->draw_kanji(pt.m_x, pt.m_y, v2, v3, v4, v5, !vsk_machine->is_8801_mode());

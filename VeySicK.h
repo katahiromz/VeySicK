@@ -727,7 +727,9 @@ struct VskMachine : VskObject
     VskPointS view_to_world(const VskPointI& pt) const;
     VskPointI view_to_screen(const VskPointI& pt) const;
     VskPointI screen_to_view(const VskPointI& pt) const;
+    VskPointI screen_to_view(const VskPointS& pt) const;
     VskPointS screen_to_world(const VskPointI& pt) const;
+    VskPointS screen_to_world(const VskPointS& pt) const;
     VskPointI world_to_screen(const VskPointS& pt) const;
     VskPointS world_to_client(const VskPointI& pt) const { return world_to_client(VskPointS{ VskSingle(pt.m_x), VskSingle(pt.m_y) }); }
     VskPointS world_to_client(const VskPointS& pt) const;
@@ -868,7 +870,7 @@ void vsk_field_close(int fileno);
 // タートルが表示されているか？
 bool vsk_turtle_shown(void);
 // タートルの位置をスクリーン座標で返す
-VskPointI vsk_turtle_pos_in_screen(void);
+VskPointS vsk_turtle_pos_in_screen(void);
 // タートルの向きをラジアンで返す
 VskSingle vsk_turtle_direction_in_radian(void);
 // アプリを終了する
