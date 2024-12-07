@@ -6,10 +6,10 @@
 #include "renum.h"      // RENUM
 #include "draw.h"       // DRAW
 #include "turtle.h"     // CMD TURTLE
+#include "n88float.h"   // 浮動小数点数
 #include <stack>        // For std::stack
 #include <array>        // For std::array
 #include <sys/stat.h>   // For std::stat
-#include <cfenv>        // 浮動小数点数の例外を扱う
 
 VskLineNo vsk_iLine = 0;            // 字句解析時の行番号
 VskColumnNo vsk_target_column = 0;  // ターゲットの桁番号
@@ -9582,58 +9582,35 @@ static VskAstPtr VSKAPI vsk_MKI_dollar(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
-    VskShort v0;
-    static_assert(sizeof(v0) == 2, "");
-    if (vsk_sht(v0, args[0]))
-    {
-        VskString str;
-        str.resize(sizeof(v0));
-
-        std::memcpy(&str[0], &v0, sizeof(v0));
-        return vsk_ast_str(str);
-    }
+    VskInt v0;
+    if (vsk_int(v0, args[0]))
+        return vsk_ast_str(vsk_make_integer(v0));
 
     return nullptr;
 }
 
 // INSN_MKS_dollar (MKS$) @implemented
-// NOTE: 浮動小数点数の形式が実機とは異なっている
 static VskAstPtr VSKAPI vsk_MKS_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
     VskSingle v0;
-    static_assert(sizeof(v0) == 4, "");
     if (vsk_sng(v0, args[0]))
-    {
-        VskString str;
-        str.resize(sizeof(v0));
-
-        std::memcpy(&str[0], &v0, sizeof(v0));
-        return vsk_ast_str(str);
-    }
+        return vsk_ast_str(vsk_make_single(v0));
 
     return nullptr;
 }
 
 // INSN_MKD_dollar (MKD$) @implemented
-// NOTE: 浮動小数点数の形式が実機とは異なっている
 static VskAstPtr VSKAPI vsk_MKD_dollar(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
         return nullptr;
 
     VskDouble v0;
-    static_assert(sizeof(v0) == 8, "");
     if (vsk_dbl(v0, args[0]))
-    {
-        VskString str;
-        str.resize(sizeof(v0));
-
-        std::memcpy(&str[0], &v0, sizeof(v0));
-        return vsk_ast_str(str);
-    }
+        return vsk_ast_str(vsk_make_double(v0));
 
     return nullptr;
 }
@@ -9647,20 +9624,16 @@ static VskAstPtr VSKAPI vsk_CVI(VskAstPtr self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
-        VskShort ret;
-        static_assert(sizeof(ret) == 2, "");
-        if (v0.size() != sizeof(ret))
+        if (v0.size() != sizeof(VskInt))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        std::memcpy(&ret, &v0[0], sizeof(ret));
-        return vsk_ast(INSN_SHT_LITERAL, ret);
+        return vsk_ast(INSN_INT_LITERAL, vsk_convert_integer(v0));
     }
 
     return nullptr;
 }
 
 // INSN_CVS (CVS) @implemented
-// NOTE: 浮動小数点数の形式が実機とは異なっている
 static VskAstPtr VSKAPI vsk_CVS(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -9669,20 +9642,16 @@ static VskAstPtr VSKAPI vsk_CVS(VskAstPtr self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
-        VskSingle ret;
-        static_assert(sizeof(ret) == 4, "");
-        if (v0.size() != sizeof(ret))
+        if (v0.size() != sizeof(VskSingle))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        std::memcpy(&ret, &v0[0], sizeof(ret));
-        return vsk_ast_sng(ret);
+        return vsk_ast(INSN_SNG_LITERAL, vsk_convert_single(v0));
     }
 
     return nullptr;
 }
 
 // INSN_CVD (CVD) @implemented
-// NOTE: 浮動小数点数の形式が実機とは異なっている
 static VskAstPtr VSKAPI vsk_CVD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 1))
@@ -9691,13 +9660,10 @@ static VskAstPtr VSKAPI vsk_CVD(VskAstPtr self, const VskAstList& args)
     VskString v0;
     if (vsk_str(v0, args[0]))
     {
-        VskDouble ret;
-        static_assert(sizeof(ret) == 8, "");
-        if (v0.size() != sizeof(ret))
+        if (v0.size() != sizeof(VskDouble))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        std::memcpy(&ret, &v0[0], sizeof(ret));
-        return vsk_ast_dbl(ret);
+        return vsk_ast(INSN_DBL_LITERAL, vsk_convert_double(v0));
     }
 
     return nullptr;

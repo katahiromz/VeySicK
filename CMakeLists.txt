@@ -168,6 +168,7 @@ add_executable(VeySicK WIN32
     encoding.cpp
     mdbg.cpp
     mem.cpp
+    n88float.cpp
     print_using.cpp
     renum.cpp
     turtle.cpp
