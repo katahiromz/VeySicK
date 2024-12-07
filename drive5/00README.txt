@@ -2,3 +2,5 @@
 
 88VA User's Club Software Library
 http://www.pc88.gr.jp/softlib/
+
+動作は未確認です。
