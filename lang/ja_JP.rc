@@ -28,6 +28,7 @@ IDR_MAINMENU MENU
         }
         MENUITEM SEPARATOR
         MENUITEM "設定...\tAlt+Enter", ID_SETTINGS
+        MENUITEM "設定のリセット...", ID_RESETSETTINGS
         MENUITEM SEPARATOR
         MENUITEM "VeySicK の終了\tAlt+F4", ID_EXIT
     }
@@ -212,6 +213,8 @@ STRINGTABLE
     IDS_8801_SW, "8801 SW"
     IDS_9801_SW, "9801 SW"
     IDS_COM_SETTINGS, "COM"
+    IDS_RESETSETTINGS, "設定をリセットしたいですか？"
+    IDS_WARNING, "警告"
 }
 
 //////////////////////////////////////////////////////////////////////////////

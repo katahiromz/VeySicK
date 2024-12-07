@@ -1941,6 +1941,7 @@ protected:
     void show_popup_menu(HWND hwnd, INT iSubMenu);
     void start_stop_timers(HWND hwnd, bool do_start);
     VskString load_string(int id);
+    VskWString load_string_w(int id);
     void reset_settings();
     bool load_settings();
     bool save_settings();
@@ -1977,6 +1978,7 @@ protected:
     void OnAbout(HWND hwnd);
     void OnOpenDriveFolder(HWND hwnd, int number);
 
+    void OnResetSettings(HWND hwnd);
     void OnCopy(HWND hwnd);
     void OnPaste(HWND hwnd);
     void OnOpenReadMe(HWND hwnd);
@@ -2567,6 +2569,14 @@ VskString VskWin32App::load_string(int id)
     return VskString(szText);
 }
 
+VskWString VskWin32App::load_string_w(int id)
+{
+    WCHAR szText[512];
+    szText[0] = 0;
+    LoadStringW(m_hInst, id, szText, _countof(szText));
+    return VskWString(szText);
+}
+
 // ID_DRIVE1_OPEN_FOLDER, ID_DRIVE2_OPEN_FOLDER, ...
 void VskWin32App::OnOpenDriveFolder(HWND hwnd, int number)
 {
@@ -2683,6 +2693,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_UNLIMITED_MODE:
         VSK_SETTINGS()->m_unlimited_mode = !VSK_SETTINGS()->m_unlimited_mode;
+        break;
+    case ID_RESETSETTINGS: // 設定のリセット
+        OnResetSettings(hwnd);
         break;
     }
 }
@@ -3373,6 +3386,17 @@ BOOL vsk_get_text_from_clipboard(HWND hwnd, std::string& text)
 
     ::CloseClipboard();
     return !!bOK;
+}
+
+// ID_RESETSETTINGS
+void VskWin32App::OnResetSettings(HWND hwnd)
+{
+    auto text = load_string_w(IDS_RESETSETTINGS);
+    auto title = load_string_w(IDS_WARNING);
+    if (MsgBoxDx(hwnd, text.c_str(), title.c_str(), MB_ICONWARNING | MB_YESNOCANCEL) == IDYES)
+    {
+        *VSK_SETTINGS() = VskSettings();
+    }
 }
 
 // ID_COPY_TEXT

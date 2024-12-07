@@ -24,6 +24,8 @@
 #define IDS_8801_SW                         106
 #define IDS_9801_SW                         107
 #define IDS_COM_SETTINGS                    108
+#define IDS_RESETSETTINGS                   109
+#define IDS_WARNING                         110
 
 #define ID_EXIT                             100
 #define ID_RESET                            101
@@ -54,12 +56,13 @@
 #define ID_UNLIMITED_MODE                   137
 #define ID_DRIVE5_INFO                      138
 #define ID_DRIVE5_OPEN_FOLDER               139
+#define ID_RESETSETTINGS                    140
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS
         #define _APS_NO_MFC                 1
         #define _APS_NEXT_RESOURCE_VALUE    103
-        #define _APS_NEXT_COMMAND_VALUE     140
+        #define _APS_NEXT_COMMAND_VALUE     141
         #define _APS_NEXT_CONTROL_VALUE     1000
         #define _APS_NEXT_SYMED_VALUE       300
     #endif
