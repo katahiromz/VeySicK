@@ -30,7 +30,7 @@ struct VskTurtleEngine
     VskInt          m_pen_color;
     bool            m_pos_adjustment;
     VskSingle       m_direction_in_degree;
-    VskPointI       m_last_point_in_view;
+    VskPointI       m_last_point_in_screen;
     bool            m_is_init;
 
     VskTurtleEngine() { reset(); }
@@ -40,11 +40,11 @@ struct VskTurtleEngine
     void reset();
     void show(bool do_show);
     void pen_down(bool down);
-    VskPointI get_pos_in_view() const;
+    VskPointI get_pos_in_screen() const;
     VskSingle get_turtle_direction_in_radian() const;
 
 protected:
-    void update_LP(const VskPointI& pt_in_view);
+    void update_LP(const VskPointI& pt_in_screen);
 };
 
 void vsk_turtle_draw_cursor(Vsk32BppImage& image);

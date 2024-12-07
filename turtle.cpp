@@ -7,35 +7,48 @@
 static bool vsk_expand_turtle_items(std::vector<VskTurtleItem>& items)
 {
 retry:;
-    size_t k = VskString::npos;
     int level = 0, repeat = 0;
-    for (size_t i = 0; i < items.size(); ++i)
-    {
-        if (items[i].m_subcommand == "RP") { // REPEAT (繰り返し)
-            if (auto ast = vsk_eval_text(items[i].m_params[0])) {
+    auto it_repeat = items.end();
+    for (auto it = items.begin(); it != items.end(); ++it) {
+        if (it->m_subcommand == "RP") { // REPEAT (繰り返し)
+            if (auto ast = vsk_eval_text(it->m_params[0])) {
                 repeat = ast->to_int();
-                if (repeat < 0) {
+                if (repeat < 0 || 255 < repeat) {
                     assert(0);
                     return false;
                 }
-            }
-        }
-        if (items[i].m_subcommand == "[") { // 繰り返しの始まり
-            k = i;
-            ++level;
-        }
-        if (items[i].m_subcommand == "]") { // 繰り返しの終わり
-            --level;
-            if ((level == 0) && (repeat > 0)) {
-                std::vector<VskTurtleItem> sub(items.begin() + k + 1, items.begin() + i);
-                std::vector<VskTurtleItem> children;
-                for (int m = 0; m < repeat; ++m) {
-                    children.insert(children.end(), sub.begin(), sub.end());
+                it_repeat = it; // RPのある位置を覚えておく
+                ++it;
+                if (it == items.end()) {
+                    assert(0);
+                    return false;
                 }
-                items.erase(items.begin() + k, items.begin() + i + 1);
-                items.insert(items.begin() + k, children.begin(), children.end());
-                goto retry;
+                if (it->m_subcommand == "[") { // 繰り返しの始まり
+                    ++level;
+                    if (level >= 8) {
+                        assert(0);
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
             }
+            continue;
+        }
+        if (it->m_subcommand == "]") { // 繰り返しの終わり
+            --level;
+            if (it_repeat == items.end()) {
+                assert(0);
+                return false;
+            }
+            std::vector<VskTurtleItem> sub(it_repeat + 2, it);
+            auto insert_position = items.erase(it_repeat, it + 1);
+            for (int m = 0; m < repeat; ++m) {
+                insert_position = items.insert(insert_position, sub.begin(), sub.end());
+            }
+            goto retry; // 最初からやり直し
         }
     }
     return true;
@@ -46,14 +59,18 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
 {
     items.clear();
 
-    VskString subcommand;
     VskTurtleItem item;
+    VskString& subcommand = item.m_subcommand;
     VskString param;
 
+    // 大文字にする
+    auto text = str;
+    vsk_upper(text);
+
     int status = 0;
-    for (size_t i = 0; i < str.size(); ++i)
+    for (size_t i = 0; i < text.size(); ++i)
     {
-        char ch = vsk_toupper(str[i]);
+        char ch = text[i];
         if (vsk_isblank(ch))
             continue;
         switch (status) {
@@ -61,13 +78,13 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
             if (ch == ';')
                 continue;
             if (ch == '[') { // 繰り返しの始まり
-                item.m_subcommand = "[";
+                subcommand = "[";
                 items.push_back(item);
                 item.clear();
                 continue;
             }
             if (ch == ']') { // 繰り返しの終わり
-                item.m_subcommand = "]";
+                subcommand = "]";
                 items.push_back(item);
                 item.clear();
                 continue;
@@ -81,7 +98,6 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
             }
             if (subcommand.size() == 2) { // サブコマンドの名前の長さが2か？
                 // コマンドに応じて状態と項目を更新
-                item.m_subcommand = subcommand;
                 if (subcommand == "FD" || subcommand == "BK" || subcommand == "SX" || subcommand == "SY" ||
                     subcommand == "LT" || subcommand == "RT" || subcommand == "HD" || subcommand == "CP" ||
                     subcommand == "PC" || subcommand == "RP")
@@ -96,7 +112,7 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
                     assert(0);
                     return false;
                 }
-                subcommand.clear();
+                continue;
             }
             break;
         case 1: case 2: // サブコマンドに1個か2個の引数があるか？
@@ -104,7 +120,7 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
             if (ch == '(') { // 変数か？
                 int level = 1;
                 for (;;) {
-                    ch = str[++i];
+                    ch = text[++i];
                     if (ch == 0)
                         break;
                     if (ch == '(') {
@@ -120,13 +136,12 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
                 do {
                     if (!vsk_isblank(ch))
                         param.push_back(ch);
-                    ch = str[++i];
+                    ch = text[++i];
                 } while (vsk_isdigit(ch) || vsk_isblank(ch) || (ch == '-') || (ch == '+') || (ch == '.'));
                 if (ch != ',')
                     --i;
             } else {
-                assert(0);
-                return false;
+                break;
             }
 
             // パラメータを追加
@@ -153,14 +168,21 @@ bool vsk_get_turtle_items_from_string(std::vector<VskTurtleItem>& items, const V
 
     if (status == 1)
     {
-        if (item.m_subcommand == "LT" || item.m_subcommand == "RT")
+        if (subcommand == "LT" || subcommand == "RT")
             item.m_params.emplace_back("90");
 
         if (--status == 0)
             items.push_back(item);
     }
 
-    return vsk_expand_turtle_items(items);
+    // 繰り返しを展開する
+    if (!vsk_expand_turtle_items(items))
+    {
+        items.clear();
+        return false;
+    }
+
+    return true;
 } // vsk_get_turtle_items_from_string
 
 void VskTurtleEngine::reset()
@@ -170,7 +192,7 @@ void VskTurtleEngine::reset()
     m_direction_in_degree = 0;
     m_pen_color = 7;
     m_pos_adjustment = true;
-    m_last_point_in_view = { -1, -1 };
+    m_last_point_in_screen = { -1, -1 };
     m_is_init = false;
 }
 
@@ -187,9 +209,9 @@ void VskTurtleEngine::pen_down(bool down)
 }
 
 // スクリーン座標でタートルの位置を取得
-VskPointI VskTurtleEngine::get_pos_in_view() const
+VskPointI VskTurtleEngine::get_pos_in_screen() const
 {
-    return m_last_point_in_view;
+    return m_last_point_in_screen;
 }
 
 // パラメータを取得
@@ -201,10 +223,10 @@ VskAstPtr vsk_get_turtle_param(const VskTurtleItem& item, size_t index)
 } // vsk_get_play_param
 
 // 最終点を更新する
-void VskTurtleEngine::update_LP(const VskPointI& pt_in_view)
+void VskTurtleEngine::update_LP(const VskPointI& pt_in_screen)
 {
-    m_last_point_in_view = pt_in_view;
-    VSK_STATE()->m_last_point_in_world = vsk_machine->view_to_world(pt_in_view);
+    m_last_point_in_screen = pt_in_screen;
+    VSK_STATE()->m_last_point_in_world = vsk_machine->screen_to_world(pt_in_screen);
 }
 
 // タートルの向きをラジアンで返す
@@ -217,10 +239,11 @@ VskSingle VskTurtleEngine::get_turtle_direction_in_radian() const
 void VskTurtleEngine::init()
 {
     if (!m_is_init) {
-        m_last_point_in_view = {
+        VskPointI center_point = {
             (VSK_STATE()->m_viewport.m_x0 + VSK_STATE()->m_viewport.m_x1) / 2,
             (VSK_STATE()->m_viewport.m_y0 + VSK_STATE()->m_viewport.m_y1) / 2
         };
+        m_last_point_in_screen = vsk_machine->view_to_screen(center_point);
         m_is_init = true;
     }
 }
@@ -236,15 +259,17 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->to_sng();
             auto radian = get_turtle_direction_in_radian();
-            VskPointI pt0 = get_pos_in_view();
-            VskPointS pt1;
+            VskPointI pt0 = get_pos_in_screen();
+            VskPointI pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = { pt0.m_x + d0 * vsk_cosf(radian) * 2, pt0.m_y - d0 * vsk_sinf(radian) };
+                pt1 = vsk_round(VskPointS{ pt0.m_x + d0 * vsk_cosf(radian) * 2, pt0.m_y - d0 * vsk_sinf(radian) });
             } else {
-                pt1 = { pt0.m_x + d0 * vsk_cosf(radian)    , pt0.m_y - d0 * vsk_sinf(radian) };
+                pt1 = vsk_round(VskPointS{ pt0.m_x + d0 * vsk_cosf(radian)    , pt0.m_y - d0 * vsk_sinf(radian) });
             }
+            VskPointI pt0_in_view = vsk_machine->screen_to_view(pt0);
+            VskPointI pt1_in_view = vsk_machine->screen_to_view(pt1);
             if (m_pen_down) {
-                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
+                vsk_machine->draw_line(PT2INTS(pt0_in_view), PT2INTS(pt1_in_view), m_pen_color, 0xFFFF);
             }
             update_LP({ vsk_round(pt1.m_x), vsk_round(pt1.m_y) });
             return true;
@@ -253,15 +278,17 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto d0 = ast0->to_sng();
             auto radian = get_turtle_direction_in_radian();
-            VskPointI pt0 = get_pos_in_view();
-            VskPointS pt1;
+            VskPointI pt0 = get_pos_in_screen();
+            VskPointI pt1;
             if (m_pos_adjustment && VSK_STATE()->is_height_200()) {
-                pt1 = { pt0.m_x - d0 * vsk_cosf(radian) * 2, pt0.m_y + d0 * vsk_sinf(radian) };
+                pt1 = vsk_round(VskPointS{ pt0.m_x - d0 * vsk_cosf(radian) * 2, pt0.m_y + d0 * vsk_sinf(radian) });
             } else {
-                pt1 = { pt0.m_x - d0 * vsk_cosf(radian)    , pt0.m_y + d0 * vsk_sinf(radian) };
+                pt1 = vsk_round(VskPointS{ pt0.m_x - d0 * vsk_cosf(radian)    , pt0.m_y + d0 * vsk_sinf(radian) });
             }
+            VskPointI pt0_in_view = vsk_machine->screen_to_view(pt0);
+            VskPointI pt1_in_view = vsk_machine->screen_to_view(pt1);
             if (m_pen_down) {
-                vsk_machine->draw_line(PT2INTS(pt0), PT2INTS(pt1), m_pen_color, 0xFFFF);
+                vsk_machine->draw_line(PT2INTS(pt0_in_view), PT2INTS(pt1_in_view), m_pen_color, 0xFFFF);
             }
             update_LP({ vsk_round(pt1.m_x), vsk_round(pt1.m_y) });
             return true;
@@ -275,12 +302,12 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         }
     } else if (item.m_subcommand == "SX") { // X方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ ast0->to_int(), get_pos_in_view().m_x });
+            update_LP({ ast0->to_int(), m_last_point_in_screen.m_x });
             return true;
         }
     } else if (item.m_subcommand == "SY") { // Y方向に移動、向きは変わらない
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
-            update_LP({ get_pos_in_view().m_x, ast0->to_int() });
+            update_LP({ m_last_point_in_screen.m_x, ast0->to_int() });
             return true;
         }
     } else if (item.m_subcommand == "HD") { // タートルの向きをセット（単位は度）
@@ -291,13 +318,17 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
     } else if (item.m_subcommand == "LT") { // 現在の向きから左に自転する（単位は度）
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             m_direction_in_degree -= ast0->to_sng();
-            return true;
+        } else {
+            m_direction_in_degree -= 90;
         }
+        return true;
     } else if (item.m_subcommand == "RT") { // 現在の向きから右に自転する（単位は度）
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             m_direction_in_degree += ast0->to_sng();
-            return true;
+        } else {
+            m_direction_in_degree += 90;
         }
+        return true;
     } else if (item.m_subcommand == "CP") { // タートルの位置補正
         if (auto ast0 = vsk_get_turtle_param(item, 0)) {
             auto i0 = ast0->to_int();
@@ -331,6 +362,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
         return true;
     }
 
+    mdbg_traceA("%s\n", item.m_subcommand.c_str());
     assert(0);
     return false;
 } // VskTurtleEngine::turtle_item
@@ -339,7 +371,7 @@ bool VskTurtleEngine::turtle_item(const VskTurtleItem& item)
 void vsk_turtle_draw_cursor(Vsk32BppImage& image)
 {
     // 位置と角度を取得
-    auto pos = vsk_turtle_pos_in_view();
+    auto pos = vsk_machine->screen_to_view(vsk_turtle_pos_in_screen());
     auto direction = vsk_turtle_direction_in_radian();
 
     // 画面が引き伸ばされているときの対策

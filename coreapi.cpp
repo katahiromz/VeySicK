@@ -313,9 +313,9 @@ bool vsk_turtle_shown(void)
 }
 
 // タートルの位置を返す
-VskPointI vsk_turtle_pos_in_view(void)
+VskPointI vsk_turtle_pos_in_screen(void)
 {
-    return VSK_IMPL()->m_turtle_engine.m_last_point_in_view;
+    return VSK_IMPL()->m_turtle_engine.m_last_point_in_screen;
 }
 
 // タートルの向きを返す

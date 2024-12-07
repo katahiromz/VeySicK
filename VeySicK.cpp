@@ -1861,6 +1861,16 @@ VskPointS VskMachine::view_to_world(const VskPointI& pt) const
     return { x, y };
 }
 
+VskPointS VskMachine::screen_to_world(const VskPointI& pt) const
+{
+    return view_to_world(screen_to_view(pt));
+}
+
+VskPointI VskMachine::world_to_screen(const VskPointS& pt) const
+{
+    return view_to_screen(world_to_view(pt));
+}
+
 VskPointI VskMachine::view_to_screen(const VskPointI& pt) const
 {
     auto& view = m_state->m_viewport;

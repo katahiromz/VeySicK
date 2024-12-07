@@ -160,6 +160,11 @@ struct VskPoint
 typedef VskPoint<int> VskPointI;
 typedef VskPoint<VskSingle> VskPointS;
 
+inline VskPointI vsk_round(const VskPointS& pt)
+{
+    return { vsk_round(pt.m_x), vsk_round(pt.m_y) };
+}
+
 // VskSize - サイズ
 template <typename T_VALUE>
 struct VskSize
@@ -168,6 +173,11 @@ struct VskSize
 };
 typedef VskSize<int> VskSizeI;
 typedef VskSize<VskSingle> VskSizeS;
+
+inline VskSizeI vsk_round(const VskSizeS& siz)
+{
+    return { vsk_round(siz.m_cx), vsk_round(siz.m_cy) };
+}
 
 // VskRect - 長方形領域の座標
 template <typename T_VALUE>
@@ -242,6 +252,11 @@ union VskRect
 };
 typedef VskRect<int> VskRectI;
 typedef VskRect<VskSingle> VskRectS;
+
+inline VskRectI vsk_round(const VskRectS& rc)
+{
+    return { vsk_round(rc.m_x0), vsk_round(rc.m_y0), vsk_round(rc.m_x1), vsk_round(rc.m_y1) };
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
