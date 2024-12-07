@@ -127,6 +127,7 @@ Source: "drive1\DATA.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA1.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA2.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA2.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
+Source: "drive1\DATA3.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA4.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA5.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\DATA9.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
