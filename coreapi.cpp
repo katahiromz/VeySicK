@@ -8850,7 +8850,7 @@ static VskAstPtr VSKAPI vsk_INSTR(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 3))
         return nullptr;
 
-    VskInt pos = 0;
+    VskInt pos = 1;
     VskString str0, str1;
     if (args.size() == 2)
     {
@@ -8862,18 +8862,57 @@ static VskAstPtr VSKAPI vsk_INSTR(VskAstPtr self, const VskAstList& args)
         if (!(vsk_int(pos, args[0]) && vsk_str(str0, args[1]) && vsk_str(str1, args[2])))
             return nullptr;
 
-        if (pos < 0)
+        if (pos <= 0)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
     }
 
-    if (str1.empty() || pos >= int(str0.size() + 1))
+    if (str1.empty() || pos > int(str0.size()))
         return vsk_ast_int(0);
 
-    auto ich = str0.find(str1, pos);
-    if (ich == str0.npos)
+    auto ib = str0.find(str1, pos - 1);
+    if (ib == str0.npos)
         return vsk_ast_int(0);
 
-    return vsk_ast_int(VskInt(ich + 1));
+    return vsk_ast_int(VskInt(ib + 1));
+}
+
+// INSN_KINSTR (KINSTR) @implemented
+static VskAstPtr VSKAPI vsk_KINSTR(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 2, 3))
+        return nullptr;
+
+    VskInt pos = 1;
+    VskString str0, str1;
+    if (args.size() == 2)
+    {
+        if (!(vsk_str(str0, args[0]) && vsk_str(str1, args[1])))
+            return nullptr;
+    }
+    else if (args.size() == 3)
+    {
+        if (!(vsk_int(pos, args[0]) && vsk_str(str0, args[1]) && vsk_str(str1, args[2])))
+            return nullptr;
+    }
+
+    if (str1.empty())
+        return vsk_ast_int(0);
+
+    if (vsk_machine->is_jis_mode())
+    {
+        str0 = vsk_jis2sjis(str0);
+        str1 = vsk_jis2sjis(str1);
+    }
+
+    size_t ib0 = (pos > 1) ? vsk_sjis_kpos2ib(str0, pos) : 0;
+    if (ib0 + 1 > int(str0.size()))
+        return vsk_ast_int(VskInt(0));
+    size_t ib1 = str0.find(str1, ib0);
+    if (ib1 == str0.npos)
+        return vsk_ast_int(VskInt(0));
+
+    auto ret = vsk_sjis_ib2kpos(str0, ib1);
+    return vsk_ast_int(VskInt(ret));
 }
 
 // INSN_KEXT_dollar (KEXT$) @implemented
@@ -8907,43 +8946,6 @@ static VskAstPtr VSKAPI vsk_KEXT_dollar(VskAstPtr self, const VskAstList& args)
     }
 
     return nullptr;
-}
-
-// INSN_KINSTR (KINSTR) @implemented
-static VskAstPtr VSKAPI vsk_KINSTR(VskAstPtr self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 2, 3))
-        return nullptr;
-
-    VskInt v0 = 0;
-    VskString str0, str1;
-    if (args.size() == 2)
-    {
-        if (!(vsk_str(str0, args[0]) && vsk_str(str1, args[1])))
-            return nullptr;
-    }
-    else if (args.size() == 3)
-    {
-        if (!(vsk_int(v0, args[0]) && vsk_str(str0, args[1]) && vsk_str(str1, args[2])))
-            return nullptr;
-    }
-
-    if (str1.empty())
-        return vsk_ast_int(0);
-
-    if (vsk_machine->is_jis_mode())
-    {
-        str0 = vsk_jis2sjis(str0);
-        str1 = vsk_jis2sjis(str1);
-    }
-
-    size_t ib0 = (v0 != 0) ? vsk_sjis_kpos2ib(str0, v0) : 0;
-    size_t ib1 = str0.find(str1, ib0);
-    if (ib1 == str0.npos)
-        return vsk_ast_int(VskInt(0));
-
-    auto ret = vsk_sjis_ib2kpos(str0, ib1);
-    return vsk_ast_int(VskInt(ret));
 }
 
 // INSN_KLEN (KLEN) @implemented
