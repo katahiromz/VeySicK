@@ -1803,23 +1803,20 @@ VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
             } else {
                 value = std::strtoul(&str[1], nullptr, 8); // 8進数？
             }
-
-            value = sign * value;
         } else {
             value = std::strtoul(str.c_str(), nullptr, 10); // 10進数？
-            value = sign * value;
         }
 
+        value = sign * value; // 符号を付ける
+
         // VskLongの範囲を超えているか？
-        if (value < std::numeric_limits<VskLong>::lowest() || value > std::numeric_limits<VskLong>::max())
-        {
+        if (value < std::numeric_limits<VskLong>::lowest() || std::numeric_limits<VskLong>::max() < value) {
             type = VSK_TYPE_DOUBLE;
             return vsk_ast_dbl(VskDouble(value)); // 倍精度
         }
 
         // VskShortの範囲を超えているか？
-        if (value < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < value)
-        {
+        if (value < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < value) {
             type = VSK_TYPE_LONG;
             return vsk_ast_lng(value); // 32ビット整数
         }
