@@ -3524,6 +3524,13 @@ static VskAstPtr VSKAPI vsk_DATE_dollar(VskAstPtr self, const VskAstList& args)
         month = std::strtol(&v0[3], nullptr, 10);
         day = std::strtol(&v0[6], nullptr, 10);
 
+        if (!((0 <= year_xxxx && year_xxxx < 10000) &&
+              (1 <= month && month <= 12) &&
+              (1 <= day && day <= 31)))
+        {
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+
         vsk_set_datetime(year_xxxx, month, day, hour, minute, second);
     }
 
@@ -3555,6 +3562,13 @@ static VskAstPtr VSKAPI vsk_TIME_dollar(VskAstPtr self, const VskAstList& args)
         hour = std::strtol(&v0[0], nullptr, 10);
         minute = std::strtol(&v0[3], nullptr, 10);
         second = std::strtol(&v0[6], nullptr, 10);
+
+        if (!((0 <= hour && hour < 24) &&
+              (0 <= minute && minute < 60) &&
+              (0 <= second && second < 60 + 1)))
+        {
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
 
         vsk_set_datetime(year_xxxx, month, day, hour, minute, second);
     }
