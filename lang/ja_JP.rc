@@ -32,6 +32,12 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "VeySicK の終了\tAlt+F4", ID_EXIT
     }
+    POPUP "ドライブ 0"
+    {
+        MENUITEM "フォルダを開く", ID_DRIVE0_OPEN_FOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "(なし)", ID_DRIVE0_INFO, GRAYED
+    }
     POPUP "ドライブ 1"
     {
         MENUITEM "フォルダを開く", ID_DRIVE1_OPEN_FOLDER

@@ -32,6 +32,12 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Exit\tAlt+F4", ID_EXIT
     }
+    POPUP "Drive 0"
+    {
+        MENUITEM "Open Folder", ID_DRIVE0_OPEN_FOLDER
+        MENUITEM SEPARATOR
+        MENUITEM "(None)", ID_DRIVE0_INFO, GRAYED
+    }
     POPUP "Drive 1"
     {
         MENUITEM "Open Folder", ID_DRIVE1_OPEN_FOLDER
