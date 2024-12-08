@@ -10657,7 +10657,7 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
             return nullptr;
         if (args.size() > 3 && !vsk_int(v3, args[3]))
             return nullptr;
-        if (v3 == 0)
+        if (v3 <= 0)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         for (int i = v2 - base; i < int(dimension[0]); i += v3)
