@@ -11,9 +11,17 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
     VskDrawItem item;
     VskString param;
 
-    for (size_t i = 0; i < expr.size(); ++i) {
-        mdbg_traceA("vsk_get_draw_items_from_string: '%s'\n", expr.substr(0, i).c_str());
-        char ch = vsk_toupper(expr[i]);
+    // 大文字にする
+    VskString str = expr;
+    vsk_upper(str);
+
+    // 空白は無視してよい
+    mstr_replace_all(str, " ", "");
+    mstr_replace_all(str, "\t", "");
+
+    for (size_t i = 0; i < str.size(); ++i) {
+        mdbg_traceA("vsk_get_draw_items_from_string: '%s'\n", str.substr(0, i).c_str());
+        char ch = str[i];
         if (ch == ';') // セミコロン
             continue;
         switch (status) {
@@ -54,33 +62,27 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
         case 1: case 2: // 1個か2個のパラメータがある
             param.clear();
 
-            // 空白をスキップ
-            while (i + 1 < expr.size() && vsk_isblank(expr[i]))
-                ++i;
             // カンマをスキップ
-            if (i + 1 < expr.size() && expr[i] == ',')
+            if (i + 1 < str.size() && str[i] == ',')
                 ++i;
 
-            ch = expr[i];
+            ch = str[i];
             if (ch == '=' || ch == '&') { // 変数か？n進数か？
                 if (ch == '&')
                     param += ch;
                 for (;;) {
-                    ch = expr[++i];
+                    ch = str[++i];
                     if (ch == ';' || ch == ',' || ch == 0) // 終端？
                         break; 
-                    if (!vsk_isblank(ch))
-                        param += ch;
+                    param += ch;
                 }
                 if (ch != 0)
                     --i;
             } else if (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.') { // 数値？
                 do {
-                    if (!vsk_isblank(ch)) {
-                        param.push_back(ch);
-                    }
-                    ch = expr[++i];
-                } while (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.' || vsk_isblank(ch));
+                    param.push_back(ch);
+                    ch = str[++i];
+                } while (vsk_isdigit(ch) || ch == '-' || ch == '+' || ch == '.');
                 if (ch != ',') {
                     --i;
                 }
@@ -118,10 +120,6 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
                 items.push_back(item);
                 item.reset();
             }
-
-            // 空白をスキップ
-            while (i + 1 < expr.size() && vsk_isblank(expr[i]))
-                ++i;
             break;
 
         default:
