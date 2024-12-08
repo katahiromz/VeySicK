@@ -1805,30 +1805,27 @@ VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
             }
 
             value = sign * value;
-
-            // VskIntの範囲を超えているか？
-            if (value < std::numeric_limits<VskShort>::lowest() || value > std::numeric_limits<VskWord>::max())
-                return vsk_ast_dbl(VskDouble(value)); // 倍精度
         } else {
             value = std::strtoul(str.c_str(), nullptr, 10); // 10進数？
             value = sign * value;
-
-            // VskIntの範囲を超えているか？
-            if (value < std::numeric_limits<VskShort>::lowest() || value > std::numeric_limits<VskWord>::max())
-            {
-                type = VSK_TYPE_DOUBLE;
-                return vsk_ast_dbl(VskDouble(value)); // 倍精度
-            }
         }
 
-        if (value > std::numeric_limits<VskShort>::max())
+        // VskLongの範囲を超えているか？
+        if (value < std::numeric_limits<VskLong>::lowest() || value > std::numeric_limits<VskLong>::max())
+        {
+            type = VSK_TYPE_DOUBLE;
+            return vsk_ast_dbl(VskDouble(value)); // 倍精度
+        }
+
+        // VskShortの範囲を超えているか？
+        if (value < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < value)
         {
             type = VSK_TYPE_LONG;
-            return vsk_ast_lng(sign * value); // 32ビット整数
+            return vsk_ast_lng(value); // 32ビット整数
         }
 
         type = VSK_TYPE_INTEGER;
-        return vsk_ast_int(sign * VskInt(value)); // 整数
+        return vsk_ast_int(VskInt(value)); // 整数
     }
 
     // 指数表示の"D"はC言語と非互換だから"E"に変える
