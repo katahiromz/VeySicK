@@ -1821,6 +1821,12 @@ VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
             }
         }
 
+        if (value > std::numeric_limits<VskShort>::max())
+        {
+            type = VSK_TYPE_LONG;
+            return vsk_ast_lng(sign * value); // 32ビット整数
+        }
+
         type = VSK_TYPE_INTEGER;
         return vsk_ast_int(sign * VskInt(value)); // 整数
     }
