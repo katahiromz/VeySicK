@@ -893,3 +893,11 @@ void vsk_beep(int number = -1);
 bool vsk_scan_number(VskString& str, const char *ptr, bool *minus = nullptr, char **dot = nullptr, char **exp = nullptr, char **endptr = nullptr);
 // マシンをリセットする
 void vsk_reset(VskMachineMode mode);
+// ローカル日時を取得
+void vsk_get_datetime(int& year_xxxx, int& month, int& day, int& hour, int& minute, int& second);
+// ローカル日時を設定
+void vsk_set_datetime(int year_xxxx, int month, int day, int hour, int minute, int second);
+// 二桁の年を四桁の年に変換
+int vsk_year_xxxx_from_year_xx(int year_xx);
+// 四桁の年を二桁の年に変換
+int vsk_year_xx_from_year_xxxx(int year_xxxx);

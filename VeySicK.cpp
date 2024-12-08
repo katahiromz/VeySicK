@@ -185,6 +185,26 @@ bool VskMachine::has_cmd_extension() const {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+
+// 二桁の年を四桁の年に変換
+int vsk_year_xxxx_from_year_xx(int year_xx)
+{
+    if (year_xx < 50)
+        return 2000 + year_xx;
+    else
+        return 1900 + year_xx;
+}
+
+// 四桁の年を二桁の年に変換
+int vsk_year_xx_from_year_xxxx(int year_xxxx)
+{
+    if (year_xxxx > 2000)
+        return year_xxxx - 2000;
+    else
+        return year_xxxx - 1900;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // basic types
 
 size_t vsk_get_type_size(VskType type)

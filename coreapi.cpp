@@ -140,23 +140,35 @@ struct VskLoopInfo
     std::vector<VskIndexList> m_paths;
 };
 
+// 日付文字列を得る
+VskString vsk_get_date(void)
+{
+    int year_xxxx, month, day, hour, minute, second;
+    vsk_get_datetime(year_xxxx, month, day, hour, minute, second);
+
+    assert(1900 <= year_xxxx && year_xxxx < 10000);
+    assert(1 <= month && month <= 12);
+    assert(1 <= day && day <= 31);
+
+    char buf[256];
+    std::sprintf(buf, "%02u/%02u/%02u", year_xxxx % 100, month, day);
+    assert(std::strlen(buf) < 256);
+    return buf;
+}
+
 // 時刻文字列を得る
 VskString vsk_get_time(void)
 {
-    std::time_t t = std::time(nullptr);
-    std::tm *ptime = std::localtime(&t);
-    if (!ptime)
-    {
-        vsk_machine->bad_call();
-        return nullptr;
-    }
+    int year_xxxx, month, day, hour, minute, second;
+    vsk_get_datetime(year_xxxx, month, day, hour, minute, second);
+    int year_xx = vsk_year_xx_from_year_xxxx(year_xxxx);
 
-    assert(0 <= ptime->tm_hour && ptime->tm_hour < 24);
-    assert(0 <= ptime->tm_min && ptime->tm_min < 60);
-    assert(0 <= ptime->tm_sec && ptime->tm_sec <= 60);
+    assert(0 <= hour && hour < 24);
+    assert(0 <= minute && minute < 60);
+    assert(0 <= second && second < 59 + 1);
 
     char buf[256];
-    std::sprintf(buf, "%02u:%02u:%02u", ptime->tm_hour, ptime->tm_min, ptime->tm_sec);
+    std::sprintf(buf, "%02u:%02u:%02u", hour, minute, second);
     assert(std::strlen(buf) < 256);
     return buf;
 }
@@ -3489,13 +3501,65 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
 // INSN_DATE_dollar (DATE$) @implemented
 static VskAstPtr VSKAPI vsk_DATE_dollar(VskAstPtr self, const VskAstList& args)
 {
-    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_str(v0, args[0]))
+    {
+        if (v0.size() != std::strlen("XX/XX/XX"))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (!(vsk_isdigit(v0[0]) && vsk_isdigit(v0[1]) && v0[2] == '/' &&
+              vsk_isdigit(v0[3]) && vsk_isdigit(v0[4]) && v0[5] == '/' &&
+              vsk_isdigit(v0[6]) && vsk_isdigit(v0[6])))
+        {
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+
+        int year_xxxx, month, day, hour, minute, second;
+        vsk_get_datetime(year_xxxx, month, day, hour, minute, second);
+
+        year_xxxx = vsk_year_xxxx_from_year_xx(std::strtol(&v0[0], nullptr, 10));
+        month = std::strtol(&v0[3], nullptr, 10);
+        day = std::strtol(&v0[6], nullptr, 10);
+
+        vsk_set_datetime(year_xxxx, month, day, hour, minute, second);
+    }
+
+    return nullptr;
 }
 
 // INSN_TIME_dollar (TIME$) @implemented
 static VskAstPtr VSKAPI vsk_TIME_dollar(VskAstPtr self, const VskAstList& args)
 {
-    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_str(v0, args[0]))
+    {
+        if (v0.size() != std::strlen("XX:XX:XX"))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (!(vsk_isdigit(v0[0]) && vsk_isdigit(v0[1]) && v0[2] == ':' &&
+              vsk_isdigit(v0[3]) && vsk_isdigit(v0[4]) && v0[5] == ':' &&
+              vsk_isdigit(v0[6]) && vsk_isdigit(v0[6])))
+        {
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+
+        int year_xxxx, month, day, hour, minute, second;
+        vsk_get_datetime(year_xxxx, month, day, hour, minute, second);
+
+        hour = std::strtol(&v0[0], nullptr, 10);
+        minute = std::strtol(&v0[3], nullptr, 10);
+        second = std::strtol(&v0[6], nullptr, 10);
+
+        vsk_set_datetime(year_xxxx, month, day, hour, minute, second);
+    }
+
+    return nullptr;
 }
 
 // INSN_DATE_dollar_var (DATE$ 変数みたいな) @implemented
@@ -3504,24 +3568,7 @@ static VskAstPtr VSKAPI vsk_DATE_dollar_var(VskAstPtr self, const VskAstList& ar
     if (!vsk_arity_in_range(args, 0, 0))
         return nullptr;
 
-    std::time_t t = std::time(nullptr);
-    std::tm *ptime = std::localtime(&t);
-    if (!ptime)
-    {
-        vsk_machine->bad_call();
-        return nullptr;
-    }
-
-    int year = ptime->tm_year + 1900;
-    int month = ptime->tm_mon + 1; // make it 1-base
-    assert(1900 <= year && year < 10000);
-    assert(1 <= month && month <= 12);
-    assert(1 <= ptime->tm_mday && ptime->tm_mday <= 31);
-
-    char buf[256];
-    std::sprintf(buf, "%02u/%02u/%02u", year % 100, month, ptime->tm_mday);
-    assert(std::strlen(buf) < 256);
-    return vsk_ast_str(VskString(buf));
+    return vsk_ast_str(vsk_get_date());
 }
 
 // INSN_TIME_dollar_var (TIME$ 変数みたいな) @implemented

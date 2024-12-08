@@ -59,6 +59,71 @@ void vsk_sleep(uint32_t wait)
     ::Sleep(wait);
 }
 
+// 現在の日時から設定日時までの差を覚えておく
+LONGLONG vsk_datetime_diff = 0;
+
+// SYSTEMTIME構造体から日時を取得
+LONGLONG vsk_get_datetime_value(const SYSTEMTIME& st)
+{
+    FILETIME ft;
+    ::SystemTimeToFileTime(&st, &ft);
+
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+    return uli.QuadPart;
+}
+
+// 日時からSYSTEMTIME構造体に格納
+void vsk_set_datetime_value(SYSTEMTIME& st, LONGLONG value)
+{
+    ULARGE_INTEGER uli;
+    uli.QuadPart = value;
+
+    FILETIME ft;
+    ft.dwLowDateTime = uli.LowPart;
+    ft.dwHighDateTime = uli.HighPart;
+    ::FileTimeToSystemTime(&ft, &st);
+}
+
+// ローカル日時を取得
+void vsk_get_datetime(int& year_xxxx, int& month, int& day, int& hour, int& minute, int& second)
+{
+    SYSTEMTIME st0;
+    ::GetLocalTime(&st0);
+
+    auto t0 = vsk_get_datetime_value(st0);
+    t0 += vsk_datetime_diff;
+    vsk_set_datetime_value(st0, t0);
+
+    year_xxxx = st0.wYear;
+    month = st0.wMonth;
+    day = st0.wDay;
+    hour = st0.wHour;
+    minute = st0.wMinute;
+    second = st0.wSecond;
+}
+
+// ローカル日時を設定
+void vsk_set_datetime(int year_xxxx, int month, int day, int hour, int minute, int second)
+{
+    SYSTEMTIME st0, st1;
+    ::GetLocalTime(&st0);
+    st1 = st0;
+
+    st1.wYear = WORD(year_xxxx);
+    st1.wMonth = WORD(month);
+    st1.wDay = WORD(day);
+    st1.wHour = WORD(hour);
+    st1.wMinute = WORD(minute);
+    st1.wSecond = WORD(second);
+    st1.wMilliseconds = 0;
+
+    auto t0 = vsk_get_datetime_value(st0);
+    auto t1 = vsk_get_datetime_value(st1);
+    vsk_datetime_diff = t1 - t0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // 設定実装
 
