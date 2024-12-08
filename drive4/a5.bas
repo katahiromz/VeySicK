@@ -6,5 +6,5 @@
 150 POINT(10,20)
 160 X = 80
 170 Y = 160
-180 A$ = "c6y&hf0f0;d100e100y&hffff;z5z=t1$;t=x;,=y;q200,100bf40z=t2$;p6"
-190 DRAW "a0s1x=a$;a1s0.5x=a$;a2s0.2x=a$;a3s0.1x=a$;"
+180 A$ = "C6Y&HF0F0;D100E100Y&HFFFF;Z5Z=T1$;T=X;,=Y;Q200,100BF40Z=T2$;P6"
+190 DRAW "A0S1X=A$;A1S0.5X=A$;A2S0.2X=A$;A3S0.1X=A$;"

@@ -63,6 +63,8 @@ bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskSt
 
             ch = expr[i];
             if (ch == '=' || ch == '&') { // 変数か？n進数か？
+                if (ch == '&')
+                    param += ch;
                 for (;;) {
                     ch = expr[++i];
                     if (ch == ';' || ch == ',' || ch == 0) // 終端？
@@ -232,6 +234,9 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
             if (0 <= i0 && i0 < 4) {
                 m_draw_coord_system = i0;
                 return true;
+            } else {
+                assert(0);
+                return false;
             }
         }
         break;
@@ -241,6 +246,9 @@ bool VskDrawEngine::draw_item(const VskDrawItem& item)
             if (vsk_machine->is_valid_color(i0)) {
                 m_draw_color = i0;
                 return true;
+            } else {
+                assert(0);
+                return false;
             }
         }
         break;
