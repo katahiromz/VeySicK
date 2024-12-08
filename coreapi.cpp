@@ -1792,19 +1792,19 @@ VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
     if (!dot && !exp) // 整数っぽい？
     {
         // prefixに応じて進数を読み取る
-        VskLong value;
+        VskLongLong value;
         if (str[0] == '&') {
             type = VSK_TYPE_INTEGER;
 
             if (str[1] == 'H' || str[1] == 'h') {
-                value = std::strtoul(&str[2], nullptr, 16); // 16進数？
+                value = std::strtoull(&str[2], nullptr, 16); // 16進数？
             } else if (str[1] == 'O' || str[1] == 'o') {
-                value = std::strtoul(&str[2], nullptr, 8); // 8進数？
+                value = std::strtoull(&str[2], nullptr, 8); // 8進数？
             } else {
-                value = std::strtoul(&str[1], nullptr, 8); // 8進数？
+                value = std::strtoull(&str[1], nullptr, 8); // 8進数？
             }
         } else {
-            value = std::strtoul(str.c_str(), nullptr, 10); // 10進数？
+            value = std::strtoull(str.c_str(), nullptr, 10); // 10進数？
         }
 
         value = sign * value; // 符号を付ける
@@ -1818,7 +1818,7 @@ VskAstPtr vsk_parse_number(const char *ptr, char **endptr, VSK_TYPE& type)
         // VskShortの範囲を超えているか？
         if (value < std::numeric_limits<VskShort>::lowest() || std::numeric_limits<VskShort>::max() < value) {
             type = VSK_TYPE_LONG;
-            return vsk_ast_lng(value); // 32ビット整数
+            return vsk_ast_lng(VskLong(value)); // 32ビット整数
         }
 
         type = VSK_TYPE_INTEGER;

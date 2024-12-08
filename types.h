@@ -28,6 +28,8 @@ typedef  std::int16_t VskShort;
 typedef std::uint16_t VskWord;
 typedef  std::int32_t VskLong;
 typedef std::uint32_t VskDword, VskDWord;
+typedef  std::int64_t VskLongLong;
+typedef std::uint64_t VskDwordLong, VskDWordLong;
 typedef float  VskSingle;
 typedef double VskDouble;
 
