@@ -3,7 +3,7 @@
 
 #include "VeySicK.h"            // VeySicK
 #include "draw_algorithm.h"     // 描画アルゴリズム
-#include "turtle.h"             // タートル
+#include "cmd_turtle.h"         // タートル グラフィック
 
 ////////////////////////////////////////////////////////////////////////////////////
 // 9801 machine

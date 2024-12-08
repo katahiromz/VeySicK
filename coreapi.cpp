@@ -4,8 +4,8 @@
 #include "random.h"     // 乱数
 #include "sound.h"      // 音
 #include "renum.h"      // RENUM
-#include "draw.h"       // DRAW
-#include "turtle.h"     // CMD TURTLE
+#include "draw98.h"     // DRAW
+#include "cmd_turtle.h" // タートル グラフィック
 #include "n88float.h"   // 浮動小数点数
 #include <stack>        // For std::stack
 #include <array>        // For std::array

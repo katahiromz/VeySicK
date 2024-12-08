@@ -163,15 +163,15 @@ message(STATUS "HAS_STD_COSF: ${HAS_STD_COSF}")
 # VeySicK.exe
 add_executable(VeySicK WIN32
     VeySicK.cpp
+    cmd_turtle.cpp
     coreapi.cpp
-    draw.cpp
+    draw98.cpp
     encoding.cpp
     mdbg.cpp
     mem.cpp
     n88float.cpp
     print_using.cpp
     renum.cpp
-    turtle.cpp
     vm8801.cpp
     vm9801.cpp
     random.cpp
