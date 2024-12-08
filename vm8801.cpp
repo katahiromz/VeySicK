@@ -869,6 +869,10 @@ struct Vsk8801Machine : VskMachine
                 else
                     m_planes[iPlane][offset] &= ~(1 << ibit);
             }
+
+            // 時間のかかる処理なのでロックを一時的に解除して描画を促す
+            vsk_unlock();
+            vsk_lock();
         }
     };
 
