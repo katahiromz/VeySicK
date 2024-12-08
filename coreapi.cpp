@@ -4832,13 +4832,17 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
                 // シフトJISモードにする
                 VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
 
+                // 9801互換に補正する
+                v0 = (v0 == 3) ? 0 : 2;
                 v2 = 0;
                 v3 = 1;
             }
         }
 
-        if (arg0 && !arg3)
-            v3 = 1;
+        if (arg0 && !arg2) // 画面モードの指定があり、描画ページの指定がない？
+            v2 = 0; // 描画ページを初期化する
+        if (arg0 && !arg3) // 画面モードの指定があり、表示ページの指定がない？
+            v3 = 1; // 表示ページを初期化する
 
         bool high_color = (VSK_STATE()->m_palette_mode == VSK_PAL_MODE_16_COLORS_SUPER);
         if (!vsk_machine->is_valid_screen_mode(v0) ||
