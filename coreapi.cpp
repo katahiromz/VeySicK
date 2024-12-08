@@ -4837,7 +4837,7 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
             }
         }
 
-        if (v0 != VSK_STATE()->m_screen_mode && !arg3)
+        if (arg0 && !arg3)
             v3 = 1;
 
         bool high_color = (VSK_STATE()->m_palette_mode == VSK_PAL_MODE_16_COLORS_SUPER);
