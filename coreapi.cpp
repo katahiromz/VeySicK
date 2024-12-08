@@ -10642,12 +10642,13 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
         return nullptr;
 
     VskString v0;
-    VskInt v1, v2 = 1, v3 = 1;
+    VskInt v1, v2 = 0, v3 = 1;
     if (vsk_ident(v0, args[0]) && vsk_int(v1, args[1]))
     {
-        VskIndexList dimension = vsk_var_get_dimension(v0);
+        auto dimension = vsk_var_get_dimension(v0);
+        auto type = vsk_var_get_type(v0);
 
-        if (vsk_var_get_type(v0) != VSK_TYPE_INTEGER || dimension.size() != 1)
+        if (type != VSK_TYPE_INTEGER || dimension.size() != 1)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         if (args.size() > 2 && !vsk_int(v2, args[2]))
@@ -10655,14 +10656,15 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
         if (args.size() > 3 && !vsk_int(v3, args[3]))
             return nullptr;
 
-        for (VskInt i = v2; i < VskInt(dimension[0]); i += v3)
+        VskInt base = (VSK_STATE()->m_option_base == 1) ? 1 : 0;
+        for (VskInt i = v2; i < VskInt(dimension[0]) + base; i += v3)
         {
             void *ptr;
             if (!vsk_var_get_value(v0, &ptr, { size_t(i) }))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
             if (*(VskInt*)ptr == v1) // 見つかった
-                return vsk_ast_int(i);
+                return vsk_ast_int(i + base);
         }
 
         return vsk_ast_int(-1); // 見つからなかった
