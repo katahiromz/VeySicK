@@ -10641,8 +10641,10 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
     if (!vsk_arity_in_range(args, 2, 4))
         return nullptr;
 
+    int base = (VSK_STATE()->m_option_base == 1) ? 1 : 0;
+
     VskString v0;
-    VskInt v1, v2 = 0, v3 = 1;
+    VskInt v1, v2 = base, v3 = 1;
     if (vsk_ident(v0, args[0]) && vsk_int(v1, args[1]))
     {
         auto dimension = vsk_var_get_dimension(v0);
@@ -10655,9 +10657,10 @@ static VskAstPtr VSKAPI vsk_SEARCH(VskAstPtr self, const VskAstList& args)
             return nullptr;
         if (args.size() > 3 && !vsk_int(v3, args[3]))
             return nullptr;
+        if (v3 == 0)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        VskInt base = (VSK_STATE()->m_option_base == 1) ? 1 : 0;
-        for (VskInt i = v2; i < VskInt(dimension[0]) + base; i += v3)
+        for (int i = v2 - base; i < int(dimension[0]); i += v3)
         {
             void *ptr;
             if (!vsk_var_get_value(v0, &ptr, { size_t(i) }))
