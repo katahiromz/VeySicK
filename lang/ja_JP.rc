@@ -200,6 +200,34 @@ IDR_MAINACCEL ACCELERATORS
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// RT_VERSION
+
+1 VERSIONINFO
+FILEVERSION     0, 5, 2, 0
+PRODUCTVERSION  0, 5, 2, 0
+FILEOS          0x40004
+FILETYPE        0x1
+FILESUBTYPE     0x0
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "041103A4"
+        {
+            VALUE "CompanyName", "片山博文MZ\0"
+            VALUE "FileDescription", "ヴェイシック マテン\0"
+            VALUE "FileVersion", "0.5.2\0"
+            VALUE "LegalCopyright", "(C) 2015-2024 katahiromz\0"
+            VALUE "ProductName", "VeySicK MATEN\0"
+            VALUE "ProductVersion", "0.5.2\0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0411, 0x03A4
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // RT_STRING
 
 STRINGTABLE
