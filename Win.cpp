@@ -1361,6 +1361,13 @@ VskInt vsk_inport_9801(VskInt port)
     int ibit = 0;
     switch (port)
     {
+    case 0xA0: // V-sync
+        // TODO: 何すればいいのかわからない
+        mdbg_traceA("TODO: V-sync\n");
+        if ((vsk_get_tick_count() & 0x3) == 0x3)
+            return 0x00;
+        else
+            return 0x20;
     case 0xE0:
         if (!vsk_is_pressed(VK_NUMPAD0)) ret |= (1 << ibit); ++ibit;
         if (!vsk_is_pressed(VK_NUMPAD1)) ret |= (1 << ibit); ++ibit;
