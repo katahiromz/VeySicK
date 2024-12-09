@@ -62,12 +62,6 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "(なし)", ID_DRIVE4_INFO, GRAYED
     }
-    POPUP "ドライブ 5"
-    {
-        MENUITEM "フォルダを開く", ID_DRIVE5_OPEN_FOLDER
-        MENUITEM SEPARATOR
-        MENUITEM "(なし)", ID_DRIVE5_INFO, GRAYED
-    }
     POPUP "画面"
     {
         MENUITEM "ズーム実寸", ID_ZOOM_X1

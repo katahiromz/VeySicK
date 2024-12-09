@@ -59,6 +59,7 @@ Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "HISTORY.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VeySicK.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "doc-ja\veysick-maten-manual-ja.pdf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "drive0\00README.txt"; DestDir: "{app}\drive0"; Flags: ignoreversion
 Source: "drive1\@load.v1"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\@load.v2"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\00README.txt"; DestDir: "{app}\drive1"; Flags: ignoreversion
