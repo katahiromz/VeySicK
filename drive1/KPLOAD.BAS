@@ -21,4 +21,4 @@
 290 CHRPTN%(16)=&H3018  '|   **     **    |
 300 CHRPTN%(17)=&HC007  '|     *****      |
 310 KPLOAD &H7621,CHRPTN%
-320 PRINT CHR$(&H7621)
+320 PRINT "&H7621 = ";CHR$(&H7621)

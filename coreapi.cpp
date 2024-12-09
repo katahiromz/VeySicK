@@ -9127,7 +9127,7 @@ static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_KPLOAD
+// INSN_KPLOAD (KPLOAD) @implemented
 static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 3))
@@ -9143,7 +9143,7 @@ static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
     if (!vsk_is_kpload_jis_code(v0))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-    if (args.size() == 2)
+    if (args.size() == 2) // 引数が２つの場合
     {
         // 左辺値（lvalue）から名前と次元を取得
         VskString name;
@@ -9182,19 +9182,24 @@ static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
                 }
             }
         }
-
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
     }
-    else if (args.size() == 3)
+    else if (args.size() == 3) // 引数が３つの場合(VeySicK拡張)
     {
+        VskWord v1;
+        if (!vsk_wrd(v1, args[1]))
+            return nullptr;
         VskString v2;
         if (!vsk_ident(v2, args[2]))
             return nullptr;
         if (v2 != "UNI")
             VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
+
+        // 外字をUnicode標準フォントから取得
+        if (vsk_kpload_uni(v0, v1))
+            return nullptr;
     }
 
-    return nullptr;
+    VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 }
 
 // INSN_KPOS (KPOS) @implemented
