@@ -926,8 +926,6 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     VskByte palette = log_attr.m_palette;
     // スクリーン描画を助けるオブジェクト
     VskScreenPutter putter(m_screen_image, m_state->text_color_to_web_color(palette));
-    // 漢字のイメージを取得するオブジェクト
-    VskKanjiGetter getter;
     // 何も描画しないオブジェクト
     VskNullPutter eraser;
     // アンダーライン（下線）
@@ -935,16 +933,16 @@ void Vsk9801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     if (wider) // 40文字の幅か?
     {
         if (reverse) // リバースか?
-            vk_draw_wide_jis(eraser, putter, x0, y0, x1, y1, jis, getter, underline);
+            vk_draw_wide_jis(eraser, putter, x0, y0, x1, y1, jis, underline);
         else
-            vk_draw_wide_jis(putter, eraser, x0, y0, x1, y1, jis, getter, underline);
+            vk_draw_wide_jis(putter, eraser, x0, y0, x1, y1, jis, underline);
     }
     else
     {
         if (reverse) // リバースか?
-            vk_draw_jis(eraser, putter, x0, y0, x1, y1, jis, getter, underline);
+            vk_draw_jis(eraser, putter, x0, y0, x1, y1, jis, underline);
         else
-            vk_draw_jis(putter, eraser, x0, y0, x1, y1, jis, getter, underline);
+            vk_draw_jis(putter, eraser, x0, y0, x1, y1, jis, underline);
     }
 
     // リバースかつ20文字の高さのときに、反転している文字の下部を描画する

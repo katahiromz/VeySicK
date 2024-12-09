@@ -1203,20 +1203,22 @@ void Vsk8801Machine::render_jis(int x, int y, int next_x, int next_y, VskWord ji
     bool upperline = log_attr.m_upperline;  // アッパーライン（上線）
     bool underline = log_attr.m_underline;  // アンダーライン（下線）
     // 漢字のイメージを取得するオブジェクト
+
     VskKanjiGetter getter;
+
     if (wider) // 40文字の幅か?
     {
         if (reverse) // リバースか?
-            vk_draw_wide_jis(eraser, putter, x0, y0, x1, y1, jis, getter, underline, upperline);
+            vk_draw_wide_jis(eraser, putter, x0, y0, x1, y1, jis, underline, upperline);
         else
-            vk_draw_wide_jis(putter, eraser, x0, y0, x1, y1, jis, getter, underline, upperline);
+            vk_draw_wide_jis(putter, eraser, x0, y0, x1, y1, jis, underline, upperline);
     }
     else
     {
         if (reverse) // リバースか?
-            vk_draw_jis(eraser, putter, x0, y0, x1, y1, jis, getter, underline, upperline);
+            vk_draw_jis(eraser, putter, x0, y0, x1, y1, jis, underline, upperline);
         else
-            vk_draw_jis(putter, eraser, x0, y0, x1, y1, jis, getter, underline, upperline);
+            vk_draw_jis(putter, eraser, x0, y0, x1, y1, jis, underline, upperline);
     }
 
     // リバースかつ20文字の高さのときに、反転している文字の下部を描画する

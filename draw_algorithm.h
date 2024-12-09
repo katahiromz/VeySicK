@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef VEYSICK
+    #include "VeySicK.h"
+#endif
+
 #include <cassert>
 
 // 角度を正規化
@@ -92,6 +96,7 @@ struct VskKanjiGetter {
 struct VskGaijiGetter {
     const VskByte *m_bits = nullptr;
     VskGaijiGetter(VskWord *pw) {
+        assert(pw[0] == 16 && pw[1] == 16);
         m_bits = (const VskByte *)&pw[2];
     }
     enum { t_width = 16, t_height = 16 };
@@ -619,11 +624,10 @@ inline void vk_draw_ank(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, VskB
     }
 }
 
-// JISの全角文字を描画する
-template <typename T_PUTTER, typename T_ERASER, typename T_GETTER>
-inline void vk_draw_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, VskWord jis, const T_GETTER& getter, bool underline, bool upperline = false)
+// JISの全角文字を描画する(共通処理)
+template <typename T_GETTER, typename T_PUTTER, typename T_ERASER>
+inline void vk_draw_jis_generic(T_GETTER& getter, T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, int xSrc, int ySrc, VskWord jis, bool underline, bool upperline = false)
 {
-    auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
     for (int dy = 0, y = y0; dy < 16; ++y, ++dy) {
         bool flag = (upperline && dy == 0) || (underline && dy == 15);
         for (int dx = 0, x = x0; dx < 8; ++x, ++dx) {
@@ -644,6 +648,20 @@ inline void vk_draw_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int 
     }
 }
 
+// JISの全角文字を描画する
+template <typename T_PUTTER, typename T_ERASER>
+inline void vk_draw_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, VskWord jis, bool underline, bool upperline = false)
+{
+    if (VskWord *pw = vsk_get_kpload_image(jis, true)) { // 外字か？
+        VskGaijiGetter getter(pw);
+        vk_draw_jis_generic(getter, putter, eraser, x0, y0, x1, y1, 0, 0, jis, underline, upperline);
+    } else {
+        VskKanjiGetter getter;
+        auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
+        vk_draw_jis_generic(getter, putter, eraser, x0, y0, x1, y1, xSrc, ySrc, jis, underline, upperline);
+    }
+}
+
 // 幅の広いANK文字を描画する
 template <typename T_PUTTER, typename T_ERASER, typename T_GETTER>
 inline void vk_draw_wide_ank(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, VskByte ch, const T_GETTER& getter, bool underline, bool upperline = false)
@@ -660,11 +678,10 @@ inline void vk_draw_wide_ank(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0,
     }
 }
 
-// 幅の広いJISの全角文字を描画する
-template <typename T_PUTTER, typename T_ERASER, typename T_GETTER>
-inline void vk_draw_wide_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, VskWord jis, const T_GETTER& getter, bool underline, bool upperline = false)
+// 幅の広いJISの全角文字を描画する(共通処理)
+template <typename T_GETTER, typename T_PUTTER, typename T_ERASER>
+inline void vk_draw_wide_jis_generic(T_GETTER& getter, T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, int xSrc, int ySrc, VskWord jis, bool underline, bool upperline = false)
 {
-    auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
     for (int dy = 0, y = y0; dy < 16; ++y, ++dy) {
         bool flag = (upperline && dy == 0) || (underline && dy == 15);
         for (int dx = 0, x = x0; dx < 16; ++x, ++dx) {
@@ -682,6 +699,20 @@ inline void vk_draw_wide_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0,
             else
                 eraser(x, y);
         }
+    }
+}
+
+// 幅の広いJISの全角文字を描画する
+template <typename T_PUTTER, typename T_ERASER>
+inline void vk_draw_wide_jis(T_PUTTER& putter, T_ERASER& eraser, int x0, int y0, int x1, int y1, VskWord jis, bool underline, bool upperline = false)
+{
+    if (VskWord *pw = vsk_get_kpload_image(jis, true)) { // 外字か？
+        VskGaijiGetter getter(pw);
+        vk_draw_wide_jis_generic(getter, putter, eraser, x0, y0, x1, y1, 0, 0, jis, underline, upperline);
+    } else {
+        VskKanjiGetter getter;
+        auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
+        vk_draw_wide_jis_generic(getter, putter, eraser, x0, y0, x1, y1, xSrc, ySrc, jis, underline, upperline);
     }
 }
 

@@ -1,3 +1,6 @@
+#ifdef VEYSICK
+    #include "VeySicK.h"
+#endif
 #include "cmd_turtle.h"         // タートル グラフィック
 #include "encoding.h"
 #include "draw_algorithm.h"
