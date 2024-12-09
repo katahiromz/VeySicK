@@ -1778,23 +1778,24 @@ bool vsk_copy_image_to_clipboard(HWND hwnd, HBITMAP hBitmap)
 bool vsk_kpload_uni(VskWord jis, VskWord uni)
 {
     if (!vsk_is_kpload_jis_code(jis))
-        return false;
+        return false; // 外字コードではないので失敗
 
     VskByte *image = reinterpret_cast<VskByte *>(vsk_get_kpload_image(jis));
     if (!image)
-        return false;
+        return false; // イメージへのポインタが取得できなかった
 
+    // デバイスコンテキストとビットマップオブジェクトを作成
     HDC hDC = ::CreateCompatibleDC(NULL);
     HBITMAP hbm = ::CreateCompatibleBitmap(hDC, 16, 16);
     HGDIOBJ hbmOld = ::SelectObject(hDC, hbm);
 
+    // 標準フォントを作成し、それを使ってテキストを描画
     LOGFONTW lf;
     ZeroMemory(&lf, sizeof(lf));
     lf.lfHeight = 16;
     lf.lfCharSet = SHIFTJIS_CHARSET;
     lstrcpynW(lf.lfFaceName, L"ＭＳ ゴシック", _countof(lf.lfFaceName));
     HFONT hFont = ::CreateFontIndirectW(&lf);
-
     HGDIOBJ hFontOld = ::SelectObject(hDC, hFont);
     WCHAR sz[2] = { uni, 0 };
     RECT rc = { 0, 0, 16, 16 };
@@ -1803,7 +1804,9 @@ bool vsk_kpload_uni(VskWord jis, VskWord uni)
     ::SetBkMode(hDC, TRANSPARENT);
     ::DrawTextW(hDC, sz, 1, &rc, DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
     ::SelectObject(hDC, hFontOld);
+    ::DeleteObject(hFont);
 
+    // イメージをビットマップから取得
     image[0] = image[2] = 16;
     image[1] = image[3] = 0;
     for (int y = 0; y < 16; ++y)
@@ -1812,18 +1815,19 @@ bool vsk_kpload_uni(VskWord jis, VskWord uni)
         {
             int ibyte = 4 + 2*y + (x / CHAR_BIT);
             int ibit = (CHAR_BIT - 1) - (x % CHAR_BIT);
-            if (!::GetPixel(hDC, x, y))
-                image[ibyte] |= (1 << ibit);
-            else
+            if (::GetPixel(hDC, x, y))
                 image[ibyte] &= ~(1 << ibit);
+            else
+                image[ibyte] |= (1 << ibit);
         }
     }
 
+    // 後始末
     ::SelectObject(hDC, hbmOld);
     ::DeleteObject(hbm);
     ::DeleteDC(hDC);
 
-    return true;
+    return true; // 成功
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
