@@ -7509,10 +7509,24 @@ static VskAstPtr VSKAPI vsk_BEEP(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CALL
+// INSN_CALL (CALL)
 static VskAstPtr VSKAPI vsk_CALL(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskWord v0;
+    if (vsk_wrd(v0, args[0]))
+    {
+        if (v0 != 0)
+        {
+            mdbg_traceA("TODO: CALL &H%04X\n", v0);
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+        }
+
+        vsk_reset(VSK_SETTINGS()->m_machine_mode);
+    }
+
     return nullptr;
 }
 
@@ -9830,10 +9844,19 @@ static VskAstPtr VSKAPI vsk_NEW(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_NEW_ON
+// INSN_NEW_ON (NEW ON)
 static VskAstPtr VSKAPI vsk_NEW_ON(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskWord v0;
+    if (vsk_wrd(v0, args[0]))
+    {
+        mdbg_traceA("TODO: NEW ON &H%04X\n", v0);
+        vsk_reset(VSK_SETTINGS()->m_machine_mode);
+    }
+
     return nullptr;
 }
 
