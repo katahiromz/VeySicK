@@ -1507,8 +1507,6 @@ void Vsk8801Machine::reset()
     clear_graphic();
     clear_text();
     move_to_top();
-
-    test_pattern(0);
 }
 
 void Vsk8801Machine::do_unit_tests()

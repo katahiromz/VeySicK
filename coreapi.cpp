@@ -2936,6 +2936,35 @@ bool vsk_wait(void)
     return false; // 待たない
 }
 
+// 初期コマンドを実行する
+void vsk_initial_command(void)
+{
+    // 再起動してる感のために、0.25秒待つ
+    vsk_unlock();
+    vsk_sleep(250);
+    vsk_lock();
+
+    // ダイレクトモードで起動時のコマンドを実行する
+    VskString command = "? \"" VEYSICK_TITLE "\":";
+    command += "? \"" VEYSICK_COPYRIGHT "\":";
+    switch (VSK_SETTINGS()->m_machine_mode)
+    {
+    case VSK_MACHINE_MODE_8801:
+        command += "? \"Started in 8801 mode\":";
+        break;
+    case VSK_MACHINE_MODE_9801:
+        command += "? \"Started in 9801 mode\":";
+        break;
+    }
+    command += "CLEAR:";
+    command += "? MID$(STR$(FRE(2)+FRE(3)),2)+\" Bytes free\":";
+    command += "NEW";
+    vsk_direct_execute(command);
+}
+
+// 電源はONか？
+bool vsk_power_on = false;
+
 // ステップ実行。戻り値がtrueなら出力待ち
 bool vsk_step(void)
 {
@@ -2951,6 +2980,15 @@ bool vsk_step(void)
 
     if (!vsk_machine)
         return false;
+
+    if (!vsk_power_on) // 電源はまだOFFか
+    {
+        // 電源はONになった
+        vsk_power_on = true;
+        // BASICの初期コマンドを実行する
+        vsk_initial_command();
+        return false;
+    }
 
     // トラップをチェックする
     if (vsk_check_trap())

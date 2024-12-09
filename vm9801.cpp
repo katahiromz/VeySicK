@@ -1388,8 +1388,6 @@ void Vsk9801Machine::reset()
     clear_graphic();
     clear_text();
     move_to_top();
-
-    test_pattern(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

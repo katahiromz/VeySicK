@@ -901,3 +901,5 @@ void vsk_set_datetime(int year_xxxx, int month, int day, int hour, int minute, i
 int vsk_year_xxxx_from_year_xx(int year_xx);
 // 四桁の年を二桁の年に変換
 int vsk_year_xx_from_year_xxxx(int year_xxxx);
+// 電源はONか？
+extern bool vsk_power_on;

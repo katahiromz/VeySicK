@@ -509,6 +509,7 @@ bool vsk_connect_machine(VskMachineState *state, VskSettings *settings, bool do_
         vsk_unlock();
 
         vsk_sound_exit();
+        vsk_power_on = false;
     }
     return true;
 }
@@ -2248,23 +2249,6 @@ void VskMachine::test_pattern(int type)
         }
         break;
     case 0:
-        // BASIC起動風のテキストを表示する
-        print(VEYSICK_TITLE "\n");
-        print(VEYSICK_COPYRIGHT "\n");
-        switch (VSK_SETTINGS()->m_machine_mode)
-        {
-        case VSK_MACHINE_MODE_8801:
-            print("Started in 8801 mode\n");
-            break;
-        case VSK_MACHINE_MODE_9801:
-            print("Started in 9801 mode\n");
-            break;
-        }
-        print("99999 Bytes free\n");
-        VSK_STATE()->m_wait_for = VSK_NO_WAIT;
-        vsk_enter_command_level();
-        break;
-    case 1:
         // テレビの放送終了したときみたいな、カラーバー表示
         {
             int width = m_state->m_screen_width, height = m_state->m_screen_height;
