@@ -327,3 +327,24 @@ int vsk_jis_ktype(const char *str);
 int vsk_sjis_ktype(const char *str);
 // KEXT$関数を参照
 VskString vsk_sjis_kanji_extract(const VskString& str, bool is_zenkaku);
+
+// JIS外字の範囲
+#define VSK_JIS_KPLOAD_START_00 0x7621
+#define VSK_JIS_KPLOAD_START_01 0x7721
+#define VSK_JIS_KPLOAD_END_00 0x767E
+#define VSK_JIS_KPLOAD_END_01 0x777E
+
+// JISの外字コードか？
+inline int vsk_is_kpload_jis_code(VskWord jis)
+{
+    if (VSK_JIS_KPLOAD_START_00 <= jis && jis <= VSK_JIS_KPLOAD_END_00)
+        return 1;
+    if (VSK_JIS_KPLOAD_START_01 <= jis && jis <= VSK_JIS_KPLOAD_END_01)
+        return 2;
+    return 0;
+}
+
+#ifdef VEYSICK
+    // JIS外字ならイメージを取得
+    VskWord *vsk_get_kpload_image(VskWord jis, bool check = false);
+#endif

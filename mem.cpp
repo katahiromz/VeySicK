@@ -299,15 +299,15 @@ bool vsk_var_delete(const VskString& name, bool is_array)
 }
 
 // 変数へのポインタを取得する
-void *vsk_var_get_ptr(const VskString& name, const VskIndexList& dimension)
+void *vsk_var_get_ptr(const VskString& name, const VskIndexList& dimension, bool is_array)
 {
     // 必要な情報を取得
-    auto typed_name = vsk_var_get_typed_name(name, dimension.size());
+    auto typed_name = vsk_var_get_typed_name(name, dimension.size() || is_array);
     auto type = vsk_var_get_type(typed_name);
     auto type_size = vsk_get_type_size(type);
 
     // 変数を探す
-    auto var_desc = vsk_var_find(typed_name, dimension.size());
+    auto var_desc = vsk_var_find(typed_name, dimension.size() || is_array);
     if (!var_desc)
         return nullptr; // 見つからない
 

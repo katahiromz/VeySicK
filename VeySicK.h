@@ -903,3 +903,5 @@ int vsk_year_xxxx_from_year_xx(int year_xx);
 int vsk_year_xx_from_year_xxxx(int year_xxxx);
 // 電源はONか？
 extern bool vsk_power_on;
+// １バイト中のビット群を逆順にしたものを返す関数
+VskByte vsk_reverse_byte(VskByte x);

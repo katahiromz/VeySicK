@@ -88,6 +88,25 @@ struct VskKanjiGetter {
     }
 };
 
+// 外字のピクセルを取得するクラス
+struct VskGaijiGetter {
+    const VskByte *m_bits = nullptr;
+    VskGaijiGetter(VskWord *pw) {
+        m_bits = (const VskByte *)&pw[2];
+    }
+    enum { t_width = 16, t_height = 16 };
+    bool operator()(int x, int y) const {
+        if (0 <= x && x < t_width && 0 <= y && y < t_height) {
+            int offset = y * (t_width / CHAR_BIT) + x / CHAR_BIT;
+            auto& byte = m_bits[offset];
+            auto ibit = (x % CHAR_BIT);
+            ibit = ((CHAR_BIT - 1) - ibit);
+            return ((byte >> ibit) & 1);
+        }
+        return false;
+    }
+};
+
 // ピクセルを置かないクラス
 struct VskNullPutter
 {
@@ -894,16 +913,10 @@ void vsk_draw_pank(T_PUTTER& putter, T_GETTER& getter, VskWord code, int x0, int
     }
 }
 
-// JISの文字を描画する
-template <typename T_PUTTER, typename T_GETTER>
-void vsk_draw_kanji(T_PUTTER& putter, T_GETTER& getter, VskWord jis, int x0, int y0, int fore_color, int back_color, const VskString& op, bool is_9801)
+// JISの文字を描画する(共通処理)
+template <typename T_PUTTER, typename T_GETTER, typename T_KANJI_GETTER>
+void vsk_draw_kanji_generic(T_PUTTER& putter, T_GETTER& getter, VskWord jis, T_KANJI_GETTER kanji_getter, int x0, int y0, int xSrc, int ySrc, int fore_color, int back_color, const VskString& op, bool is_9801)
 {
-    if (jis <= 0xFF) {
-        vsk_draw_pank(putter, getter, jis, x0, y0, fore_color, back_color, op, is_9801);
-        return;
-    }
-    VskKanjiGetter kanji_getter;
-    auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
     if (op == "XOR" || op.empty()) {
         for (int dy = 0, y = y0; dy < 16; ++y, ++dy) {
             for (int dx = 0, x = x0; dx < 16; ++x, ++dx) {
@@ -963,6 +976,26 @@ void vsk_draw_kanji(T_PUTTER& putter, T_GETTER& getter, VskWord jis, int x0, int
             }
         }
     }
+}
+
+// JISの文字を描画する
+template <typename T_PUTTER, typename T_GETTER>
+void vsk_draw_kanji(T_PUTTER& putter, T_GETTER& getter, VskWord jis, int x0, int y0, int fore_color, int back_color, const VskString& op, bool is_9801)
+{
+    if (jis <= 0xFF) { // ANKか？
+        vsk_draw_pank(putter, getter, jis, x0, y0, fore_color, back_color, op, is_9801);
+        return;
+    }
+
+    if (VskWord *image = vsk_get_kpload_image(jis)) { // JISの外字コードか？
+        VskGaijiGetter kanji_getter(image);
+        vsk_draw_kanji_generic(putter, getter, jis, kanji_getter, x0, y0, 0, 0, fore_color, back_color, op, is_9801);
+        return;
+    }
+
+    VskKanjiGetter kanji_getter;
+    auto xSrc = (vsk_low_byte(jis) - 0x21) * 16, ySrc = (vsk_high_byte(jis) - 0x21) * 16;
+    vsk_draw_kanji_generic(putter, getter, jis, kanji_getter, x0, y0, xSrc, ySrc, fore_color, back_color, op, is_9801);
 }
 
 struct VskImageGetter

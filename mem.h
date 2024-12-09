@@ -45,7 +45,7 @@ bool vsk_var_set_value(const VskString& name, const VskIndexList& dimension, con
 // 変数名から変数ポインタを取得
 VskAddr vsk_var_get_varptr(const VskString& name, const VskIndexList& dimension);
 // 変数へのポインタを取得する
-void *vsk_var_get_ptr(const VskString& name, const VskIndexList& dimension);
+void *vsk_var_get_ptr(const VskString& name, const VskIndexList& dimension, bool is_array = false);
 // 変数名のデフォルトの型をセットする
 void vsk_set_def_type(VskByte ch, VskType type);
 // 型付き変数名を取得する

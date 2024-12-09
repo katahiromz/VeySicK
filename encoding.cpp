@@ -1,3 +1,6 @@
+#ifdef VEYSICK
+    #include "VeySicK.h"
+#endif
 #include "encoding.h"
 
 // JIS全角文字をSJIS全角文字に変換
@@ -368,3 +371,35 @@ size_t vsk_sjis_ib2kpos(VskString sjis, size_t ib0)
     }
     return ++kindex;
 }
+
+#ifdef VEYSICK
+    // JIS外字ならイメージを取得
+    VskWord *vsk_get_kpload_image(VskWord jis, bool check)
+    {
+        switch (vsk_is_kpload_jis_code(jis))
+        {
+        case 0:
+        default:
+            break;
+        case 1:
+            if (VskWord *ptr = &VSK_SETTINGS()->m_kpload_images[0][0])
+            {
+                auto offset = jis - VSK_JIS_KPLOAD_START_00;
+                ptr += offset  * (sizeof(VskKploadImage) / sizeof(VskWord));
+                if (!check || (ptr[0] == 16 && ptr[1] == 16))
+                    return ptr;
+            }
+            break;
+        case 2:
+            if (VskWord *ptr = &VSK_SETTINGS()->m_kpload_images[VSK_KPLOAD_JIS_HALF_MAX_COUNT][0])
+            {
+                auto offset = jis - VSK_JIS_KPLOAD_START_01;
+                ptr += offset * (sizeof(VskKploadImage) / sizeof(VskWord));
+                if (!check || (ptr[0] == 16 && ptr[1] == 16))
+                    return ptr;
+            }
+            break;
+        }
+        return nullptr;
+    }
+#endif

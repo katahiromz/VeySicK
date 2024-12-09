@@ -3804,18 +3804,23 @@ static VskAstPtr VSKAPI vsk_CHR_dollar(VskAstPtr self, const VskAstList& args)
         VskString str;
         if (!(0 <= v0 && v0 < 256))
         {
+            // JISコードならSJISコードにする
+            if (vsk_is_jis_code(v0))
+                v0 = vsk_jis2sjis(v0);
+
+            // SJISコードでなければ失敗
             if (!vsk_is_sjis_code(v0))
-            {
-                vsk_machine->bad_call();
-                return nullptr;
-            }
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+            // 格納
             str += vsk_high_byte(v0);
             str += vsk_low_byte(v0);
         }
-        else
+        else // ANK文字
         {
             str += (char)v0;
         }
+
         return vsk_ast_str(str);
     }
 
@@ -7064,7 +7069,7 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 領域が足りない
 
         // 変数へのポインタを取得する
-        void *ptr = vsk_var_get_ptr(name, dimension);
+        void *ptr = vsk_var_get_ptr(name, dimension, true);
         if (!ptr)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
@@ -7151,7 +7156,7 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
         VskMemSize remainder = (var_desc->get_total_count() - total_index) * type_size;
 
         // 変数へのポインタを取得する
-        void *ptr = vsk_var_get_ptr(name, dimension);
+        void *ptr = vsk_var_get_ptr(name, dimension, true);
         if (!ptr)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
 
@@ -7657,7 +7662,7 @@ static bool vsk_CMD_VOICE_COPY(VskInt v1, VskAstPtr arg2)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, false); // 型が違う
 
     // 変数へのポインタを取得する
-    void *ptr = vsk_var_get_ptr(name, {});
+    void *ptr = vsk_var_get_ptr(name, {}, true);
     if (!ptr)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false); // 見つからない
 
@@ -9125,7 +9130,70 @@ static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr self, const VskAstList& args)
 // INSN_KPLOAD
 static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 2, 3))
+        return nullptr;
+
+    VskWord v0;
+    if (!vsk_wrd(v0, args[0]))
+        return nullptr;
+
+    if (vsk_is_sjis_code(v0))
+        v0 = vsk_sjis2jis(v0);
+
+    if (!vsk_is_kpload_jis_code(v0))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+    if (args.size() == 2)
+    {
+        // 左辺値（lvalue）から名前と次元を取得
+        VskString name;
+        VskIndexList dimension;
+        if (!vsk_dimension_from_lvalue(name, dimension, args[1], -(VSK_STATE()->m_option_base == 1, true)))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        // 配列変数を探す
+        auto var_desc = vsk_var_find(name, true);
+        if (!var_desc || !vsk_var_is_array(name))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
+
+        // 型チェック
+        auto type = vsk_var_get_type(name);
+        if (type == VSK_TYPE_STRING)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr); // 文字列型はダメ
+
+        // 添え字を解決する
+        VskIndex total_index = 0;
+        vsk_get_total_index(total_index, *var_desc, dimension);
+
+        // サイズをチェック
+        auto type_size = vsk_get_type_size(type);
+        VskMemSize remainder = (var_desc->get_total_count() - total_index) * type_size;
+        if (remainder < sizeof(VskKploadImage))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 領域が足りない
+
+        if (VskWord *image = vsk_get_kpload_image(v0)) // 外字のイメージを取得
+        {
+            if (void *ptr = vsk_var_get_ptr(name, dimension, true)) // 変数のデータへのポインタを取得
+            {
+                auto *wptr = reinterpret_cast<VskWord *>(ptr);
+                if (wptr[0] == 16 && wptr[1] == 16) { // チェック
+                    std::memcpy(image, ptr, sizeof(VskKploadImage)); // 格納
+                    return nullptr;
+                }
+            }
+        }
+
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    }
+    else if (args.size() == 3)
+    {
+        VskString v2;
+        if (!vsk_ident(v2, args[2]))
+            return nullptr;
+        if (v2 != "UNI")
+            VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
+    }
+
     return nullptr;
 }
 

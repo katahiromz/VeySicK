@@ -19,7 +19,7 @@ struct VskComSettings
 };
 
 // 外字 (KPLOAD) のイメージ
-typedef std::array<VskDword, 9> VskKploadImage;
+typedef std::array<VskWord, 18> VskKploadImage;
 
 // VeySicKの設定
 struct VskSettings
@@ -49,10 +49,9 @@ struct VskSettings
     VskComSettings m_com;
 
     // 外字 (KPLOAD) イメージ
-#define VSK_KPLOAD_8801_MAX         63
-#define VSK_KPLOAD_9801_HALF_MAX    94
-#define VSK_KPLOAD_9801_MAX         (2 * VSK_KPLOAD_9801_HALF_MAX)
-    std::array<VskKploadImage, VSK_KPLOAD_8801_MAX + VSK_KPLOAD_9801_MAX> m_kpload_images = { { 0 } };
+#define VSK_KPLOAD_JIS_HALF_MAX_COUNT   94
+#define VSK_KPLOAD_JIS_MAX_COUNT        (2 * VSK_KPLOAD_JIS_HALF_MAX_COUNT)
+    std::array<VskKploadImage, VSK_KPLOAD_JIS_MAX_COUNT> m_kpload_images = { { 0 } };
 
     void reset()
     {
