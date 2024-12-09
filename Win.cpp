@@ -1774,11 +1774,29 @@ bool vsk_copy_image_to_clipboard(HWND hwnd, HBITMAP hBitmap)
     return !!bOK;
 }
 
-// 外字をUnicode標準フォントから取得
-bool vsk_kpload_uni(VskWord jis, VskWord uni)
+// 外字を標準フォントから取得
+bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope)
 {
     if (!vsk_is_kpload_jis_code(jis))
         return false; // 外字コードではないので失敗
+
+    WCHAR sz[10];
+    if (ope == "SJIS") {
+        char szA[3] = { HIBYTE(code), LOBYTE(code), 0 };
+        MultiByteToWideChar(932, 0, szA, -1, sz, _countof(sz));
+    } else if (ope == "UNI") {
+        if (code <= 0xFFFF) {
+            sz[0] = code;
+            sz[1] = 0;
+        } else if (code <= 0x10FFFF) {
+            auto codePoint = (code - 0x10000);
+            sz[0] = static_cast<wchar_t>((codePoint >> 10) + HIGH_SURROGATE_START);
+            sz[1] = static_cast<wchar_t>((codePoint & 0x3FF) + LOW_SURROGATE_START);
+            sz[2] = 0;
+        } else {
+            return false;
+        }
+    }
 
     VskByte *image = reinterpret_cast<VskByte *>(vsk_get_kpload_image(jis));
     if (!image)
@@ -1797,12 +1815,11 @@ bool vsk_kpload_uni(VskWord jis, VskWord uni)
     lstrcpynW(lf.lfFaceName, L"ＭＳ ゴシック", _countof(lf.lfFaceName));
     HFONT hFont = ::CreateFontIndirectW(&lf);
     HGDIOBJ hFontOld = ::SelectObject(hDC, hFont);
-    WCHAR sz[2] = { uni, 0 };
     RECT rc = { 0, 0, 16, 16 };
     ::FillRect(hDC, &rc, GetStockBrush(WHITE_BRUSH));
     ::SetTextColor(hDC, RGB(0, 0, 0));
     ::SetBkMode(hDC, TRANSPARENT);
-    ::DrawTextW(hDC, sz, 1, &rc, DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
+    ::DrawTextW(hDC, sz, -1, &rc, DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
     ::SelectObject(hDC, hFontOld);
     ::DeleteObject(hFont);
 

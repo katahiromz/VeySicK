@@ -905,5 +905,5 @@ int vsk_year_xx_from_year_xxxx(int year_xxxx);
 extern bool vsk_power_on;
 // １バイト中のビット群を逆順にしたものを返す関数
 VskByte vsk_reverse_byte(VskByte x);
-// 外字をUnicode標準フォントから取得
-bool vsk_kpload_uni(VskWord jis, VskWord uni);
+// 外字を標準フォントから取得
+bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope);

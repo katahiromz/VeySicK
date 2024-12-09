@@ -9185,17 +9185,17 @@ static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
     }
     else if (args.size() == 3) // 引数が３つの場合(VeySicK拡張)
     {
-        VskWord v1;
-        if (!vsk_wrd(v1, args[1]))
+        VskLong v1;
+        if (!vsk_lng(v1, args[1]))
             return nullptr;
         VskString v2;
         if (!vsk_ident(v2, args[2]))
             return nullptr;
-        if (v2 != "UNI")
+        if (v2 != "UNI" && v2 != "SJIS")
             VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
 
-        // 外字をUnicode標準フォントから取得
-        if (vsk_kpload_uni(v0, v1))
+        // 外字を標準フォントから取得
+        if (vsk_kpload_extension(v0, v1, v2))
             return nullptr;
     }
 
