@@ -9095,8 +9095,23 @@ static VskAstPtr VSKAPI vsk_KNJ_dollar(VskAstPtr self, const VskAstList& args)
         v0.resize(4);
 
         VskWord w = (VskWord)std::strtoul(v0.c_str(), nullptr, 16);
-        if (!vsk_is_jis_code(w) && !vsk_is_ki_code(w) && !vsk_is_ko_code(w))
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        if (vsk_machine->is_jis_mode())
+        {
+            if (vsk_is_sjis_code(w))
+                w = vsk_sjis2jis(w);
+
+            if (!vsk_is_jis_code(w) && !vsk_is_ki_code(w) && !vsk_is_ko_code(w))
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
+        else
+        {
+            if (vsk_is_jis_code(w))
+                w = vsk_jis2sjis(w);
+
+            if (!vsk_is_sjis_code(w) && !vsk_is_ki_code(w) && !vsk_is_ko_code(w))
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        }
 
         v0.clear();
         v0 += vsk_high_byte(w);

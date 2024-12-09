@@ -275,10 +275,12 @@ inline bool vsk_is_hankaku_kana(VskByte b)
 #define VSK_JIS_KANJI_IN  "\x1B\x4B" // Kanji-In
 #define VSK_JIS_KANJI_OUT "\x1B\x48" // Kanji-Out
 
+// KI (Kanji-In) コードか？
 inline bool vsk_is_ki_code(VskWord w)
 {
     return w == 0x1B4B;
 }
+// KO (Kanji-Out) コードか？
 inline bool vsk_is_ko_code(VskWord w)
 {
     return w == 0x1B48;

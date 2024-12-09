@@ -1558,21 +1558,31 @@ void VskMachine::print(const VskString& str)
             was_lead = false;
             continue;
         }
-        VskByte ch = str[ich];
+        VskByte ch0 = str[ich];
+        VskByte ch1 = str.c_str()[ich + 1];
 #ifdef JAPAN
-        // 全角文字は特別な処理が必要
-        if (is_sjis_mode() && vsk_is_sjis_code(ch, str.c_str()[ich + 1]))
+        VskByte lead = ch0, trail = str.c_str()[ich + 1];
+        VskWord w = vsk_make_word(trail, lead);
+        if (is_sjis_mode()) // SJISモードのとき
         {
-            VskByte lead = ch, trail = str.c_str()[ich + 1];
-            VskWord sjis = vsk_make_word(trail, lead);
-            assert(vsk_is_sjis_code(sjis));
-            print_ch(sjis);
-            was_lead = true;
-            continue;
+            // KI/KOコードは無視する
+            if (is_sjis_mode() && (vsk_is_ki_code(w) || vsk_is_ko_code(w)))
+            {
+                was_lead = true;
+                continue;
+            }
+            // 全角文字は特別な処理が必要
+            if (vsk_is_sjis_code(ch0, ch1))
+            {
+                assert(vsk_is_sjis_code(w));
+                print_ch(w);
+                was_lead = true;
+                continue;
+            }
         }
 #endif
         // それ以外は普通に出力
-        print_ch(ch);
+        print_ch(ch0);
     }
 }
 
