@@ -198,6 +198,9 @@ bool VskSettings::load()
         ::RegQueryValueEx(hKey, TEXT("m_com_xon_xoff"), NULL, NULL, (BYTE*)&m_com.m_com_xon_xoff, &cbValue);
         cbValue = sizeof(m_com.m_com_si_so);
         ::RegQueryValueEx(hKey, TEXT("m_com_si_so"), NULL, NULL, (BYTE*)&m_com.m_com_si_so, &cbValue);
+
+        cbValue = sizeof(m_kpload_images);
+        ::RegQueryValueEx(hKey, TEXT("m_kpload_images"), NULL, NULL, (BYTE*)&m_kpload_images, &cbValue);
     }
 
     ::RegCloseKey(hKey);
@@ -274,6 +277,9 @@ bool VskSettings::save() const
         ::RegSetValueEx(hKey, TEXT("m_com_xon_xoff"), 0, REG_DWORD, (BYTE*)&m_com.m_com_xon_xoff, cbValue);
         cbValue = sizeof(m_com.m_com_si_so);
         ::RegSetValueEx(hKey, TEXT("m_com_si_so"), 0, REG_DWORD, (BYTE*)&m_com.m_com_si_so, cbValue);
+
+        cbValue = sizeof(m_kpload_images);
+        ::RegSetValueEx(hKey, TEXT("m_kpload_images"), 0, REG_BINARY, (BYTE*)&m_kpload_images, cbValue);
     }
 
     ::RegCloseKey(hKey);

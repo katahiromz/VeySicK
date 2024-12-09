@@ -180,7 +180,7 @@ add_executable(VeySicK WIN32
     "${PARSER_OUT}"
     sound.cpp
     VeySicK_res.rc)
-target_compile_definitions(VeySicK PRIVATE UNICODE _UNICODE JAPAN)
+target_compile_definitions(VeySicK PRIVATE UNICODE _UNICODE JAPAN VEYSICK)
 target_include_directories(VeySicK PRIVATE "${PARSER_DIR}")
 target_link_libraries(VeySicK comctl32 imm32 shell32 ole32 uuid shlwapi gdiplus imm32 fmgon alut ${OPENAL_LIBRARY})
 if(MSVC)
