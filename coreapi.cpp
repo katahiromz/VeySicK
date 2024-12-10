@@ -9185,6 +9185,9 @@ static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
     }
     else if (args.size() == 3) // 引数が３つの場合(VeySicK拡張)
     {
+        if (!VSK_SETTINGS()->m_unlimited_mode)
+            VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr); // 無制限モードでなければ失敗
+
         VskLong v1;
         if (!vsk_lng(v1, args[1]))
             return nullptr;
