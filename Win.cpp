@@ -2737,13 +2737,18 @@ void vsk_reset(VskMachineMode mode)
 // 仮想マシンをリセットする関数（本物）
 void VskWin32App::reset_real(VskMachineMode mode)
 {
+    // タイトル情報をクリア
+    vsk_set_program_title("");
+
+    // いくつかのポインタを覚えておく
     auto *state = vsk_machine->m_state;
     auto *settings = vsk_machine->m_settings;
-    vsk_connect_machine(state, settings, false);
-    wait_for_working_thread();
-    settings->m_machine_mode = mode;
-    vsk_connect_machine(state, settings, true);
-    restart_working_thread();
+
+    vsk_connect_machine(state, settings, false); // 接続を切断
+    wait_for_working_thread(); // ワーカースレッドを待つ
+    settings->m_machine_mode = mode; // 必要ならばマシンモードを変更
+    vsk_connect_machine(state, settings, true); // 接続開始
+    restart_working_thread(); // ワーカースレッドを再起動
 }
 
 // WM_COMMAND
