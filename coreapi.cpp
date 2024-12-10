@@ -6877,7 +6877,7 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
 
     // チャンネルを取得
     int channel = values[0] - 1;
-    if (!params[0] || !(0 <= channel && values[0] < 6)) // channel
+    if (!params[0] || !(0 <= channel && channel < 6)) // channel
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     if (params[1] && !vsk_sound_voice_LFO_WF(channel, values[1])) // Waveform
