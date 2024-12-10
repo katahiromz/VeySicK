@@ -880,7 +880,7 @@ bool vsk_sound_play_fm(const std::vector<VskString>& strs)
     return true;
 }
 
-bool vsk_sound_voice_copy(void *ptr, VskInt tone)
+bool vsk_sound_voice_copy(void *ptr, int tone)
 {
     extern int16_t ym2203_tone_table[NUM_TONES][5][10];
     const void *data = &ym2203_tone_table[tone];
