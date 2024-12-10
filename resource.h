@@ -8,6 +8,7 @@
 #define IDD_SETTINGS                        100
 #define IDD_DIP_SWITCHES                    101
 #define IDD_COMSETTINGS                     102
+#define IDD_LINEPRINTER                     103
 
 #define IDI_MAINICON                        100
 
@@ -59,12 +60,13 @@
 #define ID_RESETSETTINGS                    140
 #define ID_DRIVE0_INFO                      141
 #define ID_DRIVE0_OPEN_FOLDER               142
+#define ID_LINEPRINTER                      143
 
 #ifdef APSTUDIO_INVOKED
     #ifndef APSTUDIO_READONLY_SYMBOLS
         #define _APS_NO_MFC                 1
         #define _APS_NEXT_RESOURCE_VALUE    103
-        #define _APS_NEXT_COMMAND_VALUE     143
+        #define _APS_NEXT_COMMAND_VALUE     144
         #define _APS_NEXT_CONTROL_VALUE     1000
         #define _APS_NEXT_SYMED_VALUE       300
     #endif

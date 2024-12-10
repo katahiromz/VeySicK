@@ -2036,6 +2036,7 @@ struct VskWin32App : VskObject
     char m_disk_folders[10][MAX_PATH] = { "" }; // ディスク フォルダー群
     HANDLE m_hWorkingThread = nullptr;          // 仕事をするスレッドのハンドル
     VskSettings m_settings;                     // 設定
+    HWND m_hwndLinePrinter = nullptr;           // ラインプリンタのモードレスダイアログ
 
     VskWin32App();
     bool init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow);
@@ -2086,6 +2087,7 @@ protected:
     void OnAbout(HWND hwnd);
     void OnOpenDriveFolder(HWND hwnd, int number);
 
+    void OnLinePrinter(HWND hwnd);
     void OnResetSettings(HWND hwnd);
     void OnCopy(HWND hwnd);
     void OnPaste(HWND hwnd);
@@ -2272,6 +2274,13 @@ void VskWin32App::OnDestroy(HWND hwnd)
 
     // MImageViewExの終了処理
     m_imageView.OnDestroy(hwnd);
+
+    // ラインプリンタのダイアログを破棄
+    if (m_hwndLinePrinter)
+    {
+        ::DestroyWindow(m_hwndLinePrinter);
+        m_hwndLinePrinter = nullptr;
+    }
 
     // WM_QUITメッセージを投函し、メッセージループを終了
     ::PostQuitMessage(0);
@@ -2798,6 +2807,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         break;
     case ID_RESETSETTINGS: // 設定のリセット
         OnResetSettings(hwnd);
+        break;
+    case ID_LINEPRINTER: // ラインプリンタ
+        OnLinePrinter(hwnd);
         break;
     }
 }
@@ -3490,6 +3502,59 @@ BOOL vsk_get_text_from_clipboard(HWND hwnd, std::string& text)
     return !!bOK;
 }
 
+void vsk_update_line_printer(void)
+{
+}
+
+INT_PTR CALLBACK
+LinePrinterDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_INITDIALOG:
+        CenterWindowDx(hwnd); // 中央寄せ
+        return TRUE; // 自動フォーカス
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        case IDCANCEL:
+            // モードレスダイアログなので EndDialogではなく DestroyWindowを使う
+            ::DestroyWindow(hwnd);
+            // 安全のため、ハンドルをクリア
+            VSK_APP()->m_hwndLinePrinter = nullptr;
+            break;
+        case psh1: // クリア
+            ::SetDlgItemText(hwnd, edt1, nullptr);
+            break;
+        case psh2: // コピー
+            vsk_copy_text_to_clipboard(hwnd, "");
+            break;
+        }
+    }
+    return 0;
+}
+
+// ID_LINEPRINTER
+void VskWin32App::OnLinePrinter(HWND hwnd)
+{
+    if (m_hwndLinePrinter)
+    {
+        ::SetForegroundWindow(m_hwndLinePrinter);
+        return;
+    }
+
+    m_hwndLinePrinter = ::CreateDialog(m_hInst, MAKEINTRESOURCE(IDD_LINEPRINTER), hwnd, LinePrinterDlgProc);
+    if (!m_hwndLinePrinter)
+    {
+        assert(0);
+        return;
+    }
+
+    ::ShowWindow(m_hwndLinePrinter, SW_SHOWNORMAL);
+    ::UpdateWindow(m_hwndLinePrinter);
+}
+
 // ID_RESETSETTINGS
 void VskWin32App::OnResetSettings(HWND hwnd)
 {
@@ -3965,10 +4030,11 @@ int VskWin32App::run()
     HACCEL hAccel = ::LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_MAINACCEL));
 
     MSG msg;
-    for (;;)
+    for (;;) // メッセージループ
     {
-        if (!::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE))
+        if (!::PeekMessage(&msg, nullptr, 0, 0, PM_NOREMOVE)) // メッセージを取り出せなかった？
         {
+            // アイドル時処理
             DWORD dwTick0 = GetTickCount();
             OnIdle();
             DWORD dwTick1 = GetTickCount();
@@ -3978,9 +4044,15 @@ int VskWin32App::run()
             continue;
         }
 
+        // メッセージを取得
         if (!::GetMessage(&msg, nullptr, 0, 0))
             break;
 
+        // モードレスダイアログの処理
+        if (m_hwndLinePrinter && ::IsDialogMessage(m_hwndLinePrinter, &msg))
+            continue;
+
+        // アクセスキーの処理
         if (::TranslateAccelerator(m_hWnd, hAccel, &msg))
             continue;
 
@@ -3988,8 +4060,8 @@ int VskWin32App::run()
         if (msg.message == WM_KEYDOWN)
             vsk_vkey = ::ImmGetVirtualKey(m_hWnd);
 
-        ::TranslateMessage(&msg);
-        ::DispatchMessage(&msg);
+        ::TranslateMessage(&msg);   // 仮想キーメッセージの翻訳
+        ::DispatchMessage(&msg);    // メッセージを届ける
     }
 
     ::DestroyAcceleratorTable(hAccel);

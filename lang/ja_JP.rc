@@ -27,6 +27,8 @@ IDR_MAINMENU MENU
             MENUITEM "SJIS モード", ID_SJIS_MODE
         }
         MENUITEM SEPARATOR
+        MENUITEM "ラインプリンタ...", ID_LINEPRINTER
+        MENUITEM SEPARATOR
         MENUITEM "設定...\tAlt+Enter", ID_SETTINGS
         MENUITEM "設定のリセット...", ID_RESETSETTINGS
         MENUITEM SEPARATOR
@@ -189,6 +191,18 @@ FONT 9, "MS UI Gothic"
     AUTOCHECKBOX "XON/XOFF", chx1, 90, 115, 65, 15
     AUTOCHECKBOX "SI/SO", chx2, 90, 140, 65, 15
     PUSHBUTTON "デフォルトの設定に\nリセットする", psh1, 85, 175, 80, 40, BS_MULTILINE
+}
+
+IDD_LINEPRINTER DIALOG 0, 0, 273, 203
+CAPTION "ラインプリンタ"
+STYLE DS_CENTER | DS_NOIDLEMSG | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
+FONT 9, "MS UI Gothic"
+{
+    LTEXT "以下はラインプリンタに出力されたテキストです。", -1, 5, 5, 265, 15
+    EDITTEXT edt1, 5, 25, 265, 155, ES_READONLY | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON "クリア(&A)", psh1, 5, 185, 60, 15
+    PUSHBUTTON "コピー(&C)", psh2, 70, 185, 60, 15
+    PUSHBUTTON "閉じる(&L)", IDCANCEL, 210, 185, 60, 15
 }
 
 //////////////////////////////////////////////////////////////////////////////
