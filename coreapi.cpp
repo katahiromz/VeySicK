@@ -2492,6 +2492,10 @@ void vsk_direct_execute(const VskString& text)
     if (str.empty())
         return;
 
+    // 無制限モードではなく、行が長すぎる場合、失敗
+    if (!VSK_SETTINGS()->m_unlimited_mode && str.size() >= 256)
+        VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG);
+
     // 行番号を取得する
     auto line_number = vsk_line_number_from_line_text(str);
     if (line_number != 0) // 行番号がある
