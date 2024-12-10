@@ -683,11 +683,14 @@ bool vsk_phrase_from_play_items(std::shared_ptr<VskPhrase> phrase, const std::ve
 
 bool vsk_sound_init(void)
 {
-    if (!alutInit(NULL, NULL))
+    if (!vsk_sound_player)
     {
-        ALenum error = alutGetError();
-        std::fprintf(stderr, "%s\n", alutGetErrorString(error));
-        return false;
+        if (!alutInit(NULL, NULL))
+        {
+            ALenum error = alutGetError();
+            std::fprintf(stderr, "%s\n", alutGetErrorString(error));
+            return false;
+        }
     }
     vsk_sound_player = std::make_shared<VskSoundPlayer>();
     return true;
