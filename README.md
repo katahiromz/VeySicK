@@ -4,9 +4,13 @@
 
 ## これは何？
 
-VeySicK(ヴェイシック)は、昔のパソコンのようなBASIC環境を実現するソフトウェアです。WindowsやLinuxなどで昔ながらのBASIC環境を体験できます。
+VeySicK(ヴェイシック)は、昔のパソコンのようなBASIC環境を実現するソフトウェアです。Windowsで昔ながらのBASIC環境を体験できます。
 
 フリーソフトなので無料で使用できます。詳しくはマニュアルを参照してください。
+
+## 対応環境
+
+- Windows XP 以降
 
 ## ライセンス
 
@@ -21,9 +25,13 @@ VeySicK(ヴェイシック)は、昔のパソコンのようなBASIC環境を実
 
 # VeySicK - Virtual BASIC Environment
 
-VeySicK is software that creates a BASIC environment like that of old personal computers. You can experience the old-fashioned BASIC environment on Windows, Linux, etc.
+VeySicK is software that creates a BASIC environment like that of old personal computers. You can experience the old-fashioned BASIC environment on Windows.
 
 It is free software, so you can use it for free. Please refer to the manual for details.
+
+## Supported environments
+
+- Windows XP and later
 
 ## License
 
