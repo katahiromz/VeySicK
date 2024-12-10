@@ -293,7 +293,7 @@ struct VskMachineImpl
     // 出力
     VskFilePtr m_printing_device = nullptr;
     VskAstList m_printing_items = { };
-    bool m_printing_is_write = false;
+    INSN_TYPE m_printing_type = INSN_NONE;
     // BEEP待ち
     bool m_beep_waiting = true;
     // AUTO文情報
@@ -2402,7 +2402,7 @@ bool vsk_list(bool line_printer, const VskString& program_list_text, VskLineNo m
     assert(VSK_IMPL()->m_printing_device);
 
     VSK_IMPL()->m_printing_items = printing_items;
-    VSK_IMPL()->m_printing_is_write = false;
+    VSK_IMPL()->m_printing_type = line_printer ? INSN_LLIST : INSN_LIST;
 
     return found;
 }
@@ -2748,7 +2748,7 @@ bool vsk_do_printing(void)
     if (VSK_IMPL()->m_printing_items.empty())
     {
         // WRITE文のときは最後に改行を出力
-        if (VSK_IMPL()->m_printing_is_write)
+        if (VSK_IMPL()->m_printing_type == INSN_WRITE) // WRITE文か？
             device->write_str("\n");
         // ラインプリンタを更新
         vsk_update_line_printer();
@@ -2767,7 +2767,7 @@ bool vsk_do_printing(void)
     bool is_comma = (item->m_insn == INSN_COMMA);
     if (is_comma)
     {
-        if (VSK_IMPL()->m_printing_is_write) // WRITE文か？
+        if (VSK_IMPL()->m_printing_type == INSN_WRITE) // WRITE文か？
         {
             // カンマを出力する
             device->write_str(",");
@@ -2789,7 +2789,7 @@ bool vsk_do_printing(void)
     bool is_semicolon = (item->m_insn == INSN_SEMICOLON);
     if (is_semicolon)
     {
-        if (VSK_IMPL()->m_printing_is_write) // WRITE文か？
+        if (VSK_IMPL()->m_printing_type == INSN_WRITE) // WRITE文か？
         {
             // カンマを出力する
             device->write_str(",");
@@ -2808,7 +2808,7 @@ bool vsk_do_printing(void)
 
     // 項目を文字列に変換
     VskString str;
-    if (VSK_IMPL()->m_printing_is_write)
+    if (VSK_IMPL()->m_printing_type == INSN_WRITE)
     {
         if (ret->is_number()) // 数か？
         {
@@ -3009,7 +3009,19 @@ bool vsk_step(void)
 
     // 印字する項目があれば、印字する
     if (vsk_do_printing())
-        return true;
+    {
+        // 条件に応じて遅延する
+        switch (VSK_IMPL()->m_printing_type)
+        {
+        case INSN_PRINT:
+        case INSN_WRITE:
+        case INSN_LIST:
+        case INSN_FILES:
+            return true; // 実際の画面表示のため、遅延する
+        default:
+            return false; // 遅延しない
+        }
+    }
 
     // 実行するものがなければコマンドレベルに入る
     if (index_list.empty())
@@ -3406,7 +3418,7 @@ static VskAstPtr VSKAPI vsk_PRINT(VskAstPtr self, const VskAstList& args)
     }
 
     assert(VSK_IMPL()->m_printing_device);
-    VSK_IMPL()->m_printing_is_write = false; // WRITE文ではない
+    VSK_IMPL()->m_printing_type = INSN_PRINT;
 
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
@@ -3443,7 +3455,7 @@ static VskAstPtr VSKAPI vsk_LPRINT(VskAstPtr self, const VskAstList& args)
     VSK_IMPL()->m_printing_device = vsk_get_line_printer();
     assert(VSK_IMPL()->m_printing_device);
 
-    VSK_IMPL()->m_printing_is_write = false; // WRITE文ではない
+    VSK_IMPL()->m_printing_type = INSN_LPRINT;
 
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
@@ -3481,7 +3493,7 @@ static VskAstPtr VSKAPI vsk_WRITE(VskAstPtr self, const VskAstList& args)
     }
 
     assert(VSK_IMPL()->m_printing_device);
-    VSK_IMPL()->m_printing_is_write = true; // WRITE文
+    VSK_IMPL()->m_printing_type = INSN_WRITE;
 
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
@@ -8447,7 +8459,7 @@ static VskAstPtr vsk_FILES_LFILES_helper(const VskAstList& args, bool is_line_pr
 
     assert(VSK_IMPL()->m_printing_device);
 
-    VSK_IMPL()->m_printing_is_write = false; // WRITE文ではない
+    VSK_IMPL()->m_printing_type = (is_line_printer ? INSN_LFILES : INSN_FILES);
 
     return vsk_ast(INSN_DONT_GO_NEXT);
 }
