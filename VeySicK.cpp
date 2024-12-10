@@ -2739,7 +2739,7 @@ struct VskLinePrinter : VskFile
     bool line_width(int value) override { m_cx = value; return true; }
 
     VskError write_str(const std::string& str) override {
-        for (auto ch : str) {
+        for (auto& ch : str) {
             write_ch(ch);
         }
         return VSK_NO_ERROR;
@@ -2751,15 +2751,19 @@ struct VskLinePrinter : VskFile
         if (ch == '\r')
             return;
         if (ch == '\n') {
-            VSK_SETTINGS()->m_line_printer_text += "\r\n";
-            m_x = 0;
+            // 高速化のためにバッファを予約する
+            VSK_SETTINGS()->m_line_printer_text.reserve(VSK_SETTINGS()->m_line_printer_text.size() + 128);
+            VSK_SETTINGS()->m_line_printer_text += "\r\n"; // 改行
+            m_x = 0; // 一番左
             vsk_update_line_printer();
         } else {
             VSK_SETTINGS()->m_line_printer_text += ch;
             ++m_x;
             if (m_x == m_cx) {
-                VSK_SETTINGS()->m_line_printer_text += "\r\n";
-                m_x = 0;
+                // 高速化のためにバッファを予約する
+                VSK_SETTINGS()->m_line_printer_text.reserve(VSK_SETTINGS()->m_line_printer_text.size() + 128);
+                VSK_SETTINGS()->m_line_printer_text += "\r\n"; // 改行
+                m_x = 0; // 一番左
                 vsk_update_line_printer();
             }
         }
