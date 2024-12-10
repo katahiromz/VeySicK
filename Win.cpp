@@ -36,6 +36,7 @@
 #define MYWM_IME_ON_OFF (WM_USER + 100)
 #define MYWM_SCREENSHOT (WM_USER + 101)
 #define MYWM_RESET (WM_USER + 102)
+#define MYWM_UPDATELINEPRINTER (WM_USER + 103)
 
 static DWORD s_dwFpsCounter = 0; // FPSチェック用の変数
 
@@ -2086,6 +2087,7 @@ protected:
     void OnZoom(HWND hwnd, INT nZoom);
     void OnAbout(HWND hwnd);
     void OnOpenDriveFolder(HWND hwnd, int number);
+    void update_line_printer();
 
     void OnLinePrinter(HWND hwnd);
     void OnResetSettings(HWND hwnd);
@@ -3502,17 +3504,35 @@ BOOL vsk_get_text_from_clipboard(HWND hwnd, std::string& text)
     return !!bOK;
 }
 
+// ラインプリンタを更新する
 void vsk_update_line_printer(void)
 {
+    // ラインプリンタダイアログがない場合は更新しない
+    if (!VSK_APP()->m_hwndLinePrinter)
+        return;
+    // 別スレッドかもしれないので、PostMessageを経由する
+    ::PostMessage(VSK_APP()->m_hWnd, MYWM_UPDATELINEPRINTER, 0, 0);
 }
 
-INT_PTR CALLBACK
+// MYWM_UPDATELINEPRINTER
+void VskWin32App::update_line_printer()
+{
+    HWND hwndLinePrinter = VSK_APP()->m_hwndLinePrinter;
+    if (hwndLinePrinter)
+    {
+        ::SetDlgItemTextA(hwndLinePrinter, edt1, m_settings.m_line_printer_text.c_str());
+    }
+}
+
+static INT_PTR CALLBACK
 LinePrinterDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
     case WM_INITDIALOG:
+        VSK_APP()->m_hwndLinePrinter = hwnd;
         CenterWindowDx(hwnd); // 中央寄せ
+        vsk_update_line_printer();
         return TRUE; // 自動フォーカス
     case WM_COMMAND:
         switch (LOWORD(wParam))
@@ -3525,12 +3545,14 @@ LinePrinterDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             VSK_APP()->m_hwndLinePrinter = nullptr;
             break;
         case psh1: // クリア
-            ::SetDlgItemText(hwnd, edt1, nullptr);
+            ::SetDlgItemTextW(hwnd, edt1, nullptr);
+            VSK_SETTINGS()->m_line_printer_text.clear();
             break;
         case psh2: // コピー
-            vsk_copy_text_to_clipboard(hwnd, "");
+            vsk_copy_text_to_clipboard(hwnd, VSK_SETTINGS()->m_line_printer_text.c_str());
             break;
         }
+        break;
     }
     return 0;
 }
@@ -3943,6 +3965,9 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case MYWM_RESET:
         reset_real((VskMachineMode)wParam);
+        break;
+    case MYWM_UPDATELINEPRINTER:
+        update_line_printer();
         break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);

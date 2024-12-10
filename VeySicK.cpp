@@ -2730,7 +2730,7 @@ struct VskLinePrinter : VskFile
 {
     VskLinePrinter() : VskFile(TYPE_LINE_PRINTER, MODE_OUTPUT) { }
     int m_x = 0;
-    int m_cx = 255;
+    int m_cx = 80;
 
     int  get_x() const override         { return m_x; }
     void set_x(int x) override          { m_x = x; }
@@ -2750,16 +2750,17 @@ struct VskLinePrinter : VskFile
     void write_ch(char ch) {
         if (ch == '\r')
             return;
-        std::fwrite(&ch, 1, 1, stdout);
         if (ch == '\n') {
+            VSK_SETTINGS()->m_line_printer_text += "\r\n";
             m_x = 0;
+            vsk_update_line_printer();
         } else {
+            VSK_SETTINGS()->m_line_printer_text += ch;
             ++m_x;
-            if (m_x == m_cx)
-            {
-                ch = '\n';
-                std::fwrite(&ch, 1, 1, stdout);
+            if (m_x == m_cx) {
+                VSK_SETTINGS()->m_line_printer_text += "\r\n";
                 m_x = 0;
+                vsk_update_line_printer();
             }
         }
         return;

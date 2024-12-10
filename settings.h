@@ -44,6 +44,7 @@ struct VskSettings
     VskDword m_draw_odd_lines = 0;                      // 奇数ラインを描画するか？
     VskDword m_empty_loop_wait = 100;                   // 空ループ待ち
     VskDword m_output_wait = 10;                        // 出力待ち
+    VskString m_line_printer_text = "";                 // ラインプリンタのテキスト
 
     // COM設定
     VskComSettings m_com;

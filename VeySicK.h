@@ -908,3 +908,5 @@ extern bool vsk_power_on;
 VskByte vsk_reverse_byte(VskByte x);
 // 外字を標準フォントから取得
 bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope);
+// ラインプリンタを更新する
+void vsk_update_line_printer(void);

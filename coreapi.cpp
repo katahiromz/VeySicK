@@ -2750,6 +2750,8 @@ bool vsk_do_printing(void)
         // WRITE文のときは最後に改行を出力
         if (VSK_IMPL()->m_printing_is_write)
             device->write_str("\n");
+        // ラインプリンタを更新
+        vsk_update_line_printer();
         // 装置の指定をクリアして次に進む
         device = nullptr;
         auto& index_list = VSK_IMPL()->m_control_path;
@@ -3351,6 +3353,8 @@ static VskAstPtr VSKAPI vsk_LPRINT_USING(VskAstPtr self, const VskAstList& args)
 
     if (!is_sep)
         file->write_str("\n");
+
+    vsk_update_line_printer();
     return nullptr;
 }
 
