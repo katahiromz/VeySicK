@@ -6,38 +6,9 @@
 #include <cstdio>
 #include <memory>   // for std::shared_ptr
 
+#include "scanner.h"
 #include "freealut/include/AL/alut.h"
 #include "fmgon/soundplayer.h"
-
-struct VskScanner
-{
-    VskString   m_str;
-    size_t      m_i;
-
-    VskScanner(const VskString& str, size_t i = 0) : m_str(str), m_i(i) { }
-
-    bool eof() const {
-        return (m_i >= m_str.size());
-    }
-    char peek() const {
-        if (!eof()) {
-            return m_str[m_i];
-        }
-        return 0;
-    }
-    char getch() {
-        if (!eof()) {
-            char ret = m_str[m_i++];
-            return ret;
-        }
-        return 0;
-    }
-    void ungetch() {
-        if (m_i > 0) {
-            --m_i;
-        }
-    }
-}; // struct VskScanner
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -904,8 +875,7 @@ bool vsk_sound_voice_LFO_WF(int channel, int waveform)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (0 <= waveform && waveform <= 3)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.waveForm = uint8_t(waveform);
         return true;
     }
     assert(0);
@@ -918,8 +888,7 @@ bool vsk_sound_voice_LFO_sync(int channel, bool sync)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (0 <= sync && sync <= 1)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.sync = uint8_t(sync);
         return true;
     }
     assert(0);
@@ -932,8 +901,7 @@ bool vsk_sound_voice_LFO_speed(int channel, int speed)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (0 <= speed && speed <= 16383)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.speed = uint16_t(speed);
         return true;
     }
     assert(0);
@@ -946,8 +914,7 @@ bool vsk_sound_voice_LFO_PMD(int channel, int pmd)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (-127 <= pmd && pmd <= 127)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.pmd = int8_t(pmd);
         return true;
     }
     assert(0);
@@ -960,8 +927,7 @@ bool vsk_sound_voice_LFO_AMD(int channel, int amd)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (-127 <= amd && amd <= 127)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.amd = int8_t(amd);
         return true;
     }
     assert(0);
@@ -974,8 +940,7 @@ bool vsk_sound_voice_LFO_PMS(int channel, int pms)
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
     if (0 <= pms && pms <= 15)
     {
-        // TODO:
-        assert(0);
+        vsk_fm_sound_settings[channel].m_timbre.pms = uint8_t(pms);
         return true;
     }
     assert(0);
