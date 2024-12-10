@@ -6865,11 +6865,11 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
     if (!vsk_arity_in_range(args, 1, 7))
         return nullptr;
 
-    VskInt values[7];
+    VskInt values[7]; // 引数は全部整数値
     VskAstPtr params[7] = { nullptr };
     for (size_t iarg = 0; iarg < 7; ++iarg)
     {
-        values[iarg] = 0x7FFF;
+        values[iarg] = 0x7FFF; // 明らかに無効な値をセットする
         params[iarg] = vsk_arg(args, iarg);
         if (params[iarg] && !vsk_int(values[iarg], params[iarg]))
             return nullptr;
@@ -6884,7 +6884,7 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
     if (params[1] && !vsk_sound_voice_LFO_WF(channel, values[1]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // Sync
+    // Synchronized or not
     if (params[2] && !vsk_sound_voice_LFO_sync(channel, values[2]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
