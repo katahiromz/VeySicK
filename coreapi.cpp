@@ -6866,41 +6866,42 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
         return nullptr;
 
     VskInt values[7];
+    VskAstPtr params[7] = { nullptr };
     for (size_t iarg = 0; iarg < 7; ++iarg)
     {
         values[iarg] = 0x7FFF;
-        auto arg = vsk_arg(args, iarg);
-        if (arg && !vsk_int(values[iarg], args[iarg]))
+        params[iarg] = vsk_arg(args, iarg);
+        if (params[iarg] && !vsk_int(values[iarg], params[iarg]))
             return nullptr;
     }
 
     // チャンネルを取得
     int channel = values[0] - 1;
-    if (!args[0] || !(0 <= channel && values[0] < 6))
+    if (!params[0] || !(0 <= channel && values[0] < 6))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // Waveform
-    if (args.size() > 1 && args[1] && !vsk_sound_voice_LFO_WF(channel, values[1]))
+    if (params[1] && !vsk_sound_voice_LFO_WF(channel, values[1]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // Sync
-    if (args.size() > 2 && args[2] && !vsk_sound_voice_LFO_sync(channel, values[2]))
+    if (params[2] && !vsk_sound_voice_LFO_sync(channel, values[2]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // Speed
-    if (args.size() > 3 && args[3] && !vsk_sound_voice_LFO_speed(channel, values[3]))
+    if (params[3] && !vsk_sound_voice_LFO_speed(channel, values[3]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // PMD
-    if (args.size() > 4 && args[4] && !vsk_sound_voice_LFO_PMD(channel, values[4]))
+    if (params[4] && !vsk_sound_voice_LFO_PMD(channel, values[4]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // AMD
-    if (args.size() > 5 && args[5] && !vsk_sound_voice_LFO_AMD(channel, values[5]))
+    if (params[5] && !vsk_sound_voice_LFO_AMD(channel, values[5]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     // PMS
-    if (args.size() > 6 && args[6] && !vsk_sound_voice_LFO_AMD(channel, values[6]))
+    if (params[6] && !vsk_sound_voice_LFO_AMD(channel, values[6]))
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     return nullptr;
