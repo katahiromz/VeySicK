@@ -10620,21 +10620,25 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr self, const VskAstList& args)
     if (args[0] && !vsk_file_number(v0, args[0]))
         return nullptr;
 
-    auto arg1 = args[1];
-
     std::vector<VskString> strs;
+    auto arg1 = args[1]; // MML (Music Macro Language)のリスト
     for (size_t i = 0; i < arg1->size(); ++i)
     {
         auto arg = arg1->at(i);
-        if (!arg)
+        if (!arg) // 省略された？
         {
             strs.push_back("");
             continue;
         }
 
+        // 無制限モードではないときに、PLAY ALLOC文で割り当てしていないと失敗
+        if (!VSK_SETTINGS()->m_unlimited_mode && !vsk_sound_play_alloc(int(i)))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
         VskString str;
         if (!vsk_str(str, arg))
             return nullptr;
+
         strs.push_back(str);
     }
 
@@ -10650,6 +10654,7 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         break;
     default:
+        assert(0); // TODO:
         vsk_machine->bad_call();
         return nullptr;
     }
@@ -10663,9 +10668,29 @@ static VskAstPtr VSKAPI vsk_PLAY(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_PLAY_ALLOC
+// INSN_PLAY_ALLOC (PLAY ALLOC) @implemented
 static VskAstPtr VSKAPI vsk_PLAY_ALLOC(VskAstPtr self, const VskAstList& args)
 {
+    if (!vsk_arity_in_range(args, 1, 6))
+        return nullptr;
+
+    if (!VSK_SETTINGS()->m_unlimited_mode && !vsk_machine->is_9801_mode())
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 無制限モードでも9801でもなければ失敗
+
+    for (size_t iarg = 0; iarg < 6; ++iarg)
+    {
+        auto param = vsk_arg(args, iarg);
+        if (!param)
+            continue;
+        VskInt value;
+        if (!vsk_int(value, param))
+            return nullptr;
+        if (!vsk_sound_play_alloc(iarg, value)) // PLAY ALLOCによる割り当て
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    }
+
+    vsk_sound_init(); // PLAY ALLOC文はサウンド機能を初期化する
+
     return nullptr;
 }
 

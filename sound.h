@@ -19,3 +19,5 @@ bool vsk_sound_voice_LFO_speed(int channel, int speed);
 bool vsk_sound_voice_LFO_PMD(int channel, int pmd);
 bool vsk_sound_voice_LFO_AMD(int channel, int amd);
 bool vsk_sound_voice_LFO_PMS(int channel, int pms);
+int vsk_sound_play_alloc(int channel);
+bool vsk_sound_play_alloc(int channel, int value);

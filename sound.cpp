@@ -946,3 +946,26 @@ bool vsk_sound_voice_LFO_PMS(int channel, int pms)
     assert(0);
     return false;
 }
+
+// PLAY文のバッファ割り当て
+int vsk_play98_alloc[VSK_MAX_CHANNEL] = { 0 };
+
+// PLAY文のバッファ割り当てを取得
+int vsk_sound_play_alloc(int channel)
+{
+    if (0 <= channel && channel < VSK_MAX_CHANNEL)
+        return vsk_play98_alloc[channel];
+    return 0;
+}
+
+// PLAY文のバッファ割り当てをセット
+bool vsk_sound_play_alloc(int channel, int value)
+{
+    if (0 <= channel && channel < VSK_MAX_CHANNEL)
+    {
+        vsk_play98_alloc[channel] = value;
+        return true;
+    }
+    assert(0);
+    return false;
+}
