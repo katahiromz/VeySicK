@@ -6866,7 +6866,7 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
         return nullptr;
 
     VskInt values[7]; // 引数は全部整数値
-    VskAstPtr params[7] = { nullptr };
+    VskAstPtr params[7];
     for (size_t iarg = 0; iarg < 7; ++iarg)
     {
         values[iarg] = 0x7FFF; // 明らかに無効な値をセットする
