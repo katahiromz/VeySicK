@@ -2950,8 +2950,18 @@ void vsk_initial_command(void)
     vsk_sleep(250);
     vsk_lock();
 
+    VskString command;
+
+    if (VSK_SETTINGS()->m_start_program_file.size()) // 開始プログラムがあれば
+    {
+        // 読み込んで実行
+        command = "LOAD \"" + VSK_SETTINGS()->m_start_program_file + "\":RUN";
+        vsk_direct_execute(command);
+        return;
+    }
+
     // ダイレクトモードで起動時のコマンドを実行する
-    VskString command = "? \"" VEYSICK_TITLE "\":";
+    command = "? \"" VEYSICK_TITLE "\":";
     command += "? \"" VEYSICK_COPYRIGHT "\":";
     switch (VSK_SETTINGS()->m_machine_mode)
     {
@@ -9259,7 +9269,7 @@ static VskAstPtr VSKAPI vsk_KPLOAD(VskAstPtr self, const VskAstList& args)
         // 左辺値（lvalue）から名前と次元を取得
         VskString name;
         VskIndexList dimension;
-        if (!vsk_dimension_from_lvalue(name, dimension, args[1], -(VSK_STATE()->m_option_base == 1, true)))
+        if (!vsk_dimension_from_lvalue(name, dimension, args[1], int(VSK_STATE()->m_option_base == 1), true))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         // 配列変数を探す
@@ -10040,6 +10050,8 @@ static VskAstPtr VSKAPI vsk_NEW(VskAstPtr self, const VskAstList& args)
     vsk_rand_init(0);
     // DEF FNのデータを消す
     VSK_IMPL()->m_fn_to_path.clear();
+    // タイトル情報を消す
+    vsk_set_program_title("");
     // コマンドレベルに戻る
     vsk_enter_command_level();
 

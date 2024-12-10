@@ -7,7 +7,7 @@
 #define VEYSICK_VER                  0x00502
 #define VEYSICK_TITLE                "VeySicK MATEN Version 0.5.2"
 #define VEYSICK_TITLE_FPS            "VeySicK MATEN Version 0.5.2 @ %u fps"
-#define VEYSICK_TITLE_FPS_WITH_FILE  "VeySicK MATEN Version 0.5.2 (%s) @ %u fps"
+#define VEYSICK_TITLE_FPS_WITH_FILE  "%s on VeySicK MATEN @ %u fps"
 #define VEYSICK_COPYRIGHT            "Copyright (C) 2015-2024 katahiromz"
 #define VEYSICK_CLASSNAME            "katahiromz's VeySicK"
 
@@ -914,3 +914,5 @@ void vsk_update_line_printer(void);
 void vsk_split_input_text(std::vector<VskString>& data, const VskString& text);
 // 現在のプロセスに管理者権限があるか？
 bool vsk_is_process_elevated(void);
+// プログラムのタイトル情報をセットする
+void vsk_set_program_title(const VskString& pathname);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #define VSK_8801_SW1_DEFAULT  0x40
 #define VSK_8801_SW2_DEFAULT  0x00
 
@@ -45,6 +47,8 @@ struct VskSettings
     VskDword m_empty_loop_wait = 100;                   // 空ループ待ち
     VskDword m_output_wait = 10;                        // 出力待ち
     VskString m_line_printer_text = "";                 // ラインプリンタのテキスト
+    VskString m_start_program_file = "";                // 起動時のプログラムファイル
+    VskString m_title_info = "";                        // タイトル情報
 
     // COM設定
     VskComSettings m_com;

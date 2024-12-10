@@ -1804,7 +1804,7 @@ bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope)
 
     WCHAR sz[10];
     if (ope == "SJIS") {
-        char szA[3] = { HIBYTE(code), LOBYTE(code), 0 };
+        char szA[3] = { (char)HIBYTE(code), (char)LOBYTE(code), 0 };
         MultiByteToWideChar(932, 0, szA, -1, sz, _countof(sz));
     } else if (ope == "UNI") {
         if (code <= 0xFFFF) {
@@ -2053,7 +2053,6 @@ struct VskWin32App : VskObject
     MImageViewEx<true> m_imageView;             // イメージを表示するためのコントロール
     BOOL m_bShowCursor = TRUE;                  // マウスカーソルを表示するか？
     HIMC m_hIMC = nullptr;                      // 日本語入力のハンドル
-    char m_filename[MAX_PATH] = "";             // BASICプログラムのファイル名
     char m_disk_images[10][MAX_PATH] = { "" };  // ディスク イメージ群
     char m_disk_folders[10][MAX_PATH] = { "" }; // ディスク フォルダー群
     HANDLE m_hWorkingThread = nullptr;          // 仕事をするスレッドのハンドル
@@ -2479,10 +2478,10 @@ void VskWin32App::OnTimer(HWND hwnd, UINT id)
         // FPSに関するテキストを構築
         char szText[64];
         UINT nFPS = s_dwFpsCounter / (VSK_FPS_CHECK_INTERVAL / VSK_ONE_SECOND);
-        if (m_filename[0]) // ファイルがあるか?
+        if (m_settings.m_title_info.size()) // タイトル情報があるか？
         {
             StringCchPrintfA(szText, _countof(szText), VEYSICK_TITLE_FPS_WITH_FILE,
-                             ::PathFindFileNameA(m_filename), nFPS);
+                             m_settings.m_title_info.c_str(), nFPS);
         }
         else // ファイルがない?
         {
@@ -3996,6 +3995,15 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+// プログラムのタイトル情報をセットする
+void vsk_set_program_title(const VskString& pathname)
+{
+    if (pathname.size())
+        VSK_SETTINGS()->m_title_info = ::PathFindFileNameA(pathname.c_str());
+    else
+        VSK_SETTINGS()->m_title_info.clear();
+}
+
 // アプリを初期化する
 bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
 {
@@ -4066,6 +4074,18 @@ bool VskWin32App::init_app(void *hInst, int argc, WCHAR **argv, int nCmdShow)
     // ウィンドウを表示
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
+
+    // コマンドラインにプログラムの指定があれば開くようにする
+    if (argc == 2)
+    {
+        // 文字列をANSIに変換
+        char szPathA[MAX_PATH];
+        ::WideCharToMultiByte(932, 0, argv[1], -1, szPathA, _countof(szPathA), nullptr, nullptr);
+        szPathA[_countof(szPathA) - 1] = 0; // Avoid buffer overrun
+        // 変数とタイトルにセット
+        m_settings.m_start_program_file = szPathA;
+        vsk_set_program_title(szPathA);
+    }
 
     return true; // 成功
 }

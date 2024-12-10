@@ -2546,17 +2546,21 @@ VskError VskMachine::load(VskString filename, std::string& data)
         return VSK_ERR_DISK_IO_ERROR;
     }
 
-    if (size)
+    if (size) // テキストが空でなければ
     {
+        // 読み込む
         data.resize(size);
-
         error = file->read_bin(&data[0], size);
         if (error)
             return error;
 
+        // 改行コードを変換
         mstr_replace_all(data, "\r\n", "\n");
         mstr_replace_all(data, '\r', '\n');
     }
+
+    // タイトル情報を更新
+    vsk_set_program_title(filename);
 
     return VSK_NO_ERROR;
 }
@@ -2574,12 +2578,15 @@ VskError VskMachine::save(VskString filename, const std::string& data)
     mstr_replace_all(text, '\r', '\n');
     mstr_replace_all(text, "\n", "\r\n");
 
-    if (text.size())
+    if (text.size()) // テキストが空でなければ
     {
         error = file->write_bin(&text[0], text.size());
         if (error)
             return error;
     }
+
+    // タイトル情報を更新
+    vsk_set_program_title(filename);
 
     return VSK_NO_ERROR;
 }

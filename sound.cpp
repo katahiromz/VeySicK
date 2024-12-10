@@ -889,13 +889,8 @@ bool vsk_sound_voice_LFO_WF(int channel, int waveform)
 bool vsk_sound_voice_LFO_sync(int channel, bool sync)
 {
     assert(0 <= channel && channel < VSK_MAX_CHANNEL);
-    if (0 <= sync && sync <= 1)
-    {
-        vsk_fm_sound_settings[channel].m_timbre.sync = uint8_t(sync);
-        return true;
-    }
-    assert(0);
-    return false;
+    vsk_fm_sound_settings[channel].m_timbre.sync = uint8_t(sync);
+    return true;
 }
 
 // Speed value
