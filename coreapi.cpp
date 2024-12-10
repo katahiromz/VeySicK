@@ -6870,14 +6870,19 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
     return nullptr;
 }
 
-// INSN_CMD_VOICE_REG (CMD VOICE REG)
+// INSN_CMD_VOICE_REG (CMD VOICE REG) @implemented
 static VskAstPtr VSKAPI vsk_CMD_VOICE_REG(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 2, 2))
         return nullptr;
 
-    // TODO: CMD VOICE REG
-    assert(0);
+    VskInt v0, v1;
+    if (vsk_int(v0, args[0]) && vsk_int(v1, args[1]))
+    {
+        if (!vsk_sound_voice_reg(v0, v1))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    }
+
     return nullptr;
 }
 

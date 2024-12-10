@@ -229,6 +229,10 @@ struct VskSoundPlayer {
     void beep(int i);
     bool is_beeping();
 
+    void write_reg(uint32_t addr, uint32_t data) {
+        m_ym.write_reg(addr, data);
+    }
+
 protected:
     ALuint  m_beep_buffer;
     ALuint  m_beep_source;

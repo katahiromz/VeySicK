@@ -888,3 +888,12 @@ bool vsk_sound_voice_copy(void *ptr, VskInt tone)
     std::memcpy(ptr, data, data_size);
     return true;
 }
+
+bool vsk_sound_voice_reg(int addr, int data)
+{
+    if (vsk_sound_player) {
+        vsk_sound_player->write_reg(addr, data);
+        return true;
+    }
+    return false;
+}
