@@ -6877,31 +6877,25 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
 
     // チャンネルを取得
     int channel = values[0] - 1;
-    if (!params[0] || !(0 <= channel && values[0] < 6))
+    if (!params[0] || !(0 <= channel && values[0] < 6)) // channel
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // Waveform
-    if (params[1] && !vsk_sound_voice_LFO_WF(channel, values[1]))
+    if (params[1] && !vsk_sound_voice_LFO_WF(channel, values[1])) // Waveform
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // Synchronized or not
-    if (params[2] && !vsk_sound_voice_LFO_sync(channel, values[2]))
+    if (params[2] && !vsk_sound_voice_LFO_sync(channel, values[2])) // Synchronized or not
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // Speed
-    if (params[3] && !vsk_sound_voice_LFO_speed(channel, values[3]))
+    if (params[3] && !vsk_sound_voice_LFO_speed(channel, values[3])) // Speed
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // PMD
-    if (params[4] && !vsk_sound_voice_LFO_PMD(channel, values[4]))
+    if (params[4] && !vsk_sound_voice_LFO_PMD(channel, values[4])) // PMD
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // AMD
-    if (params[5] && !vsk_sound_voice_LFO_AMD(channel, values[5]))
+    if (params[5] && !vsk_sound_voice_LFO_AMD(channel, values[5])) // AMD
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
-    // PMS
-    if (params[6] && !vsk_sound_voice_LFO_AMD(channel, values[6]))
+    if (params[6] && !vsk_sound_voice_LFO_AMD(channel, values[6])) // PMS
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
 
     return nullptr;
