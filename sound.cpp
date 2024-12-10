@@ -897,3 +897,87 @@ bool vsk_sound_voice_reg(int addr, int data)
     }
     return false;
 }
+
+// Waveform
+bool vsk_sound_voice_LFO_WF(int channel, int waveform)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (0 <= waveform && waveform <= 3)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}
+
+// synchronized or not
+bool vsk_sound_voice_LFO_sync(int channel, bool sync)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (0 <= sync && sync <= 1)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}
+
+// Speed value
+bool vsk_sound_voice_LFO_speed(int channel, int speed)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (0 <= speed && speed <= 16383)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}
+
+// PMD (Pitch Modulation Depth) value
+bool vsk_sound_voice_LFO_PMD(int channel, int pmd)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (-127 <= pmd && pmd <= 127)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}
+
+// AMD (Amplitude Modulation Depth) value
+bool vsk_sound_voice_LFO_AMD(int channel, int amd)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (-127 <= amd && amd <= 127)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}
+
+// PMS (Pitch Modulation Sensitivity) value
+bool vsk_sound_voice_LFO_PMS(int channel, int pms)
+{
+    assert(0 <= channel && channel < VSK_MAX_CHANNEL);
+    if (0 <= pms && pms <= 15)
+    {
+        // TODO:
+        assert(0);
+        return true;
+    }
+    assert(0);
+    return false;
+}

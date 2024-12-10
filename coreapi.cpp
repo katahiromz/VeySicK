@@ -6865,8 +6865,44 @@ static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args
     if (!vsk_arity_in_range(args, 1, 7))
         return nullptr;
 
-    // TODO: CMD VOICE LFO
-    assert(0);
+    VskInt values[7];
+    for (size_t iarg = 0; iarg < 7; ++iarg)
+    {
+        values[iarg] = 0x7FFF;
+        auto arg = vsk_arg(args, iarg);
+        if (arg && !vsk_int(values[iarg], args[iarg]))
+            return nullptr;
+    }
+
+    // チャンネルを取得
+    int channel = values[0] - 1;
+    if (!args[0] || !(0 <= channel && values[0] < 6))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // Waveform
+    if (args[1] && !vsk_sound_voice_LFO_WF(channel, values[1]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // Sync
+    if (args[2] && !vsk_sound_voice_LFO_sync(channel, values[2]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // Speed
+    if (args[3] && !vsk_sound_voice_LFO_speed(channel, values[3]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // PMD
+    if (args[4] && !vsk_sound_voice_LFO_PMD(channel, values[4]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // AMD
+    if (args[5] && !vsk_sound_voice_LFO_AMD(channel, values[5]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    // PMS
+    if (args[6] && !vsk_sound_voice_LFO_AMD(channel, values[6]))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
     return nullptr;
 }
 
