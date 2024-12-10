@@ -2,8 +2,8 @@
     // VeySicK Lexer by katahiromz
     // Copyright (C) 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
     // License: MIT
-    #include "coreapi.h"
-    #include "parser.h"
+    #include "ast.h"        // AST (抽象構造木)
+    #include "parser.h"     // パーサー (構文解析器)
     #undef NOMINMAX // There was a trouble about std::min and std::max
     #include <cstring>
 %}

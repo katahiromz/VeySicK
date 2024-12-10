@@ -3,7 +3,7 @@
 // License: MIT
 
 %{
-    #include "coreapi.h"
+    #include "ast.h" // AST (抽象構造木)
     typedef VskAstPtr YYSTYPE;
     #define YYSTYPE_IS_DECLARED
     int yylex(yyscan_t yyscanner);

@@ -1,6 +1,6 @@
-#include "draw98.h"
-#include "encoding.h"
-#include "coreapi.h"
+#include "draw98.h"     // N88-BASICのDRAW文
+#include "encoding.h"   // 符号化
+#include "ast.h"        // AST (抽象構造木)
 
 // 文字列をパースして描画項目にする
 bool vsk_get_draw_items_from_string(std::vector<VskDrawItem>& items, const VskString& expr)

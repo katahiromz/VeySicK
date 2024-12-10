@@ -2,9 +2,9 @@
     #include "VeySicK.h"
 #endif
 #include "cmd_turtle.h"         // タートル グラフィック
-#include "encoding.h"
-#include "draw_algorithm.h"
-#include "coreapi.h"
+#include "encoding.h"           // 符号化
+#include "draw_algorithm.h"     // 描画アルゴリズム
+#include "ast.h"                // AST (抽象構造木)
 
 // タートル項目を展開する
 static bool vsk_expand_turtle_items(std::vector<VskTurtleItem>& items)

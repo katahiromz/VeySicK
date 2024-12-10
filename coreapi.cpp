@@ -1,4 +1,4 @@
-#include "coreapi.h"    // VeySicKのコア
+#include "ast.h"        // AST (抽象構造木)
 #include "lexer.h"      // VeySicKのレキサー
 #include "parser.h"     // VeySicKのパーサー
 #include "random.h"     // 乱数

@@ -1,14 +1,14 @@
-#include "types.h"
-#include "sound.h"
-#include "encoding.h"
-#include "coreapi.h"
-#include "mem.h"
+#include "types.h"      // 型
+#include "sound.h"      // 音声
+#include "encoding.h"   // 符号化
+#include "ast.h"        // AST (抽象構造木)
+#include "mem.h"        // メモリー
 #include <cstdio>
-#include <memory>   // for std::shared_ptr
+#include <memory>       // for std::shared_ptr
 
-#include "scanner.h"
-#include "freealut/include/AL/alut.h"
-#include "fmgon/soundplayer.h"
+#include "scanner.h"                    // スキャナー
+#include "freealut/include/AL/alut.h"   // ALUT (OpenAL utility) library
+#include "fmgon/soundplayer.h"          // サウンドプレーヤー
 
 //////////////////////////////////////////////////////////////////////////////
 
