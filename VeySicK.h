@@ -910,3 +910,5 @@ VskByte vsk_reverse_byte(VskByte x);
 bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope);
 // ラインプリンタを更新する
 void vsk_update_line_printer(void);
+// 入力テキストを分割する
+void vsk_split_input_text(std::vector<VskString>& data, const VskString& text);
