@@ -3543,9 +3543,11 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
         if (type != VskFile::TYPE_HOST_FILE)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DRIVE_NO, nullptr);
 
-        if (!vsk_is_safe_zone_pathname(raw_path, true))
+        // 管理者権限がないのに安全じゃない場所にアクセスしようとしている？
+        if (!vsk_is_safe_zone_pathname(raw_path, true) &&
+            !vsk_is_process_elevated())
         {
-            vsk_print("Security error!\b\n"); // "\b"でBEEP音を鳴らす
+            vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
@@ -3676,11 +3678,12 @@ static VskAstPtr VSKAPI vsk_NAME(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 
-        // 安全圏か？
-        if (!vsk_is_safe_zone_pathname(raw_path0, true) ||
-            !vsk_is_safe_zone_pathname(raw_path1, true))
+        // 管理者権限がないのに安全じゃない場所にアクセスしようとしている？
+        if (!vsk_is_process_elevated() &&
+            (!vsk_is_safe_zone_pathname(raw_path0, true) ||
+             !vsk_is_safe_zone_pathname(raw_path1, true)))
         {
-            vsk_print("Security error!\b\n"); // "\b"でBEEP音を鳴らす
+            vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
 

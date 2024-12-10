@@ -126,6 +126,27 @@ void vsk_set_datetime(int year_xxxx, int month, int day, int hour, int minute, i
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
+// セキュリティ関連
+
+// 現在のプロセスに管理者権限があるか？
+bool vsk_is_process_elevated(void)
+{
+    BOOL isElevated = FALSE;
+    HANDLE hToken;
+    if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &hToken))
+    {
+        TOKEN_ELEVATION elevation;
+        DWORD cbSize = sizeof(elevation);
+        if (::GetTokenInformation(hToken, TokenElevation, &elevation, cbSize, &cbSize))
+        {
+            isElevated = elevation.TokenIsElevated;
+        }
+        ::CloseHandle(hToken);
+    }
+    return !!isElevated;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
 // 設定実装
 
 #define VEYSICK_REGKEY TEXT("SOFTWARE\\Katayama Hirofumi MZ\\VeySicK")

@@ -912,3 +912,5 @@ bool vsk_kpload_extension(VskWord jis, VskDword code, VskString ope);
 void vsk_update_line_printer(void);
 // 入力テキストを分割する
 void vsk_split_input_text(std::vector<VskString>& data, const VskString& text);
+// 現在のプロセスに管理者権限があるか？
+bool vsk_is_process_elevated(void);
