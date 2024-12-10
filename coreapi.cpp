@@ -4951,6 +4951,7 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
         if (arg0 && !arg3) // 画面モードの指定があり、表示ページの指定がない？
             v3 = 1; // 表示ページを初期化する
 
+        // バリデーション
         bool high_color = (VSK_STATE()->m_palette_mode == VSK_PAL_MODE_16_COLORS_SUPER);
         if (!vsk_machine->is_valid_screen_mode(v0) ||
             !(0 <= v1 && v1 < 4) ||
@@ -6815,13 +6816,97 @@ static VskAstPtr VSKAPI vsk_CMD_UNLINK(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
+// INSN_CMD_VOICE_COPY (CMD VOICE COPY) @implemented
+static VskAstPtr VSKAPI vsk_CMD_VOICE_COPY(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskInt v0;
+    if (!vsk_int(v0, args[0]))
+        return nullptr;
+    auto arg1 = vsk_arg(args, 1);
+    if (!arg1)
+        VSK_ERROR_AND_RETURN(VSK_ERR_SYNTAX, nullptr);
+
+    // 左辺値（lvalue）から名前と次元を取得
+    VskString name;
+    VskIndexList dimension;
+    if (!vsk_dimension_from_lvalue(name, dimension, arg1, -VSK_STATE()->m_option_base == 1, true))
+        return nullptr;
+
+    if (!(dimension.size() == 2 && dimension[0] == 5 && dimension[1] == 10))
+        return nullptr;
+
+    // 配列変数を探す
+    auto var_desc = vsk_var_find(name, true);
+    if (!var_desc || !vsk_var_is_array(name))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
+
+    auto type = vsk_var_get_type(name);
+    if (type != VSK_TYPE_INTEGER)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr); // 型が違う
+
+    // 変数へのポインタを取得する
+    void *ptr = vsk_var_get_ptr(name, {}, true);
+    if (!ptr)
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
+
+    // 音色のコピー
+    if (!vsk_sound_voice_copy(ptr, v0))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 失敗
+
+    return nullptr;
+}
+
+// INSN_CMD_VOICE_LFO (CMD VOICE LFO)
+static VskAstPtr VSKAPI vsk_CMD_VOICE_LFO(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 7))
+        return nullptr;
+
+    // TODO: CMD VOICE LFO
+    assert(0);
+    return nullptr;
+}
+
+// INSN_CMD_VOICE_REG (CMD VOICE REG)
+static VskAstPtr VSKAPI vsk_CMD_VOICE_REG(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    // TODO: CMD VOICE REG
+    assert(0);
+    return nullptr;
+}
+
 // INSN_CMD_VOICE (CMD VOICE)
 static VskAstPtr VSKAPI vsk_CMD_VOICE(VskAstPtr self, const VskAstList& args)
 {
-    if (!vsk_arity_in_range(args, 1, 3))
+    if (!vsk_arity_in_range(args, 1, 64))
         return nullptr;
 
+    if (!VSK_SETTINGS()->m_unlimited_mode &&
+        (!vsk_machine->has_cmd_extension() || vsk_machine->is_9801_mode()))
+    {
+        VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
+    }
+
+    auto params = args;
+    auto cmd_voice_name = params[0]->m_str;
+    params.erase(params.begin());
+
+    if (cmd_voice_name == "COPY")
+        return vsk_CMD_VOICE_COPY(self, params);
+    if (cmd_voice_name == "LFO")
+        return vsk_CMD_VOICE_LFO(self, params);
+    if (cmd_voice_name == "REG")
+        return vsk_CMD_VOICE_REG(self, params);
+
+    // TODO: CMD VOICE
     assert(0);
+    VSK_ERROR_AND_RETURN(VSK_ERR_NO_FEATURE, nullptr);
     return nullptr;
 }
 
@@ -7638,35 +7723,6 @@ static VskAstPtr VSKAPI vsk_CLOSE(VskAstPtr self, const VskAstList& args)
     }
 
     return nullptr;
-}
-
-// CMD VOICE COPY
-static bool vsk_CMD_VOICE_COPY(VskInt v1, VskAstPtr arg2)
-{
-    // 左辺値（lvalue）から名前と次元を取得
-    VskString name;
-    VskIndexList dimension;
-    if (!vsk_dimension_from_lvalue(name, dimension, arg2, -VSK_STATE()->m_option_base == 1, true))
-        return false;
-
-    if (!(dimension.size() == 2 && dimension[0] == 5 && dimension[1] == 10))
-        return false;
-
-    // 配列変数を探す
-    auto var_desc = vsk_var_find(name);
-    if (!var_desc || !vsk_var_is_array(name))
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false); // 見つからない
-
-    auto type = vsk_var_get_type(name);
-    if (type != VSK_TYPE_INTEGER)
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, false); // 型が違う
-
-    // 変数へのポインタを取得する
-    void *ptr = vsk_var_get_ptr(name, {}, true);
-    if (!ptr)
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, false); // 見つからない
-
-    return vsk_sound_voice_copy(ptr, v1);
 }
 
 // INSN_CMD_TEXT_ON_OFF (CMD TEXT ON/OFF) @implemented

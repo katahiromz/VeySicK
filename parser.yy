@@ -716,6 +716,11 @@ primary_statement
     }
     | go_sub line_number                                { vsk_targeting($1); $$ = vsk_ast(INSN_GOSUB, { $2 }); }
     | go_to line_number                                 { vsk_targeting($1); $$ = vsk_ast_goto($2); }
+    | TK_CMD cmd_name TK_COPY expression TK_COMMA lvalue {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_CMD, { $2, $3, $4, $6 });
+    }
+    | TK_CMD cmd_name TK_IDENTIFIER cmd_parameter_list  { vsk_targeting($1); $$ = vsk_ast(INSN_CMD, { $2, $3 }); $$->insert($$->end(), $4->begin(), $4->end()); }
     | TK_CMD cmd_name cmd_parameter_list                { vsk_targeting($1); $$ = vsk_ast(INSN_CMD, { $2 }); $$->insert($$->end(), $3->begin(), $3->end()); }
     | TK_CMD cmd_name                                   { vsk_targeting($1); $$ = vsk_ast(INSN_CMD, { $2 }); }
     | lead_statement_1 TK_COMMA trailing_parameter_list { $$ = $1; $$->insert($$->end(), $3->begin(), $3->end()); }
@@ -1333,7 +1338,6 @@ cmd_name
 cmd_parameter_list
     : TK_ON                                        { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
     | TK_OFF                                       { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
-    | TK_COPY                                      { vsk_targeting($1); $$ = vsk_ast(INSN_PARAM_LIST, { $1 }); }
     | trailing_parameter_list                      { $$ = $1; }
     | file_number TK_COMMA trailing_parameter_list { $$ = $3; $$->insert($$->begin(), $1); }
     ;

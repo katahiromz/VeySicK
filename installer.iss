@@ -106,6 +106,7 @@ Source: "drive1\CMD_STOPM.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\CMD_TEXT.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\CMD_TURTLE.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\CMD_VOICE.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
+Source: "drive1\CMD_VOICE_COPY.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\CMD_VOICE_LFO.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\CMD_VOICE_REG.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\COLOR.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
