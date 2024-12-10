@@ -700,7 +700,7 @@ void VskMachine::set_line_column(int column)
 // 入力テキストを取得する
 VskString VskMachine::get_input_text() const
 {
-    auto text = get_line_text(m_state->m_caret_y);
+    auto text = get_line_text();
     if (text.find(m_state->m_input_prompt) == 0)
     {
         text.erase(0, m_state->m_input_prompt.size());
@@ -712,7 +712,7 @@ VskString VskMachine::get_input_text() const
 // キャレットの現在位置から１字消す
 void VskMachine::do_delete()
 {
-    auto text = get_line_text(m_state->m_caret_y);
+    auto text = get_line_text();
     int column = get_line_column();
 #ifdef JAPAN
     if (is_sjis_mode() && vsk_is_sjis_code(text[column], text[column + 1]))
@@ -734,6 +734,11 @@ int VskMachine::get_line_root(int y) const
         --y;
     }
     return y;
+}
+
+VskString VskMachine::get_line_text() const
+{
+    return get_line_text(m_state->m_caret_y);
 }
 
 // 行テキストを取得
@@ -987,7 +992,7 @@ void VskMachine::set_line_text(int y, VskString text)
 // キャレット位置以降を削除
 void VskMachine::delete_after()
 {
-    auto text = get_line_text(m_state->m_caret_y);
+    auto text = get_line_text();
     int column = get_line_column();
     text.erase(column);
     set_line_text(m_state->m_caret_y, text);
@@ -1004,7 +1009,7 @@ void VskMachine::delete_line()
 // 行の一番最後に移動
 void VskMachine::move_to_line_end()
 {
-    auto text = get_line_text(m_state->m_caret_y);
+    auto text = get_line_text();
     mstr_trim_right(text, " \t");
     m_state->m_caret_y = get_line_root(m_state->m_caret_y) + int(text.size()) / m_state->m_text_width;
     m_state->m_caret_x = text.size() % m_state->m_text_width;
@@ -1063,7 +1068,7 @@ bool VskMachine::do_error(VskError error)
 // ラインフィード処理
 void VskMachine::line_feed()
 {
-    auto text = get_line_text(m_state->m_caret_y);
+    auto text = get_line_text();
     int y = get_line_root(m_state->m_caret_y) + int(text.size()) / m_state->m_text_width;
     if (y >= m_state->m_console_y0 + m_state->m_console_cy0)
     {
@@ -1078,23 +1083,28 @@ void VskMachine::line_feed()
 // 改行処理
 void VskMachine::carriage_return(bool do_execute)
 {
-    if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT)
+    if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_INPUT) // INPUT待ちだった？
     {
-        auto text = get_input_text();
-        line_feed();
-        vsk_enter_input_text(text);
+        auto text = get_input_text(); // 入力プロンプト以外の現在の行を取得
+        line_feed(); // 改行
+        vsk_enter_input_text(text); // INPUTの入力をセット
         return;
     }
 
-    if (!do_execute)
+    if (!do_execute) // この行を実行しないのであれば
     {
-        m_state->m_caret_x = 0;
+        m_state->m_caret_x = 0; // 行の先頭に移動（これが本来のキャリッジリターン）
         return;
     }
 
-    auto text = get_line_text(m_state->m_caret_y);
-    line_feed();
-    direct_execute(text);
+    auto text = get_line_text(); // 現在の行を取得
+    line_feed(); // 改行
+    direct_execute(text); // 直接実行
+
+    auto line = get_line_text(); // 現在の行を取得
+    mstr_trim(line, " \t"); // 前後の空白を削除
+    if (line == "Ok")
+        delete_line(); // 現在の行が "Ok" だったら現在の行をクリア（入力の邪魔にならないように）
 }
 
 // 入力モードの切り替え
@@ -1268,7 +1278,7 @@ void VskMachine::keyboard_ch(VskWord ch)
     // 挿入モードの場合は行テキストを使用
     if (m_state->m_insert_mode)
     {
-        auto text = get_line_text(m_state->m_caret_y);
+        auto text = get_line_text();
         int column = get_line_column();
 #ifdef JAPAN
         if (is_sjis_mode() && vsk_is_sjis_code(ch))

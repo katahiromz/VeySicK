@@ -718,6 +718,7 @@ struct VskMachine : VskObject
 
     int get_line_root(int y) const;
     VskString get_line_text(int y) const;
+    VskString get_line_text() const;
     int get_line_column() const;
     void set_line_text(int y, VskString text);
     void set_line_column(int column);
