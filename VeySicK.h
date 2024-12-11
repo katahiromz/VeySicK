@@ -844,6 +844,12 @@ void vsk_caret_move_by_mouse_click(int text_x, int text_y);
 bool vsk_save_screenshot(bool text, bool graphics, bool half);
 // テキストを出力
 void vsk_print(const VskString& str);
+// テキストを出力
+template <typename T_TYPE>
+inline void vsk_print(T_TYPE value)
+{
+    vsk_print(vsk_to_string(value));
+}
 // 入力テキストを入れる
 void vsk_enter_input_text(const VskString& text);
 // 入力プロンプトを表示する
