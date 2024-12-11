@@ -317,7 +317,7 @@ Source: "drive1\WRITE_SHARP.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\WRITE_SHARP2.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\WRITE2.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive2\00README.txt"; DestDir: "{app}\drive2"; Flags: ignoreversion
-Source: "drive2\BLOCK.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
+Source: "drive2\BLOCK88.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\BUBBLE.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\DICE.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\DBLBUF98.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
@@ -335,6 +335,7 @@ Source: "drive2\MANDEL98.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\MAZE.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\NUMBER.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SAISEI98.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
+Source: "drive2\SAISEI98.TXT"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SHOOT.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SHOOT.TXT"; DestDir: "{app}\drive2"; Flags: ignoreversion
 Source: "drive2\SLOT.BAS"; DestDir: "{app}\drive2"; Flags: ignoreversion
