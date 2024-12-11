@@ -12,6 +12,8 @@
 8. プロジェクト「VeySicK」をスタートアップ プロジェクトに設定
 9. 「ビルド」メニューの「ソリューションのビルド」を選ぶ
 
+注意：VSではレキサー＆パーサーを更新できない。現行サポートのGNU Flex/Bison for Windowsが古すぎるため。レキサー/パーサーを更新するときは、CMakeCache.txtを消してRosBEでビルドすること。
+
 ## RosBE (ReactOS Build Environment) の場合
 
 1. RosBE ( https://reactos.org/wiki/Build_Environment ) をダウンロード＆インストール
