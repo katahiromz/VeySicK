@@ -8034,7 +8034,7 @@ static VskAstPtr VSKAPI vsk_COMMON(VskAstPtr self, const VskAstList& args)
             // もう一度変数を探す
             var_desc = vsk_var_find(name, is_array);
         }
-        if (!var_desc)
+        if (!var_desc) // 見つからなかった？
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
         // フラグをセット
