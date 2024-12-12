@@ -3574,7 +3574,7 @@ void VskWin32App::update_line_printer()
 VskImageHandle
 vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int page, bool is_8801)
 {
-    int max_x = 110, max_y = (is_landscape ? 40 : 80);
+    int max_x = 110, max_y = (is_landscape ? 34 : 72);
     return text_to_bitmap(total_pages, text, max_x, max_y, 0, page, is_8801, true);
 }
 
@@ -3648,7 +3648,9 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
                         zoom = float(cx0) / bm.bmWidth;
                     }
                     SetStretchBltMode(hDC, STRETCH_DELETESCANS);
-                    StretchBlt(hDC, xMargin, yMargin, LONG(bm.bmWidth * zoom), LONG(bm.bmHeight * zoom),
+                    LONG cx1 = LONG(bm.bmWidth * zoom), cy1 = LONG(bm.bmHeight * zoom);
+                    Rectangle(hDC, xMargin, yMargin, xMargin + cx1, yMargin + cy1);
+                    StretchBlt(hDC, xMargin, yMargin, cx1, cy1,
                                hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
                     SelectObject(hdcMem, hbmOld);
                     DeleteDC(hdcMem);

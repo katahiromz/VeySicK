@@ -2737,7 +2737,7 @@ struct VskLinePrinter : VskFile
 {
     VskLinePrinter() : VskFile(TYPE_LINE_PRINTER, MODE_OUTPUT) { }
     int m_x = 0;
-    int m_cx = 80;
+    int m_cx = 110;
 
     int  get_x() const override         { return m_x; }
     void set_x(int x) override          { m_x = x; }
