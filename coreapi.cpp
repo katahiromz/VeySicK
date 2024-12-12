@@ -8031,10 +8031,9 @@ static VskAstPtr VSKAPI vsk_COMMON(VskAstPtr self, const VskAstList& args)
                 dimension.push_back(10);
             // 変数を宣言する
             vsk_var_declare(name, dimension);
+            // もう一度変数を探す
+            var_desc = vsk_var_find(name, is_array);
         }
-
-        // もう一度変数を探す
-        var_desc = vsk_var_find(name, is_array);
         if (!var_desc)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
