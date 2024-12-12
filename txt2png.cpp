@@ -18,7 +18,6 @@ bool vsk_text_to_bitmap(VskTextToPng& text2png)
     bool is_8801 = text2png.m_is_8801, bold = text2png.m_bold;
 
     VskImageHandle& hbm = text2png.m_hbm;
-    DeleteObject(hbm);
     hbm = nullptr;
 
     const int char_width = (bold ? 9 : 8), char_height = 20;
