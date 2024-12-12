@@ -21,3 +21,9 @@ bool vsk_sound_voice_LFO_AMD(int channel, int amd);
 bool vsk_sound_voice_LFO_PMS(int channel, int pms);
 int vsk_sound_play_alloc(int channel);
 bool vsk_sound_play_alloc(int channel, int value);
+
+const char *vsk_get_openal_error(int error);
+void vsk_print_openal_error(int error);
+
+bool vsk_sound_cmd_sing(const VskString& str);
+bool vsk_sound_voice_reg(int addr, int data);

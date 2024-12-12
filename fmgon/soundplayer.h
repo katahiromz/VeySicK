@@ -5,22 +5,20 @@
 
 #pragma once
 
-#include <mutex>
 #include <deque>
 #include <vector>
 #include <memory>
 #include <unordered_map>
 
-//#include <thread>
-//#include <mutex>
-
 #ifdef _WIN32
     #define UNBOOST_USE_WIN32_THREAD
+    #include "unboost/mutex.hpp"
+    #include "unboost/thread.hpp"
 #else
     #define UNBOOST_USE_POSIX_THREAD
+    #include "unboost/mutex.hpp"
+    #include "unboost/thread.hpp"
 #endif
-#include "unboost/mutex.hpp"
-#include "unboost/thread.hpp"
 
 //////////////////////////////////////////////////////////////////////////////
 // OpenAL --- portable audio library
@@ -40,6 +38,11 @@
 //////////////////////////////////////////////////////////////////////////////
 // VskNote
 
+enum SpecialKeys {
+    KEY_REST = -1,          // 休符のキー
+    KEY_SPECIAL_ACTION = -2 // スペシャルアクションのキー
+};
+
 struct VskNote {
     int         m_tempo;
     int         m_octave;
@@ -53,12 +56,12 @@ struct VskNote {
     float       m_volume;   // in 0 to 15
     int         m_quantity; // in 0 to 8
     bool        m_and;
+    int         m_action_no;
 
     VskNote(int tempo, int octave, int tone, int note,
             bool dot = false, float length = 24, char sign = 0,
             float volume = 8, int quantity = 8,
-            int envelop_type = 1, uint16_t envelop_interval = 255,
-            bool and_ = false)
+            bool and_ = false, int action_no = -1)
     {
         m_tempo = tempo;
         m_octave = octave;
@@ -71,6 +74,7 @@ struct VskNote {
         m_volume = volume;
         m_quantity = quantity;
         m_and = and_;
+        m_action_no = action_no;
     }
 
     float get_sec(int tempo, float length) const;
@@ -119,11 +123,15 @@ struct VskSoundSetting {
 struct VskSoundPlayer;
 
 struct VskPhrase {
-    float                           m_goal = 0;
-    ALuint                          m_buffer = -1;
-    ALuint                          m_source = -1;
-    VskSoundSetting                 m_setting;
-    std::vector<VskNote>            m_notes;
+    float                               m_goal = 0;
+    ALuint                              m_buffer = -1;
+    ALuint                              m_source = -1;
+    VskSoundSetting                     m_setting;
+    std::vector<VskNote>                m_notes;
+
+    VskSoundPlayer*                     m_player;
+    std::vector<std::pair<float, int>>  m_gate_to_special_action_no;
+    size_t                              m_remaining_actions;
 
     VskPhrase() { }
     VskPhrase(const VskSoundSetting& setting) : m_setting(setting) { }
@@ -162,6 +170,13 @@ struct VskPhrase {
             tone, note, dot, length, sign, m_setting.m_volume,
             quantity, and_);
     }
+    void add_action_node(char note, int action_no)
+    {
+        m_notes.emplace_back(
+            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tone, note, false, 0, 0, m_setting.m_volume,
+            m_setting.m_quantity, false, action_no);
+    }
     void add_key(int key) {
         add_key(key, false);
     }
@@ -189,6 +204,9 @@ struct VskPhrase {
         m_notes.push_back(note);
     }
 
+    void schedule_special_action(float gate, int action_no);
+    void execute_special_actions();
+
     void rescan_notes();
     void calc_total();
     void realize(VskSoundPlayer *player);
@@ -196,9 +214,11 @@ struct VskPhrase {
 }; // struct VskPhrase
 
 //////////////////////////////////////////////////////////////////////////////
-// VskScoreBlock
 
 typedef std::vector<std::shared_ptr<VskPhrase>>  VskScoreBlock;
+
+// The function pointer type of special action
+typedef void (*VskSpecialActionFn)(int action_number);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -212,6 +232,7 @@ struct VskSoundPlayer {
     unboost::mutex                              m_play_async_lock;
     std::unordered_map<int, VskScoreBlock>      m_async_sound_map;
     static int                                  m_next_async_sound_id;
+    std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
 
     VskSoundPlayer() : m_playing_music(false),
                        m_stopping_event(false, false) { init_beep(); }
@@ -228,6 +249,9 @@ struct VskSoundPlayer {
 
     void beep(int i);
     bool is_beeping();
+
+    void register_special_action(int action_no, VskSpecialActionFn fn = nullptr);
+    void do_special_action(int action_no);
 
     void write_reg(uint32_t addr, uint32_t data) {
         m_ym.write_reg(addr, data);

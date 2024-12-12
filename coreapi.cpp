@@ -6799,7 +6799,7 @@ static VskAstPtr VSKAPI vsk_CMD_SING(VskAstPtr self, const VskAstList& args)
     {
         if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
             VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
-        if (!vsk_sound_sing(v0))
+        if (!vsk_sound_cmd_sing(v0))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         if (!VSK_IMPL()->m_play_bgm)
         {
