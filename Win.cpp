@@ -2608,7 +2608,14 @@ void VskWin32App::OnRButtonUp(HWND hwnd, int x, int y, UINT keyFlags)
 // WM_CONTEXTMENU
 void VskWin32App::OnContextMenu(HWND hwnd, HWND hwndContext, UINT xPos, UINT yPos)
 {
-    show_popup_menu(hwnd, 0);
+    INT hit = (INT)::SendMessage(hwnd, WM_NCHITTEST, 0, MAKELONG(xPos, yPos));
+    if (hit == HTCLIENT)
+    {
+        show_popup_menu(hwnd, 0);
+        return;
+    }
+
+    FORWARD_WM_CONTEXTMENU(hwnd, hwndContext, xPos, yPos, ::DefWindowProc);
 }
 
 // WM_INITMENUPOPUP
