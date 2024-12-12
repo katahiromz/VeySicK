@@ -1640,7 +1640,7 @@ void VskMachine::print(const VskString& str)
 }
 
 // テキスト画面をクリップボードにコピー
-VskString VskMachine::copy_text_screen()
+VskString VskMachine::copy_text_screen(bool force)
 {
     bool was_lead = false;
 
@@ -1673,7 +1673,7 @@ VskString VskMachine::copy_text_screen()
 #endif
             // それ以外は普通に追加
             uint8_t ank = get_ank(x, y);
-            if (ank < 0x20)
+            if (ank < 0x20 && !force)
                 ret += '?'; // 制御文字を隠す
             else
                 ret += get_ank(x, y);

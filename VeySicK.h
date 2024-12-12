@@ -723,7 +723,7 @@ struct VskMachine : VskObject
     void set_insert_mode(bool insert);
     void fix_caret_pos(bool go_next);
     void fix_text_pos(int& x, int& y, bool go_next) const;
-    VskString copy_text_screen();
+    VskString copy_text_screen(bool force = false);
     void syntax_error();
     void bad_call();
 

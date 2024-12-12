@@ -2109,6 +2109,7 @@ protected:
     void OnOpenDriveFolder(HWND hwnd, int number);
     void update_line_printer();
 
+    void OnPrint(HWND hwnd);
     void OnLinePrinter(HWND hwnd);
     void OnResetSettings(HWND hwnd);
     void OnCopy(HWND hwnd);
@@ -2838,6 +2839,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case ID_LINEPRINTER: // ラインプリンタ
         OnLinePrinter(hwnd);
         break;
+    case ID_PRINT: // 印刷
+        OnPrint(hwnd);
+        break;
     }
 }
 
@@ -3549,6 +3553,185 @@ void VskWin32App::update_line_printer()
     }
 }
 
+#include "txt2png.h"
+
+// 印刷をする
+bool vsk_do_print_text(HWND hwnd, VskString& text)
+{
+    PRINTDLG pd = { sizeof(pd), hwnd };
+    pd.Flags = PD_ALLPAGES | PD_DISABLEPRINTTOFILE | PD_HIDEPRINTTOFILE | PD_NOPAGENUMS |
+               PD_NOSELECTION | PD_RETURNDC;
+    if (!::PrintDlg(&pd))
+        return false; // おそらくユーザーがキャンセルした
+
+    HDC hDC = pd.hDC;
+    const float MM_PER_INCH = 25.4f; // 1インチは25.4ミリメートル
+
+    // これらはピクセル単位
+    auto xMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
+    auto yMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
+    auto cx0 = GetDeviceCaps(hDC, PHYSICALWIDTH);
+    auto cy0 = GetDeviceCaps(hDC, PHYSICALHEIGHT);
+    auto xMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
+    auto yMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
+    if (xMargin < xMinMargin)
+    {
+        cx0 -= 2 * (xMinMargin - xMargin);
+        xMargin = xMinMargin;
+    }
+    if (yMargin < yMinMargin)
+    {
+        cy0 -= 2 * (yMinMargin - yMargin);
+        yMargin = yMinMargin;
+    }
+
+    VskImageHandle hbm;
+    int total_pages = 0;
+    bool is_8801 = vsk_machine->is_8801_mode();
+    hbm = text_to_bitmap(total_pages, text, 120, 80, 0, 0, is_8801, true);
+    DeleteObject(hbm);
+
+    bool ok = true;
+    DOCINFO di = { sizeof(di), TEXT("VeySicK program list") };
+    if (::StartDoc(hDC, &di) > 0)
+    {
+        for (int page = 1; page <= total_pages; ++page)
+        {
+            if (::StartPage(hDC) > 0)
+            {
+                hbm = text_to_bitmap(total_pages, text, 120, 80, 0, page, is_8801, true);
+                if (hbm)
+                {
+                    BITMAP bm;
+                    if (!GetObject(hbm, sizeof(bm), &bm))
+                    {
+                        ::AbortDoc(hDC);
+                        ok = false;
+                        break;
+                    }
+                    HDC hdcMem = CreateCompatibleDC(hDC);
+                    HGDIOBJ hbmOld = SelectObject(hdcMem, hbm);
+                    float zoom = 1;
+                    auto aspect_ratio0 = float(cx0) / cy0;
+                    auto aspect_ratio1 = float(bm.bmWidth) / bm.bmHeight;
+                    if (aspect_ratio0 > aspect_ratio1)
+                    {
+                        zoom = float(cy0) / bm.bmHeight;
+                    }
+                    else
+                    {
+                        zoom = float(cx0) / bm.bmWidth;
+                    }
+                    SetStretchBltMode(hDC, STRETCH_DELETESCANS);
+                    StretchBlt(hDC, xMargin, yMargin, LONG(bm.bmWidth * zoom), LONG(bm.bmHeight * zoom),
+                               hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+                    SelectObject(hdcMem, hbmOld);
+                    DeleteDC(hdcMem);
+                    DeleteObject(hbm);
+                }
+                ::EndPage(hDC);
+            }
+        }
+        ::EndDoc(hDC);
+    }
+
+    ::GlobalFree(pd.hDevMode);
+    ::GlobalFree(pd.hDevNames);
+    ::DeleteDC(pd.hDC);
+    return ok;
+}
+
+// 印刷をする
+bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
+{
+    PRINTDLG pd = { sizeof(pd), hwnd };
+    pd.Flags = PD_ALLPAGES | PD_DISABLEPRINTTOFILE | PD_HIDEPRINTTOFILE | PD_NOPAGENUMS |
+               PD_NOSELECTION | PD_RETURNDC;
+    if (!::PrintDlg(&pd))
+        return false; // おそらくユーザーがキャンセルした
+
+    HDC hDC = pd.hDC;
+    const float MM_PER_INCH = 25.4f; // 1インチは25.4ミリメートル
+
+    // これらはピクセル単位
+    auto xMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
+    auto yMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
+    auto cx0 = GetDeviceCaps(hDC, PHYSICALWIDTH);
+    auto cy0 = GetDeviceCaps(hDC, PHYSICALHEIGHT);
+    auto xMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
+    auto yMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
+    if (xMargin < xMinMargin)
+    {
+        cx0 -= 2 * (xMinMargin - xMargin);
+        xMargin = xMinMargin;
+    }
+    if (yMargin < yMinMargin)
+    {
+        cy0 -= 2 * (yMinMargin - yMargin);
+        yMargin = yMinMargin;
+    }
+
+    bool ok = true;
+    DOCINFO di = { sizeof(di), TEXT("VeySicK screen image") };
+    if (::StartDoc(hDC, &di) > 0)
+    {
+        if (::StartPage(hDC) > 0)
+        {
+            BITMAP bm;
+            if (!GetObject(hbm, sizeof(bm), &bm))
+            {
+                ::AbortDoc(hDC);
+                ok = false;
+            }
+            else
+            {
+                HDC hdcMem = CreateCompatibleDC(hDC);
+                HGDIOBJ hbmOld = SelectObject(hdcMem, hbm);
+                float zoom = 1;
+                auto aspect_ratio0 = float(cx0) / cy0;
+                auto aspect_ratio1 = float(bm.bmWidth) / bm.bmHeight;
+                if (aspect_ratio0 > aspect_ratio1)
+                {
+                    zoom = float(cy0) / bm.bmHeight;
+                }
+                else
+                {
+                    zoom = float(cx0) / bm.bmWidth;
+                }
+                SetStretchBltMode(hDC, STRETCH_DELETESCANS);
+                StretchBlt(hDC, xMargin, yMargin, LONG(bm.bmWidth * zoom), LONG(bm.bmHeight * zoom),
+                           hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+                SelectObject(hdcMem, hbmOld);
+                DeleteDC(hdcMem);
+                DeleteObject(hbm);
+            }
+            ::EndPage(hDC);
+        }
+        ::EndDoc(hDC);
+    }
+
+    ::GlobalFree(pd.hDevMode);
+    ::GlobalFree(pd.hDevNames);
+    ::DeleteDC(pd.hDC);
+    return true;
+}
+
+void VskWin32App::OnPrint(HWND hwnd)
+{
+    assert(vsk_machine);
+
+    // スクリーンショットのコピーを作成
+    start_stop_timers(hwnd, false);
+    HBITMAP hbm = (HBITMAP)::CopyImage(*vsk_machine->get_screen_image(), IMAGE_BITMAP,
+                                       0, 0, LR_COPYRETURNORG | LR_CREATEDIBSECTION);
+    start_stop_timers(hwnd, true);
+    if (!hbm)
+        return;
+
+    vsk_do_print_image(hwnd, hbm);
+    DeleteObject(hbm);
+}
+
 static INT_PTR CALLBACK
 LinePrinterDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3575,6 +3758,9 @@ LinePrinterDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         case psh2: // コピー
             vsk_copy_text_to_clipboard(hwnd, VSK_SETTINGS()->m_line_printer_text.c_str());
+            break;
+        case psh3: // 印刷
+            vsk_do_print_text(hwnd, VSK_SETTINGS()->m_line_printer_text);
             break;
         }
         break;

@@ -172,6 +172,7 @@ add_executable(VeySicK WIN32
     n88float.cpp
     print_using.cpp
     renum.cpp
+    txt2png.cpp
     vm8801.cpp
     vm9801.cpp
     random.cpp
