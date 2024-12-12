@@ -7732,9 +7732,8 @@ static VskAstPtr VSKAPI vsk_CALL(VskAstPtr self, const VskAstList& args)
 static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr self, const VskAstList& args)
 {
     vsk_print("Bye!\n"); // さよならのメッセージ
-
     vsk_app_quit(); // アプリを終了
-
+    vsk_enter_command_level(false); // Ok を表示せずにコマンドレベルに
     return nullptr;
 }
 
