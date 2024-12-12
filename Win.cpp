@@ -2109,6 +2109,7 @@ protected:
     void OnOpenDriveFolder(HWND hwnd, int number);
     void update_line_printer();
 
+    void OnPrintLinePrinter(HWND hwnd);
     void OnPrintList(HWND hwnd);
     void OnPrintScreen(HWND hwnd);
     void OnLinePrinter(HWND hwnd);
@@ -2846,6 +2847,9 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case ID_PRINT_LIST: // リストの印刷
         OnPrintList(hwnd);
         break;
+    case ID_PRINT_LINE_PRINTER: // ラインプリンタの印刷
+        OnPrintLinePrinter(hwnd);
+        break;
     }
 }
 
@@ -3559,6 +3563,13 @@ void VskWin32App::update_line_printer()
 
 #include "txt2png.h"
 
+VskImageHandle
+vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int page, bool is_8801)
+{
+    int max_x = 110, max_y = (is_landscape ? 40 : 80);
+    return text_to_bitmap(total_pages, text, max_x, max_y, 0, page, is_8801, true);
+}
+
 // 印刷をする
 bool vsk_do_print_text(HWND hwnd, VskString& text)
 {
@@ -3589,10 +3600,12 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
         yMargin = yMinMargin;
     }
 
+    bool is_landscape = (cx0 > cy0); // 横向きか？
+
     VskImageHandle hbm;
     int total_pages = 0;
-    bool is_8801 = vsk_machine->is_8801_mode();
-    hbm = text_to_bitmap(total_pages, text, 120, 80, 0, 0, is_8801, true);
+    const bool is_8801 = vsk_machine->is_8801_mode();
+    hbm = vsk_text_to_bitmap(total_pages, text, is_landscape, 0, is_8801);
     DeleteObject(hbm);
 
     bool ok = true;
@@ -3603,7 +3616,7 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
         {
             if (::StartPage(hDC) > 0)
             {
-                hbm = text_to_bitmap(total_pages, text, 120, 80, 0, page, is_8801, true);
+                hbm = vsk_text_to_bitmap(total_pages, text, is_landscape, page, is_8801);
                 if (hbm)
                 {
                     BITMAP bm;
@@ -3745,6 +3758,13 @@ void VskWin32App::OnPrintScreen(HWND hwnd)
 
     vsk_do_print_image(hwnd, hbm);
     DeleteObject(hbm);
+}
+
+// ID_PRINT_LINE_PRINTER
+void VskWin32App::OnPrintLinePrinter(HWND hwnd)
+{
+    assert(vsk_machine);
+    vsk_do_print_text(hwnd, m_settings.m_line_printer_text);
 }
 
 static INT_PTR CALLBACK

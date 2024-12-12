@@ -31,8 +31,9 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         POPUP "Print..."
         {
-            MENUITEM "Print screen...", ID_PRINT_SCREEN
-            MENUITEM "Print program list...", ID_PRINT_LIST
+            MENUITEM "Screen...", ID_PRINT_SCREEN
+            MENUITEM "Program list...", ID_PRINT_LIST
+            MENUITEM "Line printer text...", ID_PRINT_LINE_PRINTER
         }
         MENUITEM SEPARATOR
         MENUITEM "Settings...\tAlt+Enter", ID_SETTINGS

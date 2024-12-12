@@ -31,8 +31,9 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         POPUP "印刷..."
         {
-            MENUITEM "画面の印刷...", ID_PRINT_SCREEN
-            MENUITEM "プログラムリストの印刷...", ID_PRINT_LIST
+            MENUITEM "画面...", ID_PRINT_SCREEN
+            MENUITEM "プログラムリスト...", ID_PRINT_LIST
+            MENUITEM "ラインプリンタのテキスト...", ID_PRINT_LINE_PRINTER
         }
         MENUITEM SEPARATOR
         MENUITEM "設定...\tAlt+Enter", ID_SETTINGS
