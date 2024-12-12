@@ -6355,52 +6355,6 @@ bool vsk_load_file(const VskString& filename, VskString& text, bool change_dir)
     return true;
 }
 
-// INSN_LOAD (LOAD) @implemented
-static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 2, 2))
-        return nullptr;
-
-    VskString v1;
-    if (args[1] && !vsk_ident(v1, args[1]))
-        return nullptr;
-    if (v1 != "" && v1 != "R")
-        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
-
-    VskString v0;
-    if (!vsk_str(v0, args[0]))
-        return nullptr;
-
-    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text, true))
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-
-    // Rが付いていたら実行する。Rが付いてなければファイルをすべて閉じる
-    if (v1 == "R")
-        return vsk_run();
-
-    vsk_file_close_all();
-    return nullptr;
-}
-
-// INSN_SAVE
-static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
-{
-    if (!vsk_arity_in_range(args, 1, 2))
-        return nullptr;
-
-    VskString v0;
-    if (vsk_str(v0, args[0]))
-    {
-        if (auto error = vsk_machine->save(v0, VSK_IMPL()->m_program_text + "\n"))
-        {
-            vsk_error(error);
-            return nullptr;
-        }
-    }
-
-    return nullptr;
-}
-
 // プログラムリストを混合する
 bool vsk_merge_program(const VskString& text)
 {
@@ -6425,6 +6379,58 @@ bool vsk_merge_program(const VskString& text)
     }
 
     return true;
+}
+
+// INSN_LOAD (LOAD) @implemented
+static VskAstPtr VSKAPI vsk_LOAD(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 2, 2))
+        return nullptr;
+
+    VskString v1; // R
+    if (args[1] && !vsk_ident(v1, args[1]))
+        return nullptr;
+    if (v1 != "" && v1 != "R")
+        VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
+
+    VskString v0; // ファイル記述子
+    if (!vsk_str(v0, args[0]))
+        return nullptr;
+
+    // ファイルから読み込む
+    VskString text;
+    if (!vsk_load_file(v0, text, true))
+        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+    // 一行ずつ混合する。行番号が重複していたら新しい方で上書きする
+    VSK_IMPL()->m_program_text.clear();
+    vsk_merge_program(text);
+
+    // Rが付いていたら実行する。
+    if (v1 == "R")
+        return vsk_run();
+
+    vsk_file_close_all(); // Rが付いてなければファイルをすべて閉じる
+    return nullptr;
+}
+
+// INSN_SAVE
+static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
+{
+    if (!vsk_arity_in_range(args, 1, 2))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_str(v0, args[0]))
+    {
+        if (auto error = vsk_machine->save(v0, VSK_IMPL()->m_program_text + "\n"))
+        {
+            vsk_error(error);
+            return nullptr;
+        }
+    }
+
+    return nullptr;
 }
 
 // INSN_MERGE (MERGE) @implemented
@@ -6666,10 +6672,18 @@ static VskAstPtr VSKAPI vsk_JIS_dollar(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_LOAD_question
+// INSN_LOAD_question (LOAD?)
 static VskAstPtr VSKAPI vsk_LOAD_question(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 1))
+        return nullptr;
+
+    VskString v0;
+    if (vsk_str(v0, args[0]))
+    {
+        mdbg_traceA("\n"); // TODO: 現状ではLOAD?を無視する。何かする必要があるのか？
+    }
+
     return nullptr;
 }
 
