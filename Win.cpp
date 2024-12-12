@@ -3561,8 +3561,9 @@ void VskWin32App::update_line_printer()
     }
 }
 
-#include "txt2png.h"
+#include "txt2png.h" // テキストを画像にする
 
+// テキストを画像にするヘルパー関数
 VskImageHandle
 vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int page, bool is_8801)
 {
@@ -3570,7 +3571,7 @@ vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int pag
     return text_to_bitmap(total_pages, text, max_x, max_y, 0, page, is_8801, true);
 }
 
-// 印刷をする
+// テキストの印刷をする
 bool vsk_do_print_text(HWND hwnd, VskString& text)
 {
     PRINTDLG pd = { sizeof(pd), hwnd };
@@ -3587,8 +3588,8 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
     auto yMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
     auto cx0 = GetDeviceCaps(hDC, PHYSICALWIDTH);
     auto cy0 = GetDeviceCaps(hDC, PHYSICALHEIGHT);
-    auto xMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
-    auto yMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
+    auto xMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
+    auto yMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
     if (xMargin < xMinMargin)
     {
         cx0 -= 2 * (xMinMargin - xMargin);
@@ -3658,7 +3659,7 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
     return ok;
 }
 
-// 印刷をする
+// 画像の印刷をする
 bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
 {
     PRINTDLG pd = { sizeof(pd), hwnd };
@@ -3675,8 +3676,8 @@ bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
     auto yMargin = GetDeviceCaps(hDC, PHYSICALOFFSETX);
     auto cx0 = GetDeviceCaps(hDC, PHYSICALWIDTH);
     auto cy0 = GetDeviceCaps(hDC, PHYSICALHEIGHT);
-    auto xMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
-    auto yMinMargin = 8.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
+    auto xMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH;
+    auto yMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH;
     if (xMargin < xMinMargin)
     {
         cx0 -= 2 * (xMinMargin - xMargin);
