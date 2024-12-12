@@ -1493,12 +1493,12 @@ CMD TURTLE "FD(dist)"
 
 ---
 
-### `COMMON` / `CHAIN` 文 {#common}
+### `COMMON` 文 {#common}
 
 - 【機能】 [`CHAIN`](#chain)文が実行されたときに渡す変数を設定します。
-- 【語源】 Common / Chain
-- 【書式】 `CHAIN` *変数名* `[,` *変数名* `] ...`
-- 【説明】 `COMMON`文は、[`CHAIN`](#chain)文と一緒に使います。`COMMON`文は、[`CHAIN`](#chain)文が実行されたときに渡す変数を決めます。 プログラム中のすべての変数を渡す場合は、[`CHAIN`](#chain)文の`ALL`オプションを使う方が便利です。
+- 【語源】 Common
+- 【書式】 `COMMON` *変数名* `[,` *変数名* `] ...`
+- 【説明】 `COMMON`文は、[`CHAIN`](#chain)文と一緒に使います。`COMMON`文は、[`CHAIN`](#chain)文が実行されたときに渡す変数を決めます。 プログラム中のすべての変数を渡す場合は、[`CHAIN`](#chain)文の`ALL`オプションを使う方が便利です。配列変数を指定する場合はカッコ `()` を付けないといけません。
 - 【参照】 [`CHAIN`](#chain)、サンプルプログラム「`drive1/COMMON.BAS`」
 
 ---

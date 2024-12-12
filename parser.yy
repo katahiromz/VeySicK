@@ -293,6 +293,8 @@ file_numbers_or_expressions
 lvalue
     : TK_IDENTIFIER TK_L_PAREN   parameter_list TK_R_PAREN      { vsk_targeting($1); $$ = vsk_ast(INSN_LVALUE, { $1, $3 }); }
     | TK_IDENTIFIER TK_L_BRACKET parameter_list TK_R_BRACKET    { vsk_targeting($1); $$ = vsk_ast(INSN_LVALUE, { $1, $3 }); }
+    | TK_IDENTIFIER TK_L_PAREN                  TK_R_PAREN      { vsk_targeting($1); $$ = vsk_ast(INSN_LVALUE, { $1, nullptr }); }
+    | TK_IDENTIFIER TK_L_BRACKET                TK_R_BRACKET    { vsk_targeting($1); $$ = vsk_ast(INSN_LVALUE, { $1, nullptr }); }
     | TK_IDENTIFIER                                             { $$ = $1; }
     ;
 
@@ -933,6 +935,7 @@ primary_statement
     | TK_AUTO                                           { vsk_targeting($1); $$ = vsk_ast(INSN_AUTO, { nullptr, nullptr }); }
     | TK_WIDTH_sharp TK_DIGITS   TK_COMMA expression    { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2, $4 }); }
     | TK_WIDTH       file_number TK_COMMA expression    { vsk_targeting($1); $$ = vsk_ast(INSN_WIDTH_sharp, { $2, $4 }); }
+    | TK_COMMON lvalue_list                             { vsk_targeting($1); $$ = vsk_ast(INSN_COMMON); $$->insert($$->end(), $2->begin(), $2->end()); }
     | dirty_8bit_sequence                               { vsk_targeting($1); $$ = $1; }
     ;
 
@@ -995,7 +998,6 @@ lead_statement_0
     | TK_CLEAR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_CLEAR); }
     | TK_CLS                                            { vsk_targeting($1); $$ = vsk_ast(INSN_CLS); }
     | TK_COLOR                                          { vsk_targeting($1); $$ = vsk_ast(INSN_COLOR); }
-    | TK_COMMON                                         { vsk_targeting($1); $$ = vsk_ast(INSN_COMMON); }
     | TK_CONSOLE                                        { vsk_targeting($1); $$ = vsk_ast(INSN_CONSOLE); }
     | TK_CONT                                           { vsk_targeting($1); $$ = vsk_ast(INSN_CONT); }
     | TK_COPY                                           { vsk_targeting($1); $$ = vsk_ast(INSN_COPY); }

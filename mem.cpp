@@ -624,6 +624,21 @@ bool vsk_get_total_index(VskIndex& total_index, VskVarDesc& desc, const VskIndex
     return true;
 }
 
+// COMMONではない変数をすべてクリアする
+void vsk_var_clear_non_common(void)
+{
+retry:
+    for (auto& pair : *vsk_vars_map)
+    {
+        VskVarDescPtr& desc = pair.second;
+        if (!desc->m_common)
+        {
+            vsk_var_delete(pair.first, vsk_var_is_array(pair.first));
+            goto retry;
+        }
+    }
+}
+
 // 変数をすべてクリアする
 void vsk_var_clear_all(void)
 {

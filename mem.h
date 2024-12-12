@@ -14,6 +14,7 @@ struct VskVarDesc : VskObject
     VskString               m_typed_name;
     VskString               m_data;
     std::vector<VskString>  m_strs;
+    bool                    m_common = false;
 
     VskIndex get_total_count() const;
     VskIndex get_total_size() const;
@@ -58,6 +59,8 @@ VskType vsk_var_get_type(const VskString& name);
 VskType vsk_var_get_type_0(const VskString& name);
 // 変数をすべてクリアする
 void vsk_var_clear_all(void);
+// COMMONではない変数をすべてクリアする
+void vsk_var_clear_non_common(void);
 // 添え字を解決する
 bool vsk_get_total_index(VskIndex& total_index, VskVarDesc& desc, const VskIndexList& index_list);
 

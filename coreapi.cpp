@@ -1421,14 +1421,19 @@ VskAstPtr vsk_lvalue_optimize(VskAstPtr& lvalue, int base)
         return lvalue;
     }
 
-    auto& param_list = lvalue->at(1);
+    assert(lvalue->m_insn == INSN_LVALUE);
     VskAstPtr index_list = vsk_ast(INSN_PARAM_LIST);
-    for (auto& param : param_list->children())
+
+    auto param_list = lvalue->at(1);
+    if (param_list)
     {
-        VskInt value;
-        if (!vsk_int(value, param))
-            return nullptr;
-        index_list->push_back(vsk_ast_int(base + value));
+        for (auto& param : param_list->children())
+        {
+            VskInt value;
+            if (!vsk_int(value, param))
+                return nullptr;
+            index_list->push_back(vsk_ast_int(base + value));
+        }
     }
 
     auto new_lvalue = vsk_ast(INSN_LVALUE);
@@ -1452,23 +1457,23 @@ bool vsk_dimension_from_lvalue(VskString& name, VskIndexList& dimension, const V
 
     assert(lvalue->m_insn == INSN_LVALUE);
     assert(lvalue->size() == 2);
+    is_array = true;
 
     auto& ident = lvalue->at(0);
-    auto& param_list = lvalue->at(1);
-
     assert(ident->is_ident());
-    name = vsk_var_get_typed_name(ident->m_str, false);
+    name = vsk_var_get_typed_name(ident->m_str, is_array);
 
-    for (auto& param : param_list->children())
+    auto param_list = lvalue->at(1);
+    if (param_list)
     {
-        VskInt value;
-        if (!vsk_int(value, param))
-            return false;
-        dimension.push_back(base + value);
+        for (auto& param : param_list->children())
+        {
+            VskInt value;
+            if (!vsk_int(value, param))
+                return false;
+            dimension.push_back(base + value);
+        }
     }
-
-    if (dimension.size() || is_array)
-        name += VSK_TYPE_ARRAY;
 
     return true;
 }
@@ -7378,7 +7383,7 @@ static bool vsk_DIM_helper(VskAstPtr& lvalue)
     // 左辺値（lvalue）から名前と次元を取得
     VskString name;
     VskIndexList dimension;
-    if (!vsk_dimension_from_lvalue(name, dimension, lvalue, +(VSK_STATE()->m_option_base != 1, true)))
+    if (!vsk_dimension_from_lvalue(name, dimension, lvalue, +(VSK_STATE()->m_option_base != 1), true))
         return false;
 
     // 変数を宣言
@@ -7692,7 +7697,7 @@ static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CHAIN (CHAIN)
+// INSN_CHAIN (CHAIN) @implemented
 static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 1, 3))
@@ -7726,8 +7731,10 @@ static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_UNDEFINED_LABEL, nullptr);
     }
 
-    if (!all)
-        mdbg_traceA("CHAIN: TODO: COMMON を指定した変数だけをつなげてください。");
+    if (all) // 変数をすべてクリアする？
+        vsk_var_clear_all();
+    else // COMMONではない変数をすべてクリアする？
+        vsk_var_clear_non_common();
 
     // 実行
     vsk_run(index_list, false);
@@ -7999,10 +8006,42 @@ static VskAstPtr VSKAPI vsk_COLOR_at(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_COMMON
+// INSN_COMMON (COMMON) @implementation
 static VskAstPtr VSKAPI vsk_COMMON(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
+    if (!vsk_arity_in_range(args, 1, 256))
+        return nullptr;
+
+    for (auto& arg : args)
+    {
+        bool is_array = arg->size() == 2; // 配列か？
+
+        // 左辺値（lvalue）から名前と次元を取得
+        VskString name;
+        VskIndexList dimension;
+        if (!vsk_dimension_from_lvalue(name, dimension, arg, int(VSK_STATE()->m_option_base == 1), is_array))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        // 変数を探す
+        auto var_desc = vsk_var_find(name, is_array);
+        if (!var_desc)
+        {
+            // 配列で次元がなければ 10 要素とする
+            if (is_array && dimension.empty())
+                dimension.push_back(10);
+            // 変数を宣言する
+            vsk_var_declare(name, dimension);
+        }
+
+        // もう一度変数を探す
+        var_desc = vsk_var_find(name, is_array);
+        if (!var_desc)
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+
+        // フラグをセット
+        var_desc->m_common = true;
+    }
+
     return nullptr;
 }
 
@@ -8877,19 +8916,22 @@ static VskAstPtr VSKAPI vsk_LVALUE(VskAstPtr self, const VskAstList& args)
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
 
     assert(args[0]->is_ident());
-    assert(args[1]->m_insn == INSN_PARAM_LIST);
+    assert(!args[1] || args[1]->m_insn == INSN_PARAM_LIST);
 
     VskIndexList index_list;
-    for (auto& param : args[1]->children())
+    if (args[1])
     {
-        VskInt value;
-        if (!vsk_int(value, param))
-            return nullptr;
-        if (VSK_STATE()->m_option_base == 1)
-            --value;
-        if (value < 0)
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_INDEX, nullptr);
-        index_list.push_back(value);
+        for (auto& param : args[1]->children())
+        {
+            VskInt value;
+            if (!vsk_int(value, param))
+                return nullptr;
+            if (VSK_STATE()->m_option_base == 1)
+                --value;
+            if (value < 0)
+                VSK_ERROR_AND_RETURN(VSK_ERR_BAD_INDEX, nullptr);
+            index_list.push_back(value);
+        }
     }
 
     return vsk_LVALUE_helper(args[0]->m_str, index_list);
