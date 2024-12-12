@@ -29,6 +29,17 @@ VskString vsk_to_string(VskDouble dbl);
 VskString vsk_to_string(const VskString& str);
 
 //////////////////////////////////////////////////////////////////////////////
+// 抽象オブジェクト クラス
+
+struct VskObject
+{
+    static long s_cAliveObjects; // オブジェクトの生存数を管理する
+
+    VskObject();
+    virtual ~VskObject();
+};
+
+//////////////////////////////////////////////////////////////////////////////
 
 #include <cstdlib>
 #include <cstdio>

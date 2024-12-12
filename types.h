@@ -134,17 +134,6 @@ inline VskSingle vsk_cosf(VskSingle x)
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// 抽象オブジェクト クラス
-
-struct VskObject
-{
-    static long s_cAliveObjects; // オブジェクトの生存数を管理する
-
-    VskObject();
-    virtual ~VskObject();
-};
-
-//////////////////////////////////////////////////////////////////////////////
 // インデックスリスト
 
 typedef size_t VskIndex;
