@@ -3649,7 +3649,6 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
                     }
                     SetStretchBltMode(hDC, STRETCH_DELETESCANS);
                     LONG cx1 = LONG(bm.bmWidth * zoom), cy1 = LONG(bm.bmHeight * zoom);
-                    Rectangle(hDC, xMargin, yMargin, xMargin + cx1, yMargin + cy1);
                     StretchBlt(hDC, xMargin, yMargin, cx1, cy1,
                                hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
                     SelectObject(hdcMem, hbmOld);
