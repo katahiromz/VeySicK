@@ -2088,6 +2088,7 @@ protected:
     void OnMove(HWND hwnd, int x, int y);
     void OnSize(HWND hwnd, UINT state, int cx, int cy);
     void OnTimer(HWND hwnd, UINT id);
+    void OnDropFiles(HWND hwnd, HDROP hdrop);
     void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
     void OnInitMenuPopup(HWND hwnd, HMENU hMenu, UINT item, BOOL fSystemMenu);
     BOOL OnEraseBkgnd(HWND hwnd, HDC hdc);
@@ -2216,6 +2217,9 @@ BOOL VskWin32App::OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
         ::SetCurrentDirectoryA(path.c_str());
 
     restart_working_thread();
+
+    // ドラッグアンドドロップを受け付ける
+    ::DragAcceptFiles(hwnd, TRUE);
 
     return TRUE; // 成功
 }
@@ -2461,6 +2465,18 @@ void vsk_mouse_clip(int x0, int y0, int x1, int y1)
     ::MapWindowPoints(VSK_APP()->m_hWnd, nullptr, &pt1, 1);
     RECT rc = { pt0.x, pt0.y, pt1.x + 1, pt1.y + 1 };
     ::ClipCursor(&rc);
+}
+
+// WM_DROPFILES
+void VskWin32App::OnDropFiles(HWND hwnd, HDROP hdrop)
+{
+    char szPath[MAX_PATH];
+    ::DragQueryFileA(hdrop, 0, szPath, _countof(szPath));
+    VskString str = "\"";
+    str += szPath;
+    str += '\"';
+    vsk_machine->keyboard_str(str);
+    ::DragFinish(hdrop);
 }
 
 // WM_TIMER
@@ -4208,6 +4224,7 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HANDLE_MSG(hwnd, WM_MOVE, OnMove);
         HANDLE_MSG(hwnd, WM_SIZE, OnSize);
         HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
+        HANDLE_MSG(hwnd, WM_DROPFILES, OnDropFiles);
         HANDLE_MSG(hwnd, WM_DESTROY, OnDestroy);
     case MYWM_IME_ON_OFF:
         ime_on_off_real((bool)wParam);
