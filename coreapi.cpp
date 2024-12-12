@@ -3589,11 +3589,10 @@ static VskAstPtr VSKAPI vsk_KILL(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_DRIVE_NO, nullptr);
 
         // 管理者権限がないのに安全じゃない場所にアクセスしようとしている？
-        if (!vsk_is_safe_zone_pathname(raw_path, true) &&
-            !vsk_is_process_elevated())
+        if (!vsk_is_process_elevated() && !vsk_is_safe_zone_pathname(raw_path, true))
         {
             vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
-            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+            VSK_ERROR_AND_RETURN(VSK_ERR_WRITE_PROTECTED, nullptr);
         }
 
         if (auto error = vsk_delete_file(raw_path.c_str()))

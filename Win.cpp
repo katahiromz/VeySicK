@@ -397,14 +397,20 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
                               OPEN_EXISTING, 0, NULL);
         break;
     case VskFile::MODE_OUTPUT:
-        if (!vsk_is_safe_zone_pathname(raw_path, true))
+        if (!vsk_is_process_elevated() && !vsk_is_safe_zone_pathname(raw_path, true))
+        {
+            vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
             return VSK_ERR_WRITE_PROTECTED;
+        }
         hFile = ::CreateFileA(raw_path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
                               CREATE_ALWAYS, 0, NULL);
         break;
     case VskFile::MODE_APPEND:
-        if (!vsk_is_safe_zone_pathname(raw_path, true))
+        if (!vsk_is_process_elevated() && !vsk_is_safe_zone_pathname(raw_path, true))
+        {
+            vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
             return VSK_ERR_WRITE_PROTECTED;
+        }
         if (!::PathFileExistsA(raw_path.c_str()))
             return VSK_ERR_FILE_NOT_FOUND;
         if (::PathIsDirectoryA(raw_path.c_str()))
@@ -415,8 +421,11 @@ VskError VskFileManager::open_host_file(VskFilePtr& file, const VskString& raw_p
             ::SetFilePointer(hFile, 0, nullptr, FILE_END);
         break;
     case VskFile::MODE_DEFAULT:
-        if (!vsk_is_safe_zone_pathname(raw_path, true))
+        if (!vsk_is_process_elevated() && !vsk_is_safe_zone_pathname(raw_path, true))
+        {
+            vsk_print("Security error!\a\n"); // "\a"でBEEP音を鳴らす
             return VSK_ERR_WRITE_PROTECTED;
+        }
         hFile = ::CreateFileA(raw_path.c_str(), GENERIC_READ | GENERIC_WRITE,
                               FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, 0, NULL);
         break;
