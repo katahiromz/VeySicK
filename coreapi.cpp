@@ -6372,6 +6372,32 @@ static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
+// プログラムリストを結合する
+bool vsk_merge_program(const VskString& text)
+{
+    // 行に分ける
+    std::vector<VskString> lines;
+    mstr_split(lines, text, "\n");
+
+    // 統合する
+    for (auto& line : lines)
+    {
+        mstr_trim(line, " \t\r\n");
+        if (line.empty())
+            continue; // 空行は無視
+
+        // 行番号を取得
+        auto number = vsk_line_number_from_line_text(line);
+        if (!number)
+            continue;
+
+        // 行を上書きする
+        vsk_update_program_line(VSK_IMPL()->m_program_text, number, line);
+    }
+
+    return true;
+}
+
 // INSN_MERGE (MERGE) @implemented
 static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr self, const VskAstList& args)
 {
@@ -6386,25 +6412,8 @@ static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr self, const VskAstList& args)
         if (!vsk_load_file(v0, text, false))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        // 行に分ける
-        std::vector<VskString> lines;
-        mstr_split(lines, text, "\n");
-
-        // 統合する
-        for (auto& line : lines)
-        {
-            mstr_trim(line, " \t\r\n");
-            if (line.empty())
-                continue; // 空行は無視
-
-            // 行番号を取得
-            auto number = vsk_line_number_from_line_text(line);
-            if (!number)
-                continue;
-
-            // 行を上書きする
-            vsk_update_program_line(VSK_IMPL()->m_program_text, number, line);
-        }
+        // 結合する
+        vsk_merge_program(text);
 
         // コマンドレベルに戻る
         vsk_enter_command_level();
@@ -7697,32 +7706,56 @@ static VskAstPtr VSKAPI vsk_SYSTEM(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CHAIN (CHAIN) @implemented
-static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
+static VskAstPtr vsk_CHAIN_helper(VskAstPtr self, const VskAstList& args, bool merge)
 {
-    if (!vsk_arity_in_range(args, 1, 3))
+    if (!vsk_arity_in_range(args, 1, 4))
+        return nullptr;
+
+    VskString v0;
+    if (!vsk_str(v0, args[0])) // ファイル記述子
         return nullptr;
 
     VskString v2;
-    auto arg2 = vsk_arg(args, 2);
+    auto arg2 = vsk_arg(args, 2); // ALL
     if (arg2 && (!vsk_ident(v2, arg2) || v2 != "ALL"))
         VSK_SYNTAX_ERROR_AND_RETURN(nullptr);
     bool all = !!arg2;
 
-    // 文字列を取得する
-    VskString v0;
-    if (!vsk_str(v0, args[0]))
-        return nullptr;
-
-    // ファイルを読み込む
-    if (!vsk_load_file(v0, VSK_IMPL()->m_program_text, true))
-        VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    // プログラムをスキャンする
     if (auto error = vsk_scan_program_list())
         VSK_ERROR_AND_RETURN(error, nullptr);
 
-    // 行番号を取得
+    auto arg3 = vsk_arg(args, 3); // DELETE する範囲
+    if (arg3)
+    {
+        std::pair<VskLineNo, VskLineNo> line_range;
+        if (!vsk_get_line_range(arg3, line_range))
+            return nullptr;
+        vsk_delete_lines(VSK_IMPL()->m_program_text, line_range.first, line_range.second);
+    }
+
+    if (merge)
+    {
+        // ファイルを読み込む
+        VskString text;
+        if (!vsk_load_file(v0, text, true))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+        // プログラムリストを結合する
+        vsk_merge_program(text);
+    }
+    else
+    {
+        // ファイルを読み込む
+        if (!vsk_load_file(v0, VSK_IMPL()->m_program_text, true))
+            VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
+    }
+
+    // 再度プログラムをスキャンする
+    if (auto error = vsk_scan_program_list())
+        VSK_ERROR_AND_RETURN(error, nullptr);
+
     VskLineNo number = 0;
-    auto arg1 = vsk_arg(args, 1);
+    auto arg1 = vsk_arg(args, 1); // 行番号
     VskIndexList index_list = { I_PROGRAM_CODE };
     if (arg1)
     {
@@ -7731,9 +7764,7 @@ static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
             VSK_ERROR_AND_RETURN(VSK_ERR_UNDEFINED_LABEL, nullptr);
     }
 
-    if (all) // 変数をすべてクリアする？
-        vsk_var_clear_all();
-    else // COMMONではない変数をすべてクリアする？
+    if (!all) // COMMONではない変数をクリアする？
         vsk_var_clear_non_common();
 
     // 実行
@@ -7742,32 +7773,16 @@ static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_CHAIN_MERGE
+// INSN_CHAIN (CHAIN) @implemented
+static VskAstPtr VSKAPI vsk_CHAIN(VskAstPtr self, const VskAstList& args)
+{
+    return vsk_CHAIN_helper(self, args, false);
+}
+
+// INSN_CHAIN_MERGE (CHAIN MERGE) @implemented
 static VskAstPtr VSKAPI vsk_CHAIN_MERGE(VskAstPtr self, const VskAstList& args)
 {
-    assert(0);
-    return nullptr;
-}
-
-// INSN_CHAIN_MERGE_ALL
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL(VskAstPtr self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
-
-// INSN_CHAIN_MERGE_ALL_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_ALL_DELETE(VskAstPtr self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
-}
-
-// INSN_CHAIN_MERGE_DELETE
-static VskAstPtr VSKAPI vsk_CHAIN_MERGE_DELETE(VskAstPtr self, const VskAstList& args)
-{
-    assert(0);
-    return nullptr;
+    return vsk_CHAIN_helper(self, args, true);
 }
 
 // INSN_CLOSE (CLOSE) @implemented

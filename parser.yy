@@ -811,15 +811,19 @@ primary_statement
     // CHAIN
     | TK_CHAIN TK_MERGE expression TK_COMMA line_number TK_COMMA TK_IDENTIFIER TK_COMMA TK_DELETE line_range {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_MERGE_ALL_DELETE, { $3, $5, $10 });
-    }
-    | TK_CHAIN TK_MERGE expression TK_COMMA line_number TK_COMMA TK_IDENTIFIER {
-        vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_MERGE_ALL, { $3, $5 });
+        $$ = vsk_ast(INSN_CHAIN_MERGE, { $3, $5, $7, $10 });
     }
     | TK_CHAIN TK_MERGE expression TK_COMMA line_number TK_COMMA TK_DELETE line_range {
         vsk_targeting($1);
-        $$ = vsk_ast(INSN_CHAIN_MERGE_DELETE, { $3, $5 });
+        $$ = vsk_ast(INSN_CHAIN_MERGE, { $3, $5, nullptr, $8 });
+    }
+    | TK_CHAIN TK_MERGE expression TK_COMMA TK_IDENTIFIER {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_CHAIN_MERGE, { $3, nullptr, $5 });
+    }
+    | TK_CHAIN TK_MERGE expression TK_COMMA line_number TK_COMMA TK_IDENTIFIER {
+        vsk_targeting($1);
+        $$ = vsk_ast(INSN_CHAIN_MERGE, { $3, $5, $7 });
     }
     | TK_CHAIN TK_MERGE expression TK_COMMA line_number {
         vsk_targeting($1);
