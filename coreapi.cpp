@@ -270,6 +270,8 @@ struct VskMachineImpl
     VskString m_target_line_text;
     // 現在の行
     VskLineNo m_current_line = 0;
+    // 現在のエラー行のテキスト
+    VskString m_error_line_text;
     // DEF FNの情報
     std::map<VskString, VskIndexList> m_fn_to_path;
     // トラップ情報
@@ -1242,7 +1244,6 @@ bool vsk_error(VskError error)
     VSK_STATE()->m_error.m_error_code = error;
     VSK_STATE()->m_error.m_error_column = vsk_target_column;
     VSK_STATE()->m_error.m_error_line = vsk_target_line;
-    VSK_IMPL()->m_target_line_text = vsk_get_program_line_text(vsk_target_line);
 
     static const std::unordered_map<VskError, const char *> vsk_error_map =
     {
@@ -1258,10 +1259,15 @@ bool vsk_error(VskError error)
         vsk_machine->print("Unprintable error");
 
     if (vsk_target_line != 0 && vsk_target_line != -1)
+    {
         vsk_machine->print(" at " + vsk_to_string(vsk_target_line));
+        VSK_IMPL()->m_error_line_text = vsk_get_program_line_text(vsk_target_line);
+    }
 
     vsk_enter_command_level();
     vsk_beep(-1);
+    if (vsk_target_line != 0 && vsk_target_line != -1)
+        vsk_help();
     return true;
 }
 
@@ -1538,6 +1544,8 @@ VskAstPtr vsk_type_cast(VskAstPtr arg, VskType type)
 // 変数に代入
 bool vsk_var_assign(VskAstPtr arg0, VskAstPtr arg1)
 {
+    vsk_targeting(arg0);
+
     // 左辺値（lvalue）から名前と次元を取得
     VskString name;
     VskIndexList dimension;
@@ -1773,7 +1781,7 @@ void vsk_targeting(VskAstPtr ast)
 {
     if (!ast)
         return;
-    vsk_target_column = ast->m_column;
+    VSK_STATE()->m_error.m_error_column = vsk_target_column = ast->m_column;
     if (ast->m_program_line != -1)
         vsk_target_line = ast->m_program_line;
 }
@@ -2614,9 +2622,24 @@ void vsk_default_trap(VskTrapType type)
     case VSK_TRAP_HELP: // HELPキー（Endキー）を機能させる
         if (VSK_STATE()->m_wait_for == VSK_WAIT_FOR_COMMAND) // 実行中でなければ
         {
-            vsk_machine->line_feed();
-            vsk_machine->set_line_text(VSK_STATE()->m_caret_y, VSK_IMPL()->m_target_line_text);
-            vsk_machine->set_line_column(int(VSK_STATE()->m_error.m_error_column));
+            // キャレット行のテキストを取得
+            auto text = vsk_machine->get_line_text();
+            mstr_trim(text, " \t\r\n");
+
+            vsk_machine->line_feed(); // 改行
+
+            if (text.empty() && VSK_IMPL()->m_error_line_text.size()) // キャレット行が空でエラー行があれば
+            {
+                // エラー行を表示
+                vsk_machine->set_line_text(VSK_STATE()->m_caret_y, VSK_IMPL()->m_error_line_text);
+                vsk_machine->set_line_column(0);
+            }
+            else
+            {
+                // 現在の行を表示
+                vsk_machine->set_line_text(VSK_STATE()->m_caret_y, VSK_IMPL()->m_target_line_text);
+                vsk_machine->set_line_column(int(VSK_STATE()->m_error.m_error_column));
+            }
         }
         break;
     case VSK_TRAP_F1: case VSK_TRAP_F2: case VSK_TRAP_F3: case VSK_TRAP_F4: case VSK_TRAP_F5:
@@ -9602,7 +9625,7 @@ static VskAstPtr VSKAPI vsk_LINE_INPUT_WAIT(VskAstPtr self, const VskAstList& ar
         if (vsk_var_get_type(name) != VSK_TYPE_STRING)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
+        auto prompt = vsk_machine->get_line_text();
         mstr_trim_right(prompt, " \t\r\n");
         prompt.resize(vsk_machine->get_line_column(), ' ');
 
@@ -9636,7 +9659,7 @@ static VskAstPtr VSKAPI vsk_KINPUT(VskAstPtr self, const VskAstList& args)
         VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
 
     // 行入力の準備
-    auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
+    auto prompt = vsk_machine->get_line_text();
     mstr_trim_right(prompt, " \t\r\n");
     prompt.resize(vsk_machine->get_line_column(), ' ');
     VSK_SETTINGS()->m_text_mode = VSK_TEXT_MODE_SJIS;
@@ -9677,7 +9700,7 @@ static VskAstPtr vsk_INPUT_WAIT_helper(const VskAstList& args, bool semicolon)
         if (!args[1] || semicolon)
             v1 += "? ";
 
-        auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
+        auto prompt = vsk_machine->get_line_text();
         mstr_trim_right(prompt, " \t\r\n");
         prompt.resize(vsk_machine->get_line_column(), ' ');
         VSK_STATE()->m_input_prompt = prompt + v1;
@@ -9730,7 +9753,7 @@ static VskAstPtr vsk_INPUT_helper(const VskAstList& args, bool semicolon)
         if (!args[0] || semicolon)
             v0 += "? ";
 
-        auto prompt = vsk_machine->get_line_text(VSK_STATE()->m_caret_y);
+        auto prompt = vsk_machine->get_line_text();
         mstr_trim_right(prompt, " \t\r\n");
         prompt.resize(vsk_machine->get_line_column(), ' ');
 
