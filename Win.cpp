@@ -29,6 +29,7 @@
 
 #define VSK_TIMER_ID_BLINK 999      // 点滅（blink）のタイマー
 #define VSK_TIMER_ID_FPS_CHECK 888  // FPSチェックのタイマー
+#define VSK_TIMER_ID_BYE 777        // さよならのタイマー
 
 #define VSK_IDEAL_FPS 20            // 理想的なFPS
 #define VSK_FPS_CHECK_INTERVAL (2 * VSK_ONE_SECOND) // FPSチェックの間隔（ミリ秒）
@@ -37,6 +38,7 @@
 #define MYWM_SCREENSHOT (WM_USER + 101)
 #define MYWM_RESET (WM_USER + 102)
 #define MYWM_UPDATELINEPRINTER (WM_USER + 103)
+#define MYWM_BYE (WM_USER + 104)
 
 static DWORD s_dwFpsCounter = 0; // FPSチェック用の変数
 
@@ -2147,7 +2149,7 @@ VskWin32App *vsk_pMainWnd = nullptr;
 void vsk_app_quit(void)
 {
     // スレッドが違うかもしれないので、PostMessageを経由
-    ::PostMessage(VSK_APP()->m_hWnd, WM_DESTROY, 0, 0);
+    ::PostMessage(VSK_APP()->m_hWnd, MYWM_BYE, 0, 0);
 }
 
 // コンストラクタ
@@ -2519,6 +2521,11 @@ void VskWin32App::OnTimer(HWND hwnd, UINT id)
         ::SetWindowTextA(hwnd, szText);
         // FPSカウントをクリア
         s_dwFpsCounter = 0;
+    }
+    else if (id == VSK_TIMER_ID_BYE) // 終了か？
+    {
+        ::KillTimer(hwnd, id);
+        ::DestroyWindow(hwnd);
     }
 }
 
@@ -4246,6 +4253,13 @@ VskWin32App::WndProcDx(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case MYWM_UPDATELINEPRINTER:
         update_line_printer();
+        break;
+    case MYWM_BYE:
+        // キャレットの点滅をやめる
+        ::KillTimer(hwnd, VSK_TIMER_ID_BLINK);
+        m_state.m_blink_flag = 1;
+        // 0.5秒後に終了する
+        ::SetTimer(hwnd, VSK_TIMER_ID_BYE, 500, nullptr);
         break;
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
