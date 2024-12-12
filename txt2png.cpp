@@ -1,21 +1,43 @@
 #include "VeySicK.h"
 #include "draw_algorithm.h"
+#include "txt2png.h"
 #include <windows.h>
 #include <windowsx.h>
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-VskImageHandle
-text_to_bitmap(int& total_pages, std::string& text, int max_x, int max_y, int margin, int page, bool is_8801, bool bold)
+bool vsk_text_to_bitmap(VskTextToPng& text2png)
 {
-    const int char_width = (bold ? 9 : 8);
-    const int char_height = 20;
+    std::string& text = text2png.m_text;
+    if (text.empty())
+        return false;
+
+    int max_x = text2png.m_max_x, max_y = text2png.m_max_y;
+    int margin = text2png.m_margin;
+    int page = text2png.m_page;
+    bool is_8801 = text2png.m_is_8801, bold = text2png.m_bold;
+
+    VskImageHandle& hbm = text2png.m_hbm;
+    DeleteObject(hbm);
+    hbm = nullptr;
+
+    const int char_width = (bold ? 9 : 8), char_height = 20;
     int cx = char_width*max_x + 2*margin, cy = char_height*max_y + 2*margin;
-    HDC hDC = CreateCompatibleDC(NULL);
-    HBITMAP hbm = (HBITMAP)vsk_create_32bpp_image(cx, cy, nullptr);
-    HGDIOBJ hbmOld = SelectObject(hDC, hbm);
-    RECT rc = { 0, 0, cx, cy };
-    FillRect(hDC, &rc, GetStockBrush(WHITE_BRUSH));
+
+    HDC hDC;
+    HGDIOBJ hbmOld;
+    if (page > 0)
+    {
+        hbm = (HBITMAP)vsk_create_32bpp_image(cx, cy, nullptr);
+        if (!hbm)
+            return false;
+
+        hDC = CreateCompatibleDC(NULL);
+        hbmOld = SelectObject(hDC, hbm);
+        RECT rc = { 0, 0, cx, cy };
+        FillRect(hDC, &rc, GetStockBrush(WHITE_BRUSH));
+    }
+
     VskNullPutter null_putter;
     auto black_putter = [&](int x, int y) {
         if (bold) {
@@ -25,6 +47,7 @@ text_to_bitmap(int& total_pages, std::string& text, int max_x, int max_y, int ma
             SetPixel(hDC, x, y, RGB(0, 0, 0));
         }
     };
+
     Vsk8801AnkGetter getter88;
     Vsk9801AnkGetter getter98;
     auto getter = [&](int x, int y) {
@@ -47,8 +70,7 @@ text_to_bitmap(int& total_pages, std::string& text, int max_x, int max_y, int ma
         if (was_lead)
         {
             was_lead = false;
-            int x0 = margin + char_width*(x - 1);
-            int y0 = margin + char_height*y;
+            int x0 = margin + char_width*(x - 1), y0 = margin + char_height*y;
             if (vsk_is_sjis_trail(ch))
             {
                 VskWord jis = vsk_sjis2jis(lead, ch);
@@ -72,10 +94,13 @@ text_to_bitmap(int& total_pages, std::string& text, int max_x, int max_y, int ma
             if (y >= max_y)
             {
                 x = y = 0;
+                if (current_page == page && page > 0)
+                    break;
                 ++current_page;
             }
             continue;
         }
+
         if (vsk_is_sjis_lead(ch))
         {
             lead = ch;
@@ -83,17 +108,24 @@ text_to_bitmap(int& total_pages, std::string& text, int max_x, int max_y, int ma
             ++x;
             continue;
         }
-        int x0 = margin + char_width*x;
-        int y0 = margin + char_height*y;
+
         if (page == current_page)
+        {
+            int x0 = margin + char_width*x, y0 = margin + char_height*y;
             vk_draw_ank(black_putter, null_putter, x0, y0, ch, getter, false, false);
+        }
         ++x;
     }
 
-    total_pages = current_page;
+    if (page <= 0)
+    {
+        text2png.m_total_pages = current_page;
+        return true;
+    }
+
     SelectObject(hDC, hbmOld);
     DeleteDC(hDC);
-    return hbm;
+    return true;
 }
 
 #ifdef TXT2PNG_EXE
@@ -264,21 +296,31 @@ int main(int argc, char **argv)
     }
     fclose(fin);
 
-    int total_pages;
-    HBITMAP hbm = text_to_bitmap(total_pages, text, max_x, max_y, margin, 0, is_8801, bold);
-    DeleteObject(hbm);
-    int num_pages = total_pages;
+    VskTextToPng text2png;
+    text2png.m_text = text;
+    text2png.m_max_x = max_x;
+    text2png.m_max_y = max_y;
+    text2png.m_margin = margin;
+    text2png.m_page = 0;
+    text2png.m_is_8801 = is_8801;
+    text2png.m_bold = bold;
+    vsk_text_to_bitmap(text2png);
+
+    int num_pages = text2png.m_total_pages;
     for (int ipage = 1; ipage <= num_pages; ++ipage)
     {
-        hbm = text_to_bitmap(total_pages, text, max_x, max_y, margin, ipage, is_8801, bold);
         char out_filename[MAX_PATH];
         std::sprintf(out_filename, "output-%u.png", ipage);
-        vsk_save_screenshot(hbm, out_filename);
-        DeleteObject(hbm);
+
+        text2png.m_page = ipage;
+        vsk_text_to_bitmap(text2png);
+        vsk_save_screenshot(text2png.m_hbm, out_filename);
+        DeleteObject(text2png.m_hbm);
+
         printf("Generated %s.\n", out_filename);
     }
 
-    printf("total %d pages\n", total_pages);
+    printf("Total %d pages\n", num_pages);
     return 0;
 }
 

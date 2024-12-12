@@ -3574,8 +3574,19 @@ void VskWin32App::update_line_printer()
 VskImageHandle
 vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int page, bool is_8801)
 {
-    int max_x = 110, max_y = (is_landscape ? 34 : 72);
-    return text_to_bitmap(total_pages, text, max_x, max_y, 0, page, is_8801, true);
+    VskTextToPng text2png;
+    text2png.m_text = text;
+    text2png.m_max_x = 110;
+    text2png.m_max_y = (is_landscape ? 34 : 72);
+    text2png.m_margin = 0;
+    text2png.m_page = page;
+    text2png.m_is_8801 = is_8801;
+    text2png.m_bold = true;
+    if (!vsk_text_to_bitmap(text2png))
+        return nullptr;
+    if (page == 0)
+        total_pages = text2png.m_total_pages;
+    return text2png.m_hbm;
 }
 
 #define MM_PER_INCH 25.4f // 1インチは25.4ミリメートル
