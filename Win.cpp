@@ -2109,7 +2109,8 @@ protected:
     void OnOpenDriveFolder(HWND hwnd, int number);
     void update_line_printer();
 
-    void OnPrint(HWND hwnd);
+    void OnPrintList(HWND hwnd);
+    void OnPrintScreen(HWND hwnd);
     void OnLinePrinter(HWND hwnd);
     void OnResetSettings(HWND hwnd);
     void OnCopy(HWND hwnd);
@@ -2839,8 +2840,11 @@ void VskWin32App::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case ID_LINEPRINTER: // ラインプリンタ
         OnLinePrinter(hwnd);
         break;
-    case ID_PRINT: // 印刷
-        OnPrint(hwnd);
+    case ID_PRINT_SCREEN: // 画面の印刷
+        OnPrintScreen(hwnd);
+        break;
+    case ID_PRINT_LIST: // リストの印刷
+        OnPrintList(hwnd);
         break;
     }
 }
@@ -3716,7 +3720,18 @@ bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
     return true;
 }
 
-void VskWin32App::OnPrint(HWND hwnd)
+// ID_PRINT_LIST
+void VskWin32App::OnPrintList(HWND hwnd)
+{
+    assert(vsk_machine);
+
+    VskString text;
+    if (vsk_get_program_text(text))
+        vsk_do_print_text(hwnd, text);
+}
+
+// ID_PRINT_SCREEN
+void VskWin32App::OnPrintScreen(HWND hwnd)
 {
     assert(vsk_machine);
 

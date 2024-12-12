@@ -29,7 +29,11 @@ IDR_MAINMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "ラインプリンタ...", ID_LINEPRINTER
         MENUITEM SEPARATOR
-        MENUITEM "印刷...", ID_PRINT
+        POPUP "印刷..."
+        {
+            MENUITEM "画面の印刷...", ID_PRINT_SCREEN
+            MENUITEM "プログラムリストの印刷...", ID_PRINT_LIST
+        }
         MENUITEM SEPARATOR
         MENUITEM "設定...\tAlt+Enter", ID_SETTINGS
         MENUITEM "設定のリセット...", ID_RESETSETTINGS

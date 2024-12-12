@@ -336,6 +336,13 @@ VskSingle vsk_turtle_direction_in_radian(void)
     return VSK_IMPL()->m_turtle_engine.get_turtle_direction_in_radian();
 }
 
+// プログラムテキストの取得
+bool vsk_get_program_text(VskString& text)
+{
+    text = VSK_IMPL()->m_program_text;
+    return text.size();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 // フィールドを追加

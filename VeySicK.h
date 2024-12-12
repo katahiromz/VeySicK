@@ -933,3 +933,5 @@ void vsk_split_input_text(std::vector<VskString>& data, const VskString& text);
 bool vsk_is_process_elevated(void);
 // プログラムのタイトル情報をセットする
 void vsk_set_program_title(const VskString& pathname);
+// プログラムテキストの取得
+bool vsk_get_program_text(VskString& text);
