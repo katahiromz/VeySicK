@@ -3578,6 +3578,8 @@ vsk_text_to_bitmap(int& total_pages, VskString& text, bool is_landscape, int pag
     return text_to_bitmap(total_pages, text, max_x, max_y, 0, page, is_8801, true);
 }
 
+#define MM_PER_INCH 25.4f // 1インチは25.4ミリメートル
+
 // テキストの印刷をする
 bool vsk_do_print_text(HWND hwnd, VskString& text)
 {
@@ -3588,7 +3590,6 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
         return false; // おそらくユーザーがキャンセルした
 
     HDC hDC = pd.hDC;
-    const float MM_PER_INCH = 25.4f; // 1インチは25.4ミリメートル
 
     // これらはピクセル単位
     auto xMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
@@ -3614,7 +3615,7 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
     int total_pages = 0;
     const bool is_8801 = vsk_machine->is_8801_mode();
     VskImageHandle hbm = vsk_text_to_bitmap(total_pages, text, is_landscape, 0, is_8801);
-    DeleteObject(hbm);
+    ::DeleteObject(hbm);
 
     // 印刷開始
     bool ok = true;
@@ -3676,7 +3677,6 @@ bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
         return false; // おそらくユーザーがキャンセルした
 
     HDC hDC = pd.hDC;
-    const float MM_PER_INCH = 25.4f; // 1インチは25.4ミリメートル
 
     // これらはピクセル単位
     auto xMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
