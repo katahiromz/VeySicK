@@ -3589,15 +3589,13 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
     if (!::PrintDlg(&pd))
         return false; // おそらくユーザーがキャンセルした
 
-    HDC hDC = pd.hDC;
-
     // これらはピクセル単位
-    auto xMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
-    auto yMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
-    auto cx0 = ::GetDeviceCaps(hDC, PHYSICALWIDTH);
-    auto cy0 = ::GetDeviceCaps(hDC, PHYSICALHEIGHT);
-    auto xMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH; // 余白は7mm以上
-    auto yMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH; // 余白は7mm以上
+    auto xMargin = ::GetDeviceCaps(pd.hDC, PHYSICALOFFSETX);
+    auto yMargin = ::GetDeviceCaps(pd.hDC, PHYSICALOFFSETX);
+    auto cx0 = ::GetDeviceCaps(pd.hDC, PHYSICALWIDTH);
+    auto cy0 = ::GetDeviceCaps(pd.hDC, PHYSICALHEIGHT);
+    auto xMinMargin = 7.0f * ::GetDeviceCaps(pd.hDC, LOGPIXELSX) / MM_PER_INCH; // 余白は7mm以上
+    auto yMinMargin = 7.0f * ::GetDeviceCaps(pd.hDC, LOGPIXELSY) / MM_PER_INCH; // 余白は7mm以上
     if (xMargin < xMinMargin)
     {
         cx0 -= 2 * (xMinMargin - xMargin);
@@ -3609,24 +3607,23 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
         yMargin = yMinMargin;
     }
 
-    bool is_landscape = (cx0 > cy0); // 横向きか？
-
     // 総ページ数を取得
     int total_pages = 0;
     const bool is_8801 = vsk_machine->is_8801_mode();
+    bool is_landscape = (cx0 > cy0); // 横向きか？
     VskImageHandle hbm = vsk_text_to_bitmap(total_pages, text, is_landscape, 0, is_8801);
     ::DeleteObject(hbm);
 
     // 印刷開始
     bool ok = true;
     DOCINFO di = { sizeof(di), TEXT("VeySicK program list") };
-    if (::StartDoc(hDC, &di) > 0) // 印刷文書開始
+    if (::StartDoc(pd.hDC, &di) > 0) // 印刷文書開始
     {
         for (int page = 1; page <= total_pages; ++page)
         {
-            if (::StartPage(hDC) <= 0) // ページ開始失敗？
+            if (::StartPage(pd.hDC) <= 0) // ページ開始失敗？
             {
-                ::AbortDoc(hDC);
+                ::AbortDoc(pd.hDC);
                 ok = false;
                 break;
             }
@@ -3634,30 +3631,28 @@ bool vsk_do_print_text(HWND hwnd, VskString& text)
             // テキストからビットマップを取得
             hbm = vsk_text_to_bitmap(total_pages, text, is_landscape, page, is_8801);
             BITMAP bm;
-            if (!hbm || !GetObject(hbm, sizeof(bm), &bm)) // 失敗
+            if (!hbm || !::GetObject(hbm, sizeof(bm), &bm)) // 失敗
             {
-                ::AbortDoc(hDC);
+                ::AbortDoc(pd.hDC);
                 ok = false;
                 break;
             }
 
-            HDC hdcMem = ::CreateCompatibleDC(hDC); // DC作成
+            HDC hdcMem = ::CreateCompatibleDC(pd.hDC); // DC作成
             HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbm); // ビットマップ選択
-
             // アスペクト比を考慮してビットマップを拡大して描画
             auto aspect_ratio0 = float(cx0) / cy0, aspect_ratio1 = float(bm.bmWidth) / bm.bmHeight;
             float zoom = (aspect_ratio0 > aspect_ratio1) ? (float(cy0) / bm.bmHeight) : float(cx0) / bm.bmWidth;
-            ::SetStretchBltMode(hDC, STRETCH_DELETESCANS);
+            ::SetStretchBltMode(pd.hDC, STRETCH_DELETESCANS);
             LONG cx1 = LONG(bm.bmWidth * zoom), cy1 = LONG(bm.bmHeight * zoom);
-            ::StretchBlt(hDC, xMargin, yMargin, cx1, cy1,
+            ::StretchBlt(pd.hDC, xMargin, yMargin, cx1, cy1,
                          hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-
             ::SelectObject(hdcMem, hbmOld); // ビットマップ選択解除
             ::DeleteDC(hdcMem); // DCの破棄
             ::DeleteObject(hbm); // ビットマップの破棄
-            ::EndPage(hDC); // ページ終わり
+            ::EndPage(pd.hDC); // ページ終わり
         }
-        ::EndDoc(hDC); // 文書終わり
+        ::EndDoc(pd.hDC); // 文書終わり
     }
 
     // 後始末
@@ -3676,15 +3671,13 @@ bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
     if (!::PrintDlg(&pd))
         return false; // おそらくユーザーがキャンセルした
 
-    HDC hDC = pd.hDC;
-
     // これらはピクセル単位
-    auto xMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
-    auto yMargin = ::GetDeviceCaps(hDC, PHYSICALOFFSETX);
-    auto cx0 = ::GetDeviceCaps(hDC, PHYSICALWIDTH);
-    auto cy0 = ::GetDeviceCaps(hDC, PHYSICALHEIGHT);
-    auto xMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSX) / MM_PER_INCH; // 余白は7mm以上
-    auto yMinMargin = 7.0f * ::GetDeviceCaps(hDC, LOGPIXELSY) / MM_PER_INCH; // 余白は7mm以上
+    auto xMargin = ::GetDeviceCaps(pd.hDC, PHYSICALOFFSETX);
+    auto yMargin = ::GetDeviceCaps(pd.hDC, PHYSICALOFFSETX);
+    auto cx0 = ::GetDeviceCaps(pd.hDC, PHYSICALWIDTH);
+    auto cy0 = ::GetDeviceCaps(pd.hDC, PHYSICALHEIGHT);
+    auto xMinMargin = 7.0f * ::GetDeviceCaps(pd.hDC, LOGPIXELSX) / MM_PER_INCH; // 余白は7mm以上
+    auto yMinMargin = 7.0f * ::GetDeviceCaps(pd.hDC, LOGPIXELSY) / MM_PER_INCH; // 余白は7mm以上
     if (xMargin < xMinMargin)
     {
         cx0 -= 2 * (xMinMargin - xMargin);
@@ -3699,35 +3692,33 @@ bool vsk_do_print_image(HWND hwnd, HBITMAP hbm)
     // 印刷開始
     bool ok = true;
     DOCINFO di = { sizeof(di), TEXT("VeySicK screen image") };
-    if (::StartDoc(hDC, &di) > 0) // 印刷文書開始
+    if (::StartDoc(pd.hDC, &di) > 0) // 印刷文書開始
     {
-        if (::StartPage(hDC) > 0)
+        if (::StartPage(pd.hDC) > 0)
         {
             BITMAP bm;
             if (!::GetObject(hbm, sizeof(bm), &bm)) // ビットマップ取得失敗？
             {
-                ::AbortDoc(hDC);
+                ::AbortDoc(pd.hDC);
                 ok = false;
             }
             else
             {
-                HDC hdcMem = ::CreateCompatibleDC(hDC); // DC作成
+                HDC hdcMem = ::CreateCompatibleDC(pd.hDC); // DC作成
                 HGDIOBJ hbmOld = ::SelectObject(hdcMem, hbm); // ビットマップ選択
-
                 // アスペクト比を考慮してビットマップを拡大して描画
                 auto aspect_ratio0 = float(cx0) / cy0, aspect_ratio1 = float(bm.bmWidth) / bm.bmHeight;
                 float zoom = (aspect_ratio0 > aspect_ratio1) ? (float(cy0) / bm.bmHeight) : (float(cx0) / bm.bmWidth);
-                ::SetStretchBltMode(hDC, STRETCH_DELETESCANS);
+                ::SetStretchBltMode(pd.hDC, STRETCH_DELETESCANS);
                 auto cx1 = LONG(bm.bmWidth * zoom), cy1 = LONG(bm.bmHeight * zoom);
-                ::StretchBlt(hDC, xMargin, yMargin, cx1, cy1, hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-                ::SelectObject(hdcMem, hbmOld);
-
+                ::StretchBlt(pd.hDC, xMargin, yMargin, cx1, cy1, hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+                ::SelectObject(hdcMem, hbmOld); // ビットマップ選択を解除
                 ::DeleteDC(hdcMem); // DC破棄
                 ::DeleteObject(hbm); // ビットマップ破棄
             }
-            ::EndPage(hDC); // ページ終了
+            ::EndPage(pd.hDC); // ページ終了
         }
-        ::EndDoc(hDC); // 印刷文書終了
+        ::EndDoc(pd.hDC); // 印刷文書終了
     }
 
     // 後始末
