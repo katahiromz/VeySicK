@@ -6401,7 +6401,7 @@ static VskAstPtr VSKAPI vsk_SAVE(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// プログラムリストを結合する
+// プログラムリストを混合する
 bool vsk_merge_program(const VskString& text)
 {
     // 行に分ける
@@ -6441,7 +6441,7 @@ static VskAstPtr VSKAPI vsk_MERGE(VskAstPtr self, const VskAstList& args)
         if (!vsk_load_file(v0, text, false))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
 
-        // 結合する
+        // 混合する
         vsk_merge_program(text);
 
         // コマンドレベルに戻る
@@ -7771,7 +7771,7 @@ static VskAstPtr vsk_CHAIN_helper(VskAstPtr self, const VskAstList& args, bool m
         VskString text;
         if (!vsk_load_file(v0, text, true))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-        // プログラムリストを結合する
+        // プログラムリストを混合する
         vsk_merge_program(text);
     }
     else
