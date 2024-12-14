@@ -282,6 +282,7 @@ Source: "drive1\SIN.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\SPACE_.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\SPC.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\SPC2.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
+Source: "drive1\SPACING.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\SQR.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\STEST.DAT"; DestDir: "{app}\drive1"; Flags: ignoreversion
 Source: "drive1\STOP.BAS"; DestDir: "{app}\drive1"; Flags: ignoreversion
