@@ -43,7 +43,7 @@ struct VskSettings
     VskDword m_9801_sw1 = VSK_9801_SW1_DEFAULT;         // 9801 ディップスイッチ SW1
     VskDword m_9801_sw2 = VSK_9801_SW2_DEFAULT;         // 9801 ディップスイッチ SW2
 #endif
-    VskDword m_draw_odd_lines = 0;                      // 奇数ラインを描画するか？
+    VskDword m_draw_odd_lines = true;                   // 奇数ラインを描画するか？
     VskDword m_empty_loop_wait = 100;                   // 空ループ待ち
     VskDword m_output_wait = 10;                        // 出力待ち
     VskString m_line_printer_text = "";                 // ラインプリンタのテキスト
