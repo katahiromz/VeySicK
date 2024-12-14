@@ -4295,58 +4295,29 @@ static VskAstPtr VSKAPI vsk_MUL(VskAstPtr self, const VskAstList& args)
     if (!arg1)
         return nullptr;
 
-    if (arg0->is_floating())
+    if (arg0->is_dbl() || arg1->is_dbl())
     {
-        VskDouble v0;
-        if (vsk_dbl(v0, arg0))
-        {
-            if (arg1->is_floating())
-            {
-                VskDouble v1;
-                if (vsk_dbl(v1, arg1))
-                {
-                    vsk_targeting(self);
-                    return vsk_ast_dbl(v0 * v1);
-                }
-            }
-            else if (arg1->is_integer())
-            {
-                VskLong v1;
-                if (vsk_lng(v1, arg1))
-                {
-                    vsk_targeting(self);
-                    return vsk_ast_dbl(v0 * v1);
-                }
-            }
-        }
+        VskDouble v0, v1;
+        if (vsk_dbl(v0, arg0) && vsk_dbl(v1, arg1))
+            return vsk_ast_dbl(v0 * v1);
     }
-    else if (arg0->is_integer())
+    else if (arg0->is_sng() || arg1->is_sng())
     {
-        VskLong v0;
-        if (vsk_lng(v0, arg0))
-        {
-            if (arg1->is_floating())
-            {
-                VskDouble v1;
-                if (vsk_dbl(v1, arg1))
-                {
-                    vsk_targeting(self);
-                    return vsk_ast_dbl(v0 * v1);
-                }
-            }
-            else if (arg1->is_integer())
-            {
-                VskLong v1;
-                if (vsk_lng(v1, arg1))
-                {
-                    vsk_targeting(self);
-                    if (arg0->is_lng() || arg1->is_lng())
-                        return vsk_ast_lng(v0 * v1);
-                    else
-                        return vsk_ast_int(v0 * v1);
-                }
-            }
-        }
+        VskSingle v0, v1;
+        if (vsk_sng(v0, arg0) && vsk_sng(v1, arg1))
+            return vsk_ast_sng(v0 * v1);
+    }
+    else if (arg0->is_lng() || arg1->is_lng())
+    {
+        VskLong v0, v1;
+        if (vsk_lng(v0, arg0) && vsk_lng(v1, arg1))
+            return vsk_ast_lng(v0 * v1);
+    }
+    else
+    {
+        VskInt v0, v1;
+        if (vsk_int(v0, arg0) && vsk_int(v1, arg1))
+            return vsk_ast_int(v0 * v1);
     }
 
     VSK_ERROR_AND_RETURN(VSK_ERR_BAD_TYPE, nullptr);
