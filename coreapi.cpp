@@ -4722,9 +4722,9 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr self, const VskAstList& args)
             switch (v0)
             {
             case 0:
-                return vsk_ast_dbl(VSK_STATE()->m_last_point_in_world.m_x);
+                return vsk_ast_sng(VSK_STATE()->m_last_point_in_world.m_x);
             case 1:
-                return vsk_ast_dbl(VSK_STATE()->m_last_point_in_world.m_y);
+                return vsk_ast_sng(VSK_STATE()->m_last_point_in_world.m_y);
             case 2:
                 return vsk_ast_int(vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world).m_x);
             case 3:
