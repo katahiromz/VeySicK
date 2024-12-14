@@ -9205,6 +9205,8 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr self, const VskAstList& args)
         {
             size_t ib0 = vsk_jis_kpos2ib(v0, v1);
             size_t ib1 = vsk_jis_kpos2ib(v0, v1 + v2);
+            if (ib0 > int(v0.size()))
+                return vsk_ast_str("");
             auto substr = v0.substr(ib0, ib1 - ib0);
             if (!VSK_SETTINGS()->m_unlimited_mode && substr.size() >= 256)
                 VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
@@ -9214,6 +9216,8 @@ static VskAstPtr VSKAPI vsk_KMID_dollar(VskAstPtr self, const VskAstList& args)
         {
             size_t ib0 = vsk_sjis_kpos2ib(v0, v1);
             size_t ib1 = vsk_sjis_kpos2ib(v0, v1 + v2);
+            if (ib0 > int(v0.size()))
+                return vsk_ast_str("");
             auto substr = v0.substr(ib0, ib1 - ib0);
             if (!VSK_SETTINGS()->m_unlimited_mode && substr.size() >= 256)
                 VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
@@ -9885,9 +9889,10 @@ static VskAstPtr VSKAPI vsk_MID_dollar_func(VskAstPtr self, const VskAstList& ar
     {
         if (!VSK_SETTINGS()->m_unlimited_mode && v0.size() > VSK_MAX_STR_LEN)
             VSK_ERROR_AND_RETURN(VSK_ERR_STRING_TOO_LONG, nullptr);
-        if (v0 == "" || v1 <= 0 || v1 > int(v0.size()))
+        if (v0 == "" || v1 <= 0)
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-
+        if (v1 > int(v0.size()))
+            return vsk_ast_str("");
         if (args.size() == 2)
         {
             return vsk_ast_str(v0.substr(v1 - 1));
@@ -9920,7 +9925,6 @@ static VskAstPtr VSKAPI vsk_MID_dollar_stmt(VskAstPtr self, const VskAstList& ar
     {
         if (v0 == "" || v1 <= 0 || v1 > int(v0.size()))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
-
         --v1;
         if (!args[2] || v2 > VskInt(v3.size()))
             v2 = VskInt(v3.size());
