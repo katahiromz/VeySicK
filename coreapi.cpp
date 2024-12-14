@@ -2595,7 +2595,7 @@ void vsk_default_trap(VskTrapType type)
             VSK_IMPL()->m_auto_mode = VSK_STATE()->m_edit_mode = false;
             // 改行
             vsk_print("\n");
-            // 継続（CONT）のために覚えておく
+            // 継続（CONT）のためにコントロールパスを覚えておく
             VSK_IMPL()->m_stopping_path = VSK_IMPL()->m_control_path;
             // IMEをOFFにする
             vsk_ime_on_off(false);
@@ -6614,7 +6614,7 @@ static VskAstPtr VSKAPI vsk_CONT(VskAstPtr self, const VskAstList& args)
 
     VSK_IMPL()->m_control_path = VSK_IMPL()->m_stopping_path;
     VSK_STATE()->m_wait_for = VSK_NO_WAIT;
-    return nullptr;
+    return vsk_ast(INSN_DONT_GO_NEXT);
 }
 
 // INSN_NEW_CMD (NEW CMD) @implemented
