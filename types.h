@@ -147,6 +147,9 @@ template <typename T_VALUE>
 struct VskPoint
 {
     T_VALUE m_x, m_y;
+
+    VskPoint() { }
+    VskPoint(T_VALUE x, T_VALUE y) : m_x(x), m_y(y) { }
 };
 typedef VskPoint<int> VskPointI;
 typedef VskPoint<VskSingle> VskPointS;

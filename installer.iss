@@ -400,6 +400,7 @@ Source: "drive4\PAINT.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PAINT2.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PANK88.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PANK98.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
+Source: "drive4\POINT.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PRINT.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PRINT2.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion
 Source: "drive4\PRINT3.BAS"; DestDir: "{app}\drive4"; Flags: ignoreversion

@@ -4818,9 +4818,9 @@ static VskAstPtr VSKAPI vsk_POINT_func(VskAstPtr self, const VskAstList& args)
             case 1:
                 return vsk_ast_dbl(VSK_STATE()->m_last_point_in_world.m_y);
             case 2:
-                return vsk_ast_int(vsk_machine->world_to_view(VSK_STATE()->m_last_point_in_world).m_x);
+                return vsk_ast_int(vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world).m_x);
             case 3:
-                return vsk_ast_int(vsk_machine->world_to_view(VSK_STATE()->m_last_point_in_world).m_y);
+                return vsk_ast_int(vsk_machine->world_to_screen(VSK_STATE()->m_last_point_in_world).m_y);
             default:
                 vsk_machine->bad_call();
                 break;
@@ -5036,6 +5036,7 @@ static VskAstPtr vsk_SCREEN_GENERIC(const VskAstList& args, bool is_9801)
         vsk_machine->reset_graphics();
         VSK_IMPL()->m_draw_engine.reset();
         VSK_IMPL()->m_turtle_engine.reset();
+        VSK_STATE()->m_last_point_in_world = { 0, 0 };
     }
 
     return nullptr;
@@ -5078,7 +5079,7 @@ static VskAstPtr VSKAPI vsk_CLS(VskAstPtr self, const VskAstList& args)
         if (v0 & 2)
         {
             vsk_machine->clear_graphic();
-            VSK_STATE()->m_last_point_in_world = vsk_machine->client_to_world(VSK_STATE()->m_viewport.m_pt0);
+            VSK_STATE()->m_last_point_in_world = vsk_machine->view_to_world(VSK_STATE()->m_viewport.m_pt0);
         }
 
         // 編集モードを解除
@@ -6198,7 +6199,7 @@ static VskAstPtr VSKAPI vsk_WINDOW_func(VskAstPtr self, const VskAstList& args)
     return nullptr;
 }
 
-// INSN_WINDOW_stmt @implemented
+// INSN_WINDOW_stmt (WINDOW文) @implemented
 static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr self, const VskAstList& args)
 {
     if (!vsk_arity_in_range(args, 4, 4))
@@ -6219,6 +6220,7 @@ static VskAstPtr VSKAPI vsk_WINDOW_stmt(VskAstPtr self, const VskAstList& args)
         VSK_STATE()->m_window.m_y0 = v1;
         VSK_STATE()->m_window.m_x1 = v2;
         VSK_STATE()->m_window.m_y1 = v3;
+        VSK_STATE()->m_last_point_in_world = { v0, v1 };
     }
 
     return nullptr;
@@ -6255,6 +6257,7 @@ static VskAstPtr VSKAPI vsk_VIEW_stmt(VskAstPtr self, const VskAstList& args)
             VskRectI clipping = { 0, 0, VSK_STATE()->m_screen_width - 1, VSK_STATE()->m_screen_height - 1 };
             vsk_machine->draw_box(x0 - 1, y0 - 1, x1 + 1, y1 + 1, v5, 0xFFFF, &clipping);
         }
+        VSK_STATE()->m_last_point_in_world = vsk_machine->view_to_world(VSK_STATE()->m_viewport.m_pt0);
     }
 
     return nullptr;
@@ -7286,6 +7289,10 @@ static VskAstPtr vsk_GET_at_helper(const VskAstList& args, bool step)
         // 画像を取得
         if (!vsk_machine->get_image(pt.m_x, pt.m_y, cx, cy, ptr, required_bytes, M))
             VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr); // 見つからない
+
+        // LPを移動する
+        VskPointI newpt(pt.m_x + cx - 1, pt.m_y + cy - 1);
+        VSK_STATE()->m_last_point_in_world = vsk_machine->view_to_world(newpt);
     }
 
     return nullptr;
@@ -7386,6 +7393,9 @@ static VskAstPtr VSKAPI vsk_PUT_at(VskAstPtr self, const VskAstList& args)
             if (!vsk_machine->put_image(pt.m_x, pt.m_y, ptr, remainder, M, v3))
                 VSK_ERROR_AND_RETURN(VSK_ERR_BAD_CALL, nullptr);
         }
+
+        // LPを更新する
+        VSK_STATE()->m_last_point_in_world = vsk_machine->view_to_world(pt);
     }
 
     return nullptr;
